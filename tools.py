@@ -12,6 +12,14 @@ from degree_audit import degree_audit
 
 load_dotenv()
 
+import streamlit as st
+try:
+    openai_key = st.secrets["OPENAI_API_KEY"]
+except:
+    openai_key = os.getenv("OPENAI_API_KEY")
+
+client = OpenAI(api_key=openai_key)
+
 # Load ChromaDB
 chroma_client = chromadb.PersistentClient(path="./chroma_db")
 chroma_collection = chroma_client.get_or_create_collection("umn_handbook")
