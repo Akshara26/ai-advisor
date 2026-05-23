@@ -6,6 +6,7 @@ import chromadb
 import os
 import json
 from dotenv import load_dotenv
+from course_data import check_prerequisites
 
 load_dotenv()
 
@@ -88,6 +89,20 @@ tools = [
                 "required": ["office"]
             }
         }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "check_prerequisites",
+            "description": "Look up prerequisites for any UMN CSCI course. Use format like CSCI5521.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "course_code": {"type": "string", "description": "The course code e.g. CSCI5521"}
+                },
+                "required": ["course_code"]
+            }
+        }
     }
 ]
 
@@ -104,6 +119,8 @@ def run_tool(tool_name: str, tool_args: dict) -> str:
         return check_gpa_requirement(**tool_args)
     elif tool_name == "get_contact_info":
         return get_contact_info(**tool_args)
+    elif tool_name == "check_prerequisites":
+        return check_prerequisites(**tool_args)
     return "Tool not found"
 
 def chat(user_message: str) -> str:
@@ -138,11 +155,12 @@ def chat(user_message: str) -> str:
                 "content": result
             })
 
-print("UMN CS Advisor with Tools - type 'quit' to exit\n")
+if __name__ == "__main__":
+    print("UMN CS Advisor with Tools - type 'quit' to exit\n")
 
-while True:
-    user_input = input("You: ")
-    if user_input.lower() == "quit":
-        break
-    response = chat(user_input)
-    print(f"\nAdvisor: {response}\n")
+    while True:
+        user_input = input("You: ")
+        if user_input.lower() == "quit":
+            break
+        response = chat(user_input)
+        print(f"\nAdvisor: {response}\n")
