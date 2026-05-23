@@ -7,6 +7,7 @@ import os
 import json
 from dotenv import load_dotenv
 from course_data import check_prerequisites
+from grade_data import get_grade_distribution
 
 load_dotenv()
 
@@ -103,6 +104,20 @@ tools = [
                 "required": ["course_code"]
             }
         }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "get_grade_distribution",
+            "description": "Get historical grade distribution and average GPA for a UMN course. Use when student asks if a course is hard, what grades people get, or course difficulty.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "course_code": {"type": "string", "description": "Course code e.g. CSCI5521"}
+                },
+                "required": ["course_code"]
+            }
+        }
     }
 ]
 
@@ -121,6 +136,8 @@ def run_tool(tool_name: str, tool_args: dict) -> str:
         return get_contact_info(**tool_args)
     elif tool_name == "check_prerequisites":
         return check_prerequisites(**tool_args)
+    elif tool_name == "get_grade_distribution":
+        return get_grade_distribution(**tool_args)
     return "Tool not found"
 
 def chat(user_message: str) -> str:
