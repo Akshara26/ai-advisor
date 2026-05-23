@@ -1,10 +1,10 @@
 import sqlite3
 import json
 
-conn = sqlite3.connect("data/grades.db")
-
 def get_grade_distribution(course_code: str) -> str:
     """Get historical grade distribution for a UMN course."""
+    conn = sqlite3.connect("data/grades.db")
+
     # Parse input like "CSCI5521" into dept="CSCI" and num="5521"
     course_code = course_code.upper().replace(" ", "")
     dept = ''.join(filter(str.isalpha, course_code))
@@ -18,6 +18,8 @@ def get_grade_distribution(course_code: str) -> str:
     """, (dept, num))
 
     row = cursor.fetchone()
+    conn.close()
+    
     if not row:
         return f"No grade data found for {course_code}."
 
