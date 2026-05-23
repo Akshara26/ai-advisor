@@ -8,6 +8,7 @@ import json
 from dotenv import load_dotenv
 from course_data import check_prerequisites
 from grade_data import get_grade_distribution
+from degree_audit import degree_audit
 
 load_dotenv()
 
@@ -118,6 +119,30 @@ tools = [
                 "required": ["course_code"]
             }
         }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "degree_audit",
+            "description": "Check a student's degree progress against UMN CS MS or PhD requirements. Use when student lists completed courses and asks what's left to graduate.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "completed_courses": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                        "description": "List of completed course codes e.g. ['CSCI5521', 'CSCI8970']"
+                    },
+                    "program": {
+                        "type": "string",
+                        "description": "Degree program: ms or phd",
+                        "enum": ["ms", "phd"]
+                    }
+                },
+                "required": ["completed_courses", "program"]
+            },
+            "required": ["completed_courses", "program"]
+        }
     }
 ]
 
@@ -138,6 +163,8 @@ def run_tool(tool_name: str, tool_args: dict) -> str:
         return check_prerequisites(**tool_args)
     elif tool_name == "get_grade_distribution":
         return get_grade_distribution(**tool_args)
+    elif tool_name == "degree_audit":
+        return degree_audit(**tool_args)
     return "Tool not found"
 
 def chat(user_message: str) -> str:
