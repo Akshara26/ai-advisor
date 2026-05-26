@@ -25,7 +25,7 @@ chroma_client = chromadb.PersistentClient(path="./chroma_db")
 chroma_collection = chroma_client.get_or_create_collection("umn_handbook")
 vector_store = ChromaVectorStore(chroma_collection=chroma_collection)
 storage_context = StorageContext.from_defaults(vector_store=vector_store)
-embed_model = OpenAIEmbedding(api_key=os.getenv("OPENAI_API_KEY"))
+embed_model = OpenAIEmbedding(api_key=openai_key)
 index = VectorStoreIndex.from_vector_store(vector_store, embed_model=embed_model)
 retriever = index.as_retriever(similarity_top_k=3)
 
@@ -35,24 +35,6 @@ def search_handbook(query: str) -> str:
     nodes = retriever.retrieve(query)
     return "\n\n".join([n.text for n in nodes])
 
-def check_gpa_requirement(program: str) -> str:
-    """Return GPA requirements for a given program."""
-    requirements = {
-        "ms": "M.S. students must maintain a GPA of 3.25 for courses on their GPAS audit and 3.0 overall.",
-        "mcs": "M.C.S. students must maintain a GPA of 3.0 for courses on their GPAS audit.",
-        "phd": "Ph.D. students must maintain a GPA of 3.45 on courses in their GPAS Planner."
-    }
-    return requirements.get(program.lower(), "Program not found. Valid options: ms, mcs, phd")
-
-def get_contact_info(office: str) -> str:
-    """Get contact information for university offices."""
-    contacts = {
-        "graduate": "Graduate Program Coordinators: csgradmn@umn.edu, Lind Hall Room 324",
-        "gssp": "Graduate Student Services and Progress: gssp@umn.edu, 333 Robert H. Bruininks Hall, (612) 625-3490",
-        "isss": "International Student & Scholar Services: isss@umn.edu",
-        "department": "CS&E Department Office: (612) 625-4002, 4-192 Keller Hall"
-    }
-    return contacts.get(office.lower(), "Office not found. Valid options: graduate, gssp, isss, department")
 
 # Tool schemas for GPT
 tools = [
@@ -67,34 +49,6 @@ tools = [
                     "query": {"type": "string", "description": "The question to search for"}
                 },
                 "required": ["query"]
-            }
-        }
-    },
-    {
-        "type": "function",
-        "function": {
-            "name": "check_gpa_requirement",
-            "description": "Get GPA requirements for a specific degree program.",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "program": {"type": "string", "description": "The program: ms, mcs, or phd"}
-                },
-                "required": ["program"]
-            }
-        }
-    },
-    {
-        "type": "function",
-        "function": {
-            "name": "get_contact_info",
-            "description": "Get contact information for university offices.",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "office": {"type": "string", "description": "The office: graduate, gssp, isss, or department"}
-                },
-                "required": ["office"]
             }
         }
     },
@@ -159,10 +113,6 @@ Always use search_handbook for policy questions."""
 def run_tool(tool_name: str, tool_args: dict) -> str:
     if tool_name == "search_handbook":
         return search_handbook(**tool_args)
-    elif tool_name == "check_gpa_requirement":
-        return check_gpa_requirement(**tool_args)
-    elif tool_name == "get_contact_info":
-        return get_contact_info(**tool_args)
     elif tool_name == "check_prerequisites":
         return check_prerequisites(**tool_args)
     elif tool_name == "get_grade_distribution":
@@ -215,10 +165,10 @@ def chat(user_message: str, conversation_history: list) -> tuple:
 
 if __name__ == "__main__":
     print("UMN CS Advisor with Tools - type 'quit' to exit\n")
-
+    history = []
     while True:
         user_input = input("You: ")
         if user_input.lower() == "quit":
             break
-        response = chat(user_input)
+        response, history = chat(user_input, history)
         print(f"\nAdvisor: {response}\n")
