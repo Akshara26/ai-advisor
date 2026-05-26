@@ -191,9 +191,22 @@ def chat(user_message: str, conversation_history: list) -> tuple:
 
         conversation_history.append(message)
         for tool_call in message.tool_calls:
-            tool_name = tool_call.function.name
-            tool_args = json.loads(tool_call.function.arguments)
-            result = run_tool(tool_name, tool_args)
+            try:
+                tool_name = tool_call.function.name
+                tool_args = json.loads(tool_call.function.arguments)
+            except json.JSONDecodeError:
+                result = "Error: could not parse tool arguments. Please try rephrasing your question."
+                conversation_history.append({
+                    "role": "tool",
+                    "tool_call_id": tool_call.id,
+                    "content": result
+                })
+                continue
+            try:
+                result = run_tool(tool_name, tool_args)
+            except Exception as e:
+                result = f"Error running tool: {str(e)}. Please try again."
+
             conversation_history.append({
                 "role": "tool",
                 "tool_call_id": tool_call.id,

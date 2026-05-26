@@ -1,8 +1,12 @@
 import json
 
 # Load course data
-with open("data/courses.json") as f:
-    all_courses = json.load(f)
+try:
+    with open("data/courses.json") as f:
+        all_courses = json.load(f)
+except FileNotFoundError:
+    all_courses = {}
+    print("Warning: data/courses.json not found. Prerequisite features will be limited.")
 
 uid_to_code = {v["uid"]: v["code"] for v in all_courses.values()}
 code_to_course = {v["code"]: v for v in all_courses.values()}
