@@ -1,14 +1,24 @@
 import streamlit as st
+import uuid
 from tools import chat
+from memory import load_history, save_history
 
 st.title("UMN CS Graduate Advisor")
 st.caption("Ask me anything about the CS graduate program at University of Minnesota.")
+
+# Persist session ID across refreshes using query params
+params = st.query_params
+if "session_id" not in params:
+    new_id = str(uuid.uuid4())
+    st.query_params["session_id"] = new_id
+
+session_id = st.query_params["session_id"]
 
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
 if "conversation_history" not in st.session_state:
-    st.session_state.conversation_history = []
+    st.session_state.conversation_history = load_history(session_id)
 
 # Display chat history
 for message in st.session_state.messages:
@@ -29,3 +39,4 @@ if prompt := st.chat_input("Ask a question..."):
         st.markdown(response)
 
     st.session_state.messages.append({"role": "assistant", "content": response})
+    save_history(session_id, st.session_state.conversation_history)
