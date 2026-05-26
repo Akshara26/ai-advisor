@@ -1,0 +1,49 @@
+{
+  "ms": {
+    "total_credits": 31,
+    "csci_credits": 16,
+    "colloquium": "CSCI8970",
+    "breadth_categories": {
+      "applications": [
+        "CSCI5115", "CSCI5123", "CSCI5125", "CSCI5127", "CSCI5271",
+        "CSCI5461", "CSCI5471", "CSCI5511", "CSCI5512", "CSCI5521",
+        "CSCI5523", "CSCI5551", "CSCI5561", "CSCI5563", "CSCI5607",
+        "CSCI5608", "CSCI5609", "CSCI5611", "CSCI5619", "CSCI5707",
+        "CSCI5715"
+      ],
+      "theory_and_algorithms": [
+        "CSCI5302", "CSCI5304", "CSCI5403", "CSCI5421", "CSCI5481",
+        "CSCI5525", "CSCI5527"
+      ],
+      "architecture_systems_software": [
+        "CSCI5103", "CSCI5104", "CSCI5105", "CSCI5106", "CSCI5161",
+        "CSCI5204", "CSCI5211", "CSCI5221", "CSCI5231", "CSCI5451",
+        "CSCI5552", "CSCI5708", "CSCI5751", "CSCI5801", "CSCI5802"
+      ]
+    }
+  },
+  "phd": {
+    "total_credits": 52,
+    "csci_credits": 16,
+    "colloquium": "CSCI8970",
+    "intro_research": "CSCI8001",
+    "breadth_categories": {
+      "applications": [
+        "CSCI5115", "CSCI5123", "CSCI5125", "CSCI5127", "CSCI5271",
+        "CSCI5461", "CSCI5471", "CSCI5511", "CSCI5512", "CSCI5521",
+        "CSCI5523", "CSCI5551", "CSCI5561", "CSCI5563", "CSCI5607",
+        "CSCI5608", "CSCI5609", "CSCI5611", "CSCI5619", "CSCI5707",
+        "CSCI5715"
+      ],
+      "theory_and_algorithms": [
+        "CSCI5302", "CSCI5304", "CSCI5403", "CSCI5421", "CSCI5481",
+        "CSCI5525", "CSCI5527"
+      ],
+      "architecture_systems_software": [
+        "CSCI5103", "CSCI5104", "CSCI5105", "CSCI5106", "CSCI5161",
+        "CSCI5204", "CSCI5211", "CSCI5221", "CSCI5231", "CSCI5451",
+        "CSCI5552", "CSCI5708", "CSCI5751", "CSCI5801", "CSCI5802"
+      ]
+    }
+  }
+}
