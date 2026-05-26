@@ -158,8 +158,6 @@ system_prompt = """You are an academic advisor for the UMN CS graduate program.
 Use your tools to look up accurate information before answering. 
 Always use search_handbook for policy questions."""
 
-conversation_history = []
-
 def run_tool(tool_name: str, tool_args: dict) -> str:
     if tool_name == "search_handbook":
         return search_handbook(**tool_args)
@@ -175,7 +173,7 @@ def run_tool(tool_name: str, tool_args: dict) -> str:
         return degree_audit(**tool_args)
     return "Tool not found"
 
-def chat(user_message: str) -> str:
+def chat(user_message: str, conversation_history: list) -> tuple:
     conversation_history.append({"role": "user", "content": user_message})
 
     while True:
@@ -188,18 +186,15 @@ def chat(user_message: str) -> str:
 
         message = response.choices[0].message
 
-        # If no tool call, return the answer
         if not message.tool_calls:
             assistant_message = message.content
             conversation_history.append({"role": "assistant", "content": assistant_message})
-            return assistant_message
+            return assistant_message, conversation_history
 
-        # Process tool calls
         conversation_history.append(message)
         for tool_call in message.tool_calls:
             tool_name = tool_call.function.name
             tool_args = json.loads(tool_call.function.arguments)
-            print(f"  [using tool: {tool_name}({tool_args})]")
             result = run_tool(tool_name, tool_args)
             conversation_history.append({
                 "role": "tool",
