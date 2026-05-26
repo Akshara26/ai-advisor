@@ -29,8 +29,6 @@ embed_model = OpenAIEmbedding(api_key=os.getenv("OPENAI_API_KEY"))
 index = VectorStoreIndex.from_vector_store(vector_store, embed_model=embed_model)
 retriever = index.as_retriever(similarity_top_k=3)
 
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-
 # --- Tool definitions ---
 def search_handbook(query: str) -> str:
     """Search the UMN CS handbook for policy information."""
