@@ -201,21 +201,32 @@ overall = (faith_score + relevancy_score + recall_score) / 3
 
 # ── Print results ──────────────────────────────────────────────────────────────
 print("\n=== EVAL RESULTS ===")
-print(f"Faithfulness:     {faith_score:.2%}")
-print(f"Answer Relevancy: {relevancy_score:.2%}")
-print(f"Context Recall:   {recall_score:.2%}")
-print(f"\nOverall:          {overall:.2%}")
+print(f"Faithfulness:     {f'{faith_score:.2%}' if faith_score and not math.isnan(faith_score) else 'N/A'}")
+print(f"Answer Relevancy: {f'{relevancy_score:.2%}' if relevancy_score and not math.isnan(relevancy_score) else 'N/A'}")
+print(f"Context Recall:   {f'{recall_score:.2%}' if recall_score and not math.isnan(recall_score) else 'N/A'}")
+print(f"\nOverall:          {f'{overall:.2%}' if overall and not math.isnan(overall) else 'N/A (faithfulness unavailable)'}")
 
 # ── Save aggregate JSON ────────────────────────────────────────────────────────
 run_timestamp = datetime.now(timezone.utc).isoformat()
 
+import math
+
+def safe_round(val, digits=4):
+    if val is None or (isinstance(val, float) and math.isnan(val)):
+        return None
+    return round(float(val), digits)
+
+valid_scores = [s for s in [faith_score, relevancy_score, recall_score] 
+                if s is not None and not math.isnan(s)]
+overall = sum(valid_scores) / len(valid_scores) if valid_scores else None
+
 summary = {
-    "timestamp": run_timestamp,
+    "timestamp": datetime.now(timezone.utc).isoformat(),
     "num_questions": len(questions),
-    "faithfulness": round(faith_score, 4),
-    "answer_relevancy": round(relevancy_score, 4),
-    "context_recall": round(recall_score, 4),
-    "overall": round(overall, 4),
+    "faithfulness": safe_round(faith_score),
+    "answer_relevancy": safe_round(relevancy_score),
+    "context_recall": safe_round(recall_score),
+    "overall": safe_round(overall),
 }
 
 with open("eval_results.json", "w") as f:
