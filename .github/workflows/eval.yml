@@ -21,7 +21,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install openai ragas datasets langchain-openai \
+          pip install openai ragas datasets langchain-openai langchain-community \
             llama-index llama-index-vector-stores-postgres \
             llama-index-embeddings-openai asyncpg psycopg2-binary \
             python-dotenv sqlalchemy
