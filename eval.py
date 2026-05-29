@@ -1,15 +1,25 @@
-# Patch missing langchain_community module for CI compatibility
+# Patch missing langchain_community modules for CI compatibility
 import sys
+import types
 from unittest.mock import MagicMock
 
-# langchain_community.chat_models.vertexai was removed in newer versions
-# ragas==0.4.3 imports it at module load time
-import types
-if 'langchain_community' not in sys.modules:
-    sys.modules['langchain_community'] = types.ModuleType('langchain_community')
-if 'langchain_community.chat_models' not in sys.modules:
-    sys.modules['langchain_community.chat_models'] = types.ModuleType('langchain_community.chat_models')
+def ensure_module(name):
+    if name not in sys.modules:
+        parts = name.split('.')
+        for i in range(len(parts)):
+            full = '.'.join(parts[:i+1])
+            if full not in sys.modules:
+                mod = types.ModuleType(full)
+                mod.__path__ = []  # makes it a package
+                sys.modules[full] = mod
+    return sys.modules[name]
+
+ensure_module('langchain_community')
+ensure_module('langchain_community.chat_models')
+ensure_module('langchain_community.llms')
 sys.modules['langchain_community.chat_models.vertexai'] = MagicMock()
+sys.modules['langchain_community.llms.VertexAI'] = MagicMock()
+sys.modules['langchain_community.llms'] = MagicMock()
 
 import json
 import os
