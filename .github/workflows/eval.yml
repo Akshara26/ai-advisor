@@ -21,7 +21,8 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install openai ragas datasets langchain-openai langchain-community \
+          pip install openai "ragas==0.4.3" datasets langchain-openai langchain-community \
+            google-cloud-aiplatform \
             llama-index llama-index-vector-stores-postgres \
             llama-index-embeddings-openai asyncpg psycopg2-binary \
             python-dotenv sqlalchemy
