@@ -1,0 +1,77 @@
+[
+  {
+    "question": "What is the minimum GPA required for MS students on their GPAS audit?",
+    "ground_truth": "Students must maintain a GPA of at least 3.25 for all courses listed on their GPAS audit for degree requirements and a 3.0 GPA on all coursework taken at the University of Minnesota at the graduate level. Note: the handbook contains an inconsistency on this same page — it references CSCI 8790 as the colloquium number, while other sections use CSCI 8970.",
+    "reference_page": 15
+  },
+  {
+    "question": "How many total credits are required for the MS degree?",
+    "ground_truth": "The M.S. degree in Computer Science requires a minimum of 31 total qualifying credits.",
+    "reference_page": 10
+  },
+  {
+    "question": "How many breadth courses are required and what is the rule?",
+    "ground_truth": "Master's students are required to take three courses, one from each area. No courses may be transferred from an outside institution to meet breadth requirements.",
+    "reference_page": 8
+  },
+  {
+    "question": "What is the email address for the graduate program coordinators?",
+    "ground_truth": "csgradmn@umn.edu",
+    "reference_page": 6
+  },
+  {
+    "question": "How many academic year CPT semesters can a student complete?",
+    "ground_truth": "Students who have completed one semester of academic-year CPT (Fall or Spring) are ineligible for a second academic-year semester of CPT.",
+    "reference_page": 37
+  },
+  {
+    "question": "What is the minimum GPA for PhD students on their GPAS planner?",
+    "ground_truth": "Students must maintain a minimum GPA of 3.45 on courses appearing in the GPAS Planner.",
+    "reference_page": 20
+  },
+  {
+    "question": "How many thesis credits are required for Plan A MS students?",
+    "ground_truth": "10 thesis credits (CSCI 8777)",
+    "reference_page": 10
+  },
+  {
+    "question": "What is the maximum number of credits that can be transferred from outside for MS students?",
+    "ground_truth": "The maximum number of credits that can be transferred to satisfy program requirements is 11.",
+    "reference_page": 44
+  },
+  {
+    "question": "How many total credits are required for the PhD degree?",
+    "ground_truth": "Each student must complete 52 total credits of graduate-level coursework.",
+    "reference_page": 19
+  },
+  {
+    "question": "What course number is the CS colloquium and is it mandatory?",
+    "ground_truth": "The Computer Science Colloquium is mandatory for every M.S. student. The handbook contains an inconsistency — page 15 states CSCI 8790 while other sections reference CSCI 8970. Both numbers appear in the official document.",
+    "reference_page": 15
+  },
+  {
+    "question": "How many years do PhD students have to complete their degree?",
+    "ground_truth": "University policy requires that all requirements for the doctoral degree must be completed and the degree awarded within eight calendar years after initial enrollment in the graduate program.",
+    "reference_page": 19
+  },
+  {
+    "question": "What happens if a student fails the Written Preliminary Exam?",
+    "ground_truth": "A student who does not pass the WPE may or may not be given the opportunity to retake the examination depending on the decision of the WPE committee. If not allowed a second attempt, the student will be terminated from the Ph.D. program. If a student fails to pass after two official attempts, termination from the program is automatic.",
+    "reference_page": 21
+  },
+  {
+    "question": "What tuition benefit does a 50% TA appointment provide?",
+    "ground_truth": "A 50% appointment provides a 100% tuition benefit.",
+    "reference_page": 27
+  },
+  {
+    "question": "What is the maximum number of semesters a student can hold a TA appointment?",
+    "ground_truth": "To limit eligibility for graduate TA appointments to six total semesters.",
+    "reference_page": 28
+  },
+  {
+    "question": "What is the minimum number of credits required for a minor field for MS students?",
+    "ground_truth": "The Minor Field is defined as a minimum of 6 semester credits of coursework outside CSCI in a single department of the College of Science and Engineering, Statistics, Management, Cognitive Science and/or other related fields for a designated minor.",
+    "reference_page": 11
+  }
+]
