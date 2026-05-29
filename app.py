@@ -1,6 +1,6 @@
 import streamlit as st
 import uuid
-from tools import chat
+from graph import chat
 from memory import load_history, save_history
 
 st.title("UMN CS Graduate Advisor")
@@ -32,11 +32,16 @@ if prompt := st.chat_input("Ask a question..."):
 
     with st.chat_message("assistant"):
         with st.spinner("Thinking..."):
-            response, st.session_state.conversation_history = chat(
+            response, st.session_state.conversation_history, drafted_email = chat(
                 prompt,
                 st.session_state.conversation_history
             )
+
         st.markdown(response)
+        if drafted_email:
+            st.divider()
+            st.caption("I couldn't fully answer this from the handbook. Here's a email draft to the graduate coordinators:")
+            st.text_area("Draft email", value=drafted_email, height=200, key=f"email_{len(st.session_state.messages)}")
 
     st.session_state.messages.append({"role": "assistant", "content": response})
     save_history(session_id, st.session_state.conversation_history)

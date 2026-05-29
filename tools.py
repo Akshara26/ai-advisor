@@ -26,7 +26,6 @@ client = OpenAI(api_key=openai_key)
 embed_model = OpenAIEmbedding(api_key=openai_key)
 Settings.embed_model = embed_model
 
-db_url = os.getenv("SUPABASE_DB_URL").replace("postgres://", "postgresql://", 1)
 async_db_url = db_url.replace("postgresql://", "postgresql+asyncpg://", 1)
 
 vector_store = PGVectorStore.from_params(

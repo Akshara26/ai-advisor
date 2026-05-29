@@ -27,10 +27,15 @@ def load_history(session_id: str) -> list:
         print(f"Redis load error: {e}")
         return []
 
+def _serialize(obj):
+    if hasattr(obj, "model_dump"):
+        return obj.model_dump()
+    raise TypeError(f"Object of type {type(obj).__name__} is not JSON serializable")
+
 def save_history(session_id: str, history: list):
     """Save conversation history to Redis. Expires after 7 days."""
     try:
         redis = get_redis()
-        redis.set(f"history:{session_id}", json.dumps(history), ex=604800)
+        redis.set(f"history:{session_id}", json.dumps(history, default=_serialize), ex=604800)
     except Exception as e:
         print(f"Redis save error: {e}")
