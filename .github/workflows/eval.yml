@@ -1,0 +1,65 @@
+name: RAG Eval
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  eval:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          pip install openai ragas datasets langchain-openai \
+            llama-index llama-index-vector-stores-postgres \
+            llama-index-embeddings-openai asyncpg psycopg2-binary \
+            python-dotenv sqlalchemy
+
+      - name: Run eval
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+          LANGSMITH_TRACING: "false"
+        run: python eval.py
+
+      - name: Upload eval results
+        uses: actions/upload-artifact@v4
+        with:
+          name: eval-results
+          path: |
+            eval_results.json
+            eval_results_detail.csv
+
+      - name: Comment scores on PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const results = JSON.parse(fs.readFileSync('eval_results.json', 'utf8'));
+            const body = `## RAGAS Eval Results
+            | Metric | Score |
+            |--------|-------|
+            | Faithfulness | ${(results.faithfulness * 100).toFixed(2)}% |
+            | Answer Relevancy | ${(results.answer_relevancy * 100).toFixed(2)}% |
+            | Context Recall | ${(results.context_recall * 100).toFixed(2)}% |
+            | **Overall** | **${(results.overall * 100).toFixed(2)}%** |
+            
+            _Evaluated on ${results.num_questions} questions_`;
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: body
+            });
