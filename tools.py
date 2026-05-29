@@ -11,11 +11,11 @@ from degree_audit import degree_audit
 
 load_dotenv()
 
-import streamlit as st
 try:
+    import streamlit as st
     openai_key = st.secrets["OPENAI_API_KEY"]
     db_url = st.secrets["SUPABASE_DB_URL"]
-except:
+except Exception:
     openai_key = os.getenv("OPENAI_API_KEY")
     db_url = os.getenv("SUPABASE_DB_URL")
 
