@@ -6,8 +6,14 @@ import re
 import logging
 from openai import OpenAI
 from dotenv import load_dotenv
+import os
 
 load_dotenv()
+
+os.environ["LANGSMITH_TRACING"] = os.getenv("LANGSMITH_TRACING", "false")
+os.environ["LANGSMITH_ENDPOINT"] = os.getenv("LANGSMITH_ENDPOINT", "https://api.smith.langchain.com")
+os.environ["LANGSMITH_API_KEY"] = os.getenv("LANGSMITH_API_KEY", "")
+os.environ["LANGSMITH_PROJECT"] = os.getenv("LANGSMITH_PROJECT", "umn-advisor")
 
 from tools import run_tool, tools as tool_schemas, openai_key, client
 
