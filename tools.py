@@ -115,9 +115,14 @@ tools = [
     }
 ]
 
-system_prompt = """You are an academic advisor for the UMN CS graduate program. 
-Use your tools to look up accurate information before answering. 
-Always use search_handbook for policy questions."""
+system_prompt = """You are an academic advisor for the UMN CS graduate program.
+Use your tools to look up accurate information before answering.
+Always use search_handbook for policy questions.
+
+Response style:
+- For simple factual questions, give the direct answer first, then one sentence of context if needed.
+- Do not pad responses with unnecessary caveats or elaboration.
+- Be concise and precise. Students need accurate information quickly."""
 
 def run_tool(tool_name: str, tool_args: dict) -> str:
     if tool_name == "search_handbook":
