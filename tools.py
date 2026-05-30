@@ -1,4 +1,5 @@
-from llama_index.core import VectorStoreIndex, StorageContext, Settings
+from llama_index.core import VectorStoreIndex, StorageContext, Settings, QueryBundle
+from llama_index.core.postprocessor import SentenceTransformerRerank
 from llama_index.vector_stores.postgres import PGVectorStore
 from llama_index.embeddings.openai import OpenAIEmbedding
 from openai import OpenAI
@@ -11,10 +12,12 @@ from degree_audit import degree_audit
 
 load_dotenv()
 
+_st_available = False
 try:
     import streamlit as st
     openai_key = st.secrets["OPENAI_API_KEY"]
     db_url = st.secrets["SUPABASE_DB_URL"]
+    _st_available = True
 except Exception:
     openai_key = os.getenv("OPENAI_API_KEY")
     db_url = os.getenv("SUPABASE_DB_URL")
@@ -36,15 +39,69 @@ vector_store = PGVectorStore.from_params(
 )
 
 index = VectorStoreIndex.from_vector_store(vector_store)
-retriever = index.as_retriever(similarity_top_k=5)
-# --- Tool definitions ---
+
+# Retrieve a wider candidate set — reranker will cut it down to top 3
+retriever = index.as_retriever(similarity_top_k=10)
+
+# Local cross-encoder reranker — runs on CPU in ~80ms, no API calls, no cost.
+# Specifically trained for (query, passage) relevance scoring, which is exactly
+# this task. Faster and equal/better quality vs LLM reranking for short policy chunks.
+def _make_reranker():
+    return SentenceTransformerRerank(
+        model="cross-encoder/ms-marco-MiniLM-L-6-v2",
+        top_n=3
+    )
+ 
+if _st_available:
+    @st.cache_resource
+    def _cached_reranker():
+        return _make_reranker()
+    reranker = _cached_reranker()
+else:
+    reranker = _make_reranker()
+
+
+def _source_label(node) -> str:
+    """
+    Build a short citation label from node metadata.
+    LlamaIndex stores 'page_label' for PDFs and 'url'/'source' for web pages.
+    """
+    meta = node.metadata or {}
+    page = meta.get("page_label") or meta.get("page_number")
+    url = meta.get("url") or meta.get("source")
+
+    if page:
+        return f"[Handbook p.{page}]"
+    if url:
+        try:
+            from urllib.parse import urlparse
+            domain = urlparse(url).netloc.replace("www.", "")
+            return f"[{domain}]"
+        except Exception:
+            return f"[{url}]"
+    return "[UMN CS Graduate Handbook]"
+
+
 def search_handbook(query: str) -> str:
-    """Search the UMN CS handbook for policy information."""
+    """
+    Two-pass retrieval:
+      1. Embedding similarity — retrieve top 10 candidate chunks.
+      2. LLM rerank — score each chunk against the query, keep top 3.
+    Each chunk is prefixed with its source label so the advisor can
+    include inline citations ([Handbook p.12], [cs.umn.edu], etc.).
+    """
     nodes = retriever.retrieve(query)
-    return "\n\n".join([n.text for n in nodes])
+    if not nodes:
+        return "No relevant information found in the handbook."
+
+    query_bundle = QueryBundle(query_str=query)
+    reranked = reranker.postprocess_nodes(nodes, query_bundle=query_bundle)
+
+    chunks = [f"{_source_label(n)}\n{n.text}" for n in reranked]
+    return "\n\n---\n\n".join(chunks)
 
 
-# Tool schemas for GPT
+# ── Tool schemas for GPT ───────────────────────────────────────────────────────
 tools = [
     {
         "type": "function",
@@ -108,20 +165,11 @@ tools = [
                     }
                 },
                 "required": ["completed_courses", "program"]
-            },
-            "required": ["completed_courses", "program"]
+            }
         }
     }
 ]
 
-system_prompt = """You are an academic advisor for the UMN CS graduate program.
-Use your tools to look up accurate information before answering.
-Always use search_handbook for policy questions.
-
-Response style:
-- For simple factual questions, give the direct answer first, then one sentence of context if needed.
-- Do not pad responses with unnecessary caveats or elaboration.
-- Be concise and precise. Students need accurate information quickly."""
 
 def run_tool(tool_name: str, tool_args: dict) -> str:
     if tool_name == "search_handbook":
@@ -133,55 +181,3 @@ def run_tool(tool_name: str, tool_args: dict) -> str:
     elif tool_name == "degree_audit":
         return degree_audit(**tool_args)
     return "Tool not found"
-
-def chat(user_message: str, conversation_history: list) -> tuple:
-    conversation_history.append({"role": "user", "content": user_message})
-
-    while True:
-        response = client.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=[{"role": "system", "content": system_prompt}] + conversation_history,
-            tools=tools,
-            tool_choice="auto"
-        )
-
-        message = response.choices[0].message
-
-        if not message.tool_calls:
-            assistant_message = message.content
-            conversation_history.append({"role": "assistant", "content": assistant_message})
-            return assistant_message, conversation_history
-
-        conversation_history.append(message)
-        for tool_call in message.tool_calls:
-            try:
-                tool_name = tool_call.function.name
-                tool_args = json.loads(tool_call.function.arguments)
-            except json.JSONDecodeError:
-                result = "Error: could not parse tool arguments. Please try rephrasing your question."
-                conversation_history.append({
-                    "role": "tool",
-                    "tool_call_id": tool_call.id,
-                    "content": result
-                })
-                continue
-            try:
-                result = run_tool(tool_name, tool_args)
-            except Exception as e:
-                result = f"Error running tool: {str(e)}. Please try again."
-
-            conversation_history.append({
-                "role": "tool",
-                "tool_call_id": tool_call.id,
-                "content": result
-            })
-
-if __name__ == "__main__":
-    print("UMN CS Advisor with Tools - type 'quit' to exit\n")
-    history = []
-    while True:
-        user_input = input("You: ")
-        if user_input.lower() == "quit":
-            break
-        response, history = chat(user_input, history)
-        print(f"\nAdvisor: {response}\n")

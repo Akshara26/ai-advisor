@@ -2,6 +2,7 @@
 import sys
 import types
 from unittest.mock import MagicMock
+import re
 
 def ensure_module(name):
     if name not in sys.modules:
@@ -56,7 +57,8 @@ context_recall = ContextRecall(llm=judge_llm)
 # ── Eval function — calls actual graph.py agent ───────────────────────────────
 def get_answer_and_contexts(question: str) -> tuple[str, list[str]]:
     response, history, drafted_email, tool_contexts = graph_chat(question, [])
-    return response, tool_contexts if tool_contexts else ["no context retrieved"]
+    clean = re.sub(r'\[Handbook p\.\d+\]|\[[^\]]+\.[a-z]{2,}\]', '', response).strip()
+    return clean, tool_contexts if tool_contexts else ["no context retrieved"]
 
 # ── Load eval dataset ─────────────────────────────────────────────────────────
 DATASET_PATH = "eval_dataset.json"

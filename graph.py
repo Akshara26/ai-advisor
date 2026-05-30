@@ -8,10 +8,6 @@ from openai import OpenAI
 from dotenv import load_dotenv
 import os
 
-from ragas import messages
-from ragas import messages
-from typer.cli import state
-
 load_dotenv()
 
 os.environ["LANGSMITH_TRACING"] = os.getenv("LANGSMITH_TRACING", "false")
@@ -34,7 +30,7 @@ class AdvisorState(TypedDict):
     tools_tried: list
     drafted_email: str
     parse_failed: bool
-    tool_contexts: list  # ADD THIS
+    tool_contexts: list
 
 
 # ── System prompts ────────────────────────────────────────────────────────────
@@ -50,6 +46,14 @@ Response style:
 - Be precise. Students need accurate, actionable information.
 - When referencing offices or resources, include their URL or email if available in the context.
 
+Source citations:
+- Each retrieved handbook chunk is prefixed with a source label like [Handbook p.12] or [cs.umn.edu].
+- Include the source label inline whenever you use information from that chunk.
+  Example: "The minimum GPA requirement is 3.0 [Handbook p.8]."
+- Only cite labels that appear in the retrieved context. Never fabricate page numbers or URLs.
+- For multi-step answers, cite each step's source individually if they come from different pages.
+- Web source labels show the domain (e.g., [cs.umn.edu], [grad.umn.edu]) — that is sufficient.
+
 After your answer, include this EXACT block:
 ---STATE---
 {
@@ -62,7 +66,7 @@ After your answer, include this EXACT block:
 
 ONLY set answered=true AND confidence="high" if ALL of these are true:
 - The answer is a specific fact, number, date, or named requirement directly stated in the handbook
-- The answer does not depend on the student's individual circumstances  
+- The answer does not depend on the student's individual circumstances
 - A human advisor would NOT need to be involved to apply this answer
 
 Set answered=false and confidence="low" if ANY of these are true:
@@ -174,8 +178,8 @@ def advisor_node(state: AdvisorState) -> AdvisorState:
                 "question_type": state_data.get("question_type", "unknown"),
                 "tools_tried": tools_tried,
                 "parse_failed": parse_failed,
-                "tool_contexts": tool_contexts,  # ADD THIS
-                "messages":messages + [{"role": "assistant", "content": clean_answer}]
+                "tool_contexts": tool_contexts,
+                "messages": messages + [{"role": "assistant", "content": clean_answer}]
             }
 
         conversation.append({
@@ -227,9 +231,10 @@ def advisor_node(state: AdvisorState) -> AdvisorState:
         "confidence": "none",
         "question_type": "unknown",
         "tools_tried": tools_tried,
-        "tool_contexts": [],  # ADD THIS
+        "tool_contexts": [],
         "parse_failed": False,
-        "messages": conversation}       
+        "messages": conversation
+    }
 
 # ── Email Agent Node ──────────────────────────────────────────────────────────
 def email_agent_node(state: AdvisorState) -> AdvisorState:
