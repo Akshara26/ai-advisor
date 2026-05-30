@@ -36,7 +36,7 @@ vector_store = PGVectorStore.from_params(
 )
 
 index = VectorStoreIndex.from_vector_store(vector_store)
-retriever = index.as_retriever(similarity_top_k=3)
+retriever = index.as_retriever(similarity_top_k=5)
 # --- Tool definitions ---
 def search_handbook(query: str) -> str:
     """Search the UMN CS handbook for policy information."""
