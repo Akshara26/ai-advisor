@@ -8,6 +8,10 @@ from openai import OpenAI
 from dotenv import load_dotenv
 import os
 
+from ragas import messages
+from ragas import messages
+from typer.cli import state
+
 load_dotenv()
 
 os.environ["LANGSMITH_TRACING"] = os.getenv("LANGSMITH_TRACING", "false")
@@ -30,6 +34,8 @@ class AdvisorState(TypedDict):
     tools_tried: list
     drafted_email: str
     parse_failed: bool
+    tool_contexts: list  # ADD THIS
+
 
 # ── System prompts ────────────────────────────────────────────────────────────
 ADVISOR_SYSTEM_PROMPT = """You are an academic advisor for the UMN CS graduate program.
@@ -133,6 +139,7 @@ def normalize_content(msg) -> str:
 def advisor_node(state: AdvisorState) -> AdvisorState:
     messages = state["messages"]
     tools_tried = []
+    tool_contexts = []
 
     conversation = [{"role": "system", "content": ADVISOR_SYSTEM_PROMPT}]
     for msg in messages:
@@ -167,7 +174,8 @@ def advisor_node(state: AdvisorState) -> AdvisorState:
                 "question_type": state_data.get("question_type", "unknown"),
                 "tools_tried": tools_tried,
                 "parse_failed": parse_failed,
-                "messages": messages + [{"role": "assistant", "content": clean_answer}]
+                "tool_contexts": tool_contexts,  # ADD THIS
+                "messages":messages + [{"role": "assistant", "content": clean_answer}]
             }
 
         conversation.append({
@@ -202,6 +210,7 @@ def advisor_node(state: AdvisorState) -> AdvisorState:
 
             try:
                 result = run_tool(tool_name, tool_args)
+                tool_contexts.append(result)
             except Exception as e:
                 result = f"Error running tool: {str(e)}"
 
@@ -218,8 +227,9 @@ def advisor_node(state: AdvisorState) -> AdvisorState:
         "confidence": "none",
         "question_type": "unknown",
         "tools_tried": tools_tried,
+        "tool_contexts": [],  # ADD THIS
         "parse_failed": False,
-    }
+        "messages": conversation}       
 
 # ── Email Agent Node ──────────────────────────────────────────────────────────
 def email_agent_node(state: AdvisorState) -> AdvisorState:
@@ -289,7 +299,8 @@ def chat(user_message: str, conversation_history: list) -> tuple:
         "question_type": "unknown",
         "tools_tried": [],
         "drafted_email": "",
-        "parse_failed": False
+        "parse_failed": False,
+        "tool_contexts": []
     }
 
     result = advisor_graph.invoke(initial_state)
@@ -299,4 +310,4 @@ def chat(user_message: str, conversation_history: list) -> tuple:
         {"role": "assistant", "content": result["answer"]}
     ]
 
-    return result["answer"], updated_history, result.get("drafted_email", "")
+    return result["answer"], updated_history, result.get("drafted_email", ""), result.get("tool_contexts", [])

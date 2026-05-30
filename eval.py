@@ -55,20 +55,8 @@ context_recall = ContextRecall(llm=judge_llm)
 
 # ── Eval function — calls actual graph.py agent ───────────────────────────────
 def get_answer_and_contexts(question: str) -> tuple[str, list[str]]:
-    """Calls the actual deployed LangGraph agent — same code path as production."""
-    response, history, drafted_email = graph_chat(question, [])
-
-    contexts = []
-    for msg in history:
-        if isinstance(msg, dict) and msg.get("role") == "tool":
-            content = msg.get("content", "")
-            if content and content != "Tool not found":
-                contexts.append(content)
-
-    if not contexts:
-        contexts = ["no context retrieved"]
-
-    return response, contexts
+    response, history, drafted_email, tool_contexts = graph_chat(question, [])
+    return response, tool_contexts if tool_contexts else ["no context retrieved"]
 
 # ── Load eval dataset ─────────────────────────────────────────────────────────
 DATASET_PATH = "eval_dataset.json"

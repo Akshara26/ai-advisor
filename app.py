@@ -32,10 +32,11 @@ if prompt := st.chat_input("Ask a question..."):
 
     with st.chat_message("assistant"):
         with st.spinner("Thinking..."):
-            response, st.session_state.conversation_history, drafted_email = chat(
+            response, st.session_state.conversation_history, drafted_email, _ = chat(
                 prompt,
                 st.session_state.conversation_history
-            )
+        )
+
 
         st.markdown(response)
         if drafted_email:
