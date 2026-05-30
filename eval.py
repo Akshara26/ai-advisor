@@ -22,6 +22,7 @@ sys.modules['langchain_community.llms.VertexAI'] = MagicMock()
 sys.modules['langchain_community.llms'] = MagicMock()
 
 import json
+import math
 import os
 import csv
 from datetime import datetime, timezone
@@ -191,6 +192,7 @@ dataset = EvaluationDataset(
 results = evaluate(
     dataset,
     metrics=[faithfulness, answer_relevancy, context_recall],
+    raise_exceptions=False,
 )
 
 df = results.to_pandas()
@@ -208,8 +210,6 @@ print(f"\nOverall:          {f'{overall:.2%}' if overall and not math.isnan(over
 
 # ── Save aggregate JSON ────────────────────────────────────────────────────────
 run_timestamp = datetime.now(timezone.utc).isoformat()
-
-import math
 
 def safe_round(val, digits=4):
     if val is None or (isinstance(val, float) and math.isnan(val)):
