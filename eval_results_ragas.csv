@@ -1,0 +1,143 @@
+question,ground_truth,answer,num_contexts,category,faithfulness,answer_relevancy,context_recall
+"For the Computer Science M.S. Plan C, how many total credits do I need and do I need a committee?","Plan C requires at least 31 graduate-credit coursework credits. It requires 16 graduate credits from 5xxx or 8xxx CSCI courses, including 3 breadth courses, 6 credits of advanced CSCI coursework, and 1 credit of CSCI colloquium. Plan C does not require a committee.","For the M.S. Plan C in Computer Science, you need to complete a minimum of **31 total credits** of graduate coursework. This includes at least **16 credits from CSCI courses**, which consist of 3 breadth courses (totaling 9 credits), 6 credits of advanced CSCI coursework, and 1 credit for the CSCI Colloquium (CSCI 8970) [Handbook].
+
+Importantly, **a committee is not required** for Plan C, meaning you can complete your degree without forming a committee [Handbook].",2,A. CLEAN BASELINE QUESTIONS,1.0,0.7716491919439331,1.0
+What GPA do M.S. and MCS students need to maintain?,"M.S. students must maintain at least a 3.25 GPA for courses listed on the GPAS audit and a 3.0 GPA on all graduate-level UMN coursework. MCS students must maintain a 3.0 GPA for courses applied to degree requirements, including breadth courses.","M.S. students must maintain a minimum cumulative GPA of 3.25 for all courses listed on their GPAS audit to meet degree requirements, as well as a minimum GPA of 3.0 for all coursework taken at the University of Minnesota .
+
+For M.C.S. (Master of Computer Science) students, the minimum required cumulative GPA is 3.0 for all courses applied to their degree requirements .
+
+---",2,A. CLEAN BASELINE QUESTIONS,1.0,0.7469354644273661,1.0
+What are the prerequisites for CSCI 5751 Big Data Engineering?,The course data lists CSCI 5751 Big Data Engineering as requiring either CSCI 4041 or CSCI 5707.,The prerequisites for CSCI 5751 Big Data Engineering are either CSCI 4041 or CSCI 5707.,1,A. CLEAN BASELINE QUESTIONS,1.0,1.0,1.0
+Can I count a course from another department toward my breadth requirement?,"No, not for the standard M.S. or MCS breadth requirement. The handbook’s breadth lists are CSCI courses, and it explicitly says no outside-institution transfer courses may meet M.S./MCS breadth. Non-CSCI courses may be used as related-field, supporting-program, minor, or elective coursework when allowed and approved, but the files do not support using another-department course as a breadth substitute. Contact the GPC if you are asking about a formal exception.","Yes, courses from other departments can count toward the breadth requirement, but they must be approved by your academic advisor or graduate program committee. Additionally, the course should have a clear relevance to your program of study.
+
+Do you have a specific course in mind, and have you discussed it with your advisor?",1,B. EDGE CASES THE HANDBOOK DOESN’T CLEARLY COVER,0.0,0.9333670031994589,0.0
+I found a non-CSCI AI course in another CSE department. Can it replace CSCI 5511 for my Applications breadth if my advisor likes it?,"The files do not show that advisor preference alone can replace an official breadth course. For M.S./MCS breadth, students must take one course from each listed breadth area, and CSCI 5511 is one of the listed Applications breadth options. A non-CSCI course might count as related-field, minor, supporting-program, or elective credit if approved, but replacing a breadth course is not clearly authorized. You should contact the Graduate Program Coordinators before relying on it.","Yes, a non-CSCI course can potentially be used to satisfy the Applications breadth requirement if you receive approval from your advisor and the course is relevant. However, final approval of such substitutions also typically requires the endorsement of the Graduate Program Committee (GPC).
+
+You should have a discussion with your advisor about the course. If your advisor agrees that the course is suitable, you will likely need to complete any necessary formal request or petition process to get final approval from the GPC.
+
+Make sure to present the course syllabus and its alignment with your program goals when discussing with your advisor.",1,B. EDGE CASES THE HANDBOOK DOESN’T CLEARLY COVER,0.0,0.0,0.0
+Can I use an 8000-level special topics course as both advanced CSCI credit and breadth?,"The handbook says students may double dip when a course is eligible for both breadth and advanced CSCI categories. However, the files indicate special topics courses do not count toward breadth unless they are on the approved breadth list. An 8000-level special topics course may count toward advanced CSCI credit, but the files do not support counting it toward breadth unless the department explicitly approved it for a breadth category.","Yes, you can use an 8000-level special topics course to satisfy both the advanced CSCI course requirement and the breadth requirement, as long as the course is eligible for both categories. The graduate handbook states that students may “double dip” if a course is eligible for both the breadth and advanced course categories . 
+
+For your specific course, you should verify with your advisor or the Graduate Program Coordinator that it meets the criteria for both categories, as final eligibility may depend on the course content and instructor.",2,B. EDGE CASES THE HANDBOOK DOESN’T CLEARLY COVER,0.8333333333333334,0.0,1.0
+Can I submit my Plan B final oral exam report before my committee is officially approved?,"No. For Plan B, the committee must be fully approved before the committee chair gets access to the master’s final examination report form. Committee members also cannot be appointed until after the GPAS Planner has been approved and recorded.","You cannot submit your Plan B final oral exam report before your committee is officially approved. The committee must first review your written report to determine your readiness for the final oral defense, and only after being fully approved will the committee chair have access to the master's final examination report form .",1,B. EDGE CASES THE HANDBOOK DOESN’T CLEARLY COVER,0.6666666666666666,0.8492708249523729,1.0
+What are the prerequisites for the hardest course in the ML breadth area?,"Assuming “hardest” means the most advanced/highest-numbered ML-related breadth course in the handbook’s Theory/Applications ML cluster, CSCI 5527 Deep Learning is a strong candidate among listed ML-related breadth courses. The course data lists its prerequisite as CSCI 5521. If you mean “hardest” by grade distribution, workload, or instructor difficulty, the files do not define that reliably.","The hardest course in the Machine Learning breadth area, CSCI 5521 - Machine Learning Fundamentals, has the following prerequisites:
+
+- STAT 3021
+- Either CSCI 2033 or (MATH 2142 or MATH 4242)
+
+This course has a high average GPA of 3.59, with 61.9% of students receiving an A/A- grade, suggesting that while it might be challenging, many students perform well in it.",2,D. MULTI-HOP QUESTIONS,0.0,0.9117734365753002,0.0
+"I completed CSCI 4041. Am I eligible for CSCI 5751, and does it help my M.S. breadth?","Based on the course data, CSCI 5751 requires either CSCI 4041 or CSCI 5707, so CSCI 4041 satisfies the listed prerequisite. In the handbook, CSCI 5751 is listed under Architecture, Systems, and Software breadth, so it can help satisfy that breadth area if taken for graduate credit, A-F, and otherwise counted on your plan.","You are eligible to enroll in CSCI 5751 (Big Data Engineering) because you have completed CSCI 4041, which meets the prerequisite requirement [course/prerequisite]. 
+
+Regarding your M.S. breadth requirements, CSCI 5751 can help fulfill these. M.S. students are required to take three courses from different areas of study, and as CSCI 5751 is a graduate-level course, it can count toward this breadth requirement . 
+
+If you have further questions about specific breadth categories or need help with course selection, let me know!",2,D. MULTI-HOP QUESTIONS,0.5714285714285714,0.8865008482501198,1.0
+"If I take CSCI 5521 and CSCI 5527, how many breadth areas have I covered for an M.S.?","You have covered only one breadth area for the M.S. breadth requirement: Applications breadth. CSCI 5521 and CSCI 5527 are both listed in the Applications breadth area. Master’s students need three breadth courses, one from each area, so you would still need Theory/Algorithms and Architecture/Systems/Software breadth courses.","CSCI 5521 covers ""Machine Learning Fundamentals,"" and CSCI 5527 focuses on ""Deep Learning."" Since both courses belong to the field of machine learning, they will not satisfy breadth requirements from distinct categories.
+
+To fulfill the breadth requirement, you will need to take one more course from a different category. Each M.S. student is required to complete three breadth courses, one from each distinct area.
+
+In summary, with the courses CSCI 5521 and CSCI 5527, you have covered one breadth area. You will need to select an additional breadth course from a different category to meet the requirements.
+
+If you need assistance finding suitable breadth courses, feel free to ask!",3,D. MULTI-HOP QUESTIONS,0.6,0.6116821360155565,0.0
+"I took CSCI 5521. Can I now take CSCI 5527, and can both count toward my M.S. requirements?","The course data lists CSCI 5527 Deep Learning as requiring CSCI 5521, so completing CSCI 5521 satisfies the listed prerequisite. For M.S. requirements, both are 5xxx CSCI courses and both appear in the Applications breadth list, but they do not cover two different breadth areas. They may count as CSCI graduate credits, and any advanced-credit use depends on whether they are on the department’s advanced CSCI list and your plan requirements.","You can take CSCI 5527 after completing CSCI 5521, as CSCI 5521 is a prerequisite for CSCI 5527. Both courses can count toward your M.S. requirements, but you also need to fulfill other requirements, such as breadth courses in the areas of theory and algorithms, and architecture systems software, as well as completing the colloquium course (CSCI 8970). 
+
+So while you can take CSCI 5527, ensure you plan to cover the other outstanding requirements as well.",2,D. MULTI-HOP QUESTIONS,0.875,0.7433937327012399,0.3333333333333333
+"I want an MCS course plan with CSCI 5511, CSCI 5521, and CSCI 5123 as my breadth courses. Is that okay?","No, not as a complete MCS breadth plan. All three courses—CSCI 5511, CSCI 5521, and CSCI 5123—are listed under Applications breadth. M.S. and MCS students need three breadth courses with one from each breadth area, so you would still need a Theory/Algorithms course and an Architecture/Systems/Software course.","The MCS program requires students to complete a breadth requirement consisting of courses from different areas, but there are specific policies regarding which courses can satisfy these requirements. 
+
+CSCI 5511 and CSCI 5521 are typically counted towards advanced CSCI courses, whereas CSCI 5123 may qualify as a breadth course depending on your focus area.
+
+Can you confirm that CSCI 5123 is listed in the program's approved breadth courses? I can look this up for you. 
+
+If you have any additional information on which specific areas you're targeting or if you have a list of approved breadth courses, that would help clarify whether your plan meets the requirements.",1,D. MULTI-HOP QUESTIONS,0.0,0.0,0.0
+Can I take CSCI 5521 before CSCI 4041?,"The course data does not list CSCI 4041 as a prerequisite for CSCI 5521. It lists CSCI 5521 as requiring STAT 3021 and one of CSCI 2033, MATH 2142, or MATH 4242. So CSCI 4041 is not the blocker in the uploaded prerequisite data; you still need to satisfy the actual listed prerequisites or get any needed department/instructor approval.","You can take CSCI 5521 before CSCI 4041 as they do not have overlapping prerequisites. 
+
+- CSCI 5521 requires either STAT 3021 and (CSCI 2033 or MATH 2142 or MATH 4242).
+- CSCI 4041 requires (CSCI 1913 or CSCI 1933) and CSCI 2011.
+
+Since there are no direct prerequisites that link the two courses, you can enroll in them in any order.",2,E. NEGATION / TRAP QUESTIONS,0.6,0.9999998886925127,0.6666666666666666
+Can my outside transfer course satisfy M.S. breadth if it is basically the same as CSCI 5421?,"No, not for M.S. or MCS breadth. The handbook says no courses may be transferred from an outside institution to meet breadth requirements for the Computer Science M.S. and MCS programs. If approved, the transfer credit would be used as elective credit instead, not breadth.","To determine if an outside transfer course can satisfy M.S. breadth requirements, you need to seek approval from your advisor or the Graduate Program Coordinator (GPC). Generally, transfer courses must be formally evaluated for equivalency to meet program requirements.
+
+Please check with your advisor or the GPC to see if they can evaluate the course's content for equivalency to CSCI 5421. You will likely need to provide a syllabus or other documentation for the course.
+
+For more specific guidance, you can reach out to the GPC at (mailto:csgradmn.edu).",1,E. NEGATION / TRAP QUESTIONS,0.0,0.0,0.0
+I’m Plan B. Can I use 10 credits of CSCI 8777 thesis credits instead of CSCI 8760?,"No. Plan B requires 3 credits of the Plan B project course, CSCI 8760, and the handbook explicitly says thesis credits are not accepted for a Plan B M.S. degree. CSCI 8777 is the master’s thesis credit used for Plan A, not Plan B.","You cannot use CSCI 8777 (Master's Thesis Credits) to replace CSCI 8760 (the Plan B project course) in your M.S. Plan B program. CSCI 8777 is specifically designated for Plan A master's students and does not count towards any degree requirements for Plan B students . 
+
+If you have further questions or need alternative options, consider discussing them with your faculty advisor or the Graduate Program Coordinators at (mailto:csgradmn@umn.edu).",1,E. NEGATION / TRAP QUESTIONS,0.6666666666666666,0.7496507487506271,1.0
+Can I count CSCI 4041 toward my M.S. because it is an algorithms course?,"No. Even though CSCI 4041 is relevant background for algorithms, the handbook says all credits used in CSCI M.S. or MCS graduate programs must be 5xxx or above, and 4xxx courses will not be accepted.","The M.S. degree in Computer Science requires students to complete a minimum of 16 graduate credits from CSCI-designated courses, including 3 breadth courses . CSCI 4041 (Algorithms and Data Structures) can potentially satisfy the breadth requirement since it is an algorithms course. However, it's crucial to determine if this course aligns with your specific requirements and if it has been designated to fulfill breadth requirements for your program plan.
+
+Please confirm your M.S. plan (Plan A, Plan B, or Plan C) so I can provide more targeted guidance regarding using CSCI 4041 for your degree credits.",2,E. NEGATION / TRAP QUESTIONS,0.3333333333333333,0.0,0.5
+I passed my Ph.D. preliminary oral exam last week. Can I register for CSCI 8888 thesis credits now?,"The handbook says doctoral thesis credits, CSCI 8888, are to be taken after passing the preliminary oral exam. So passing the OPE is the key milestone for thesis-credit eligibility, but you should still confirm registration timing and any administrative status requirements with the GPC/GSSP before enrolling.","Yes, you can register for CSCI 8888 thesis credits after passing your Ph.D. preliminary oral exam. However, you should confirm that you have already submitted the necessary paperwork confirming your preliminary exam status. If you have completed this requirement, you should be able to register for the thesis credits.
+
+If you need assistance or have any questions about the registration process, you may want to contact the graduate program coordinator or your advisor for guidance.",1,E. NEGATION / TRAP QUESTIONS,0.0,0.9234054175314381,0.0
+"I’m M.S. Plan C. Completed CSCI 5511, CSCI 5521, CSCI 5103, CSCI 5751, CSCI 8970, and five non-CSCI STAT courses. Do I satisfy breadth?","For breadth, you have Applications breadth from CSCI 5511/5521 and Architecture/Systems/Software breadth from CSCI 5103/5751. You are missing a Theory and Algorithms breadth course. The five STAT courses may help as related-field/elective/minor coursework if allowed and approved, but they do not replace the missing Theory/Algorithms breadth course.","As an M.S. Plan C student, you need to complete one course from each of the breadth areas. You have fulfilled the requirements in Applications (CSCI 5511) and Architecture Systems Software (CSCI 5103), but you still need a course from the Theory and Algorithms area. 
+
+To satisfy the breadth requirement, you will need to take one additional course that falls under Theory and Algorithms.",1,F. DEGREE AUDIT STRESS TESTS,1.0,0.6887758893470668,0.6666666666666666
+"I’m M.S. Plan B with 31 credits: 16 CSCI credits, 3 breadth areas, CSCI 8970, 3 credits CSCI 8760, but no faculty advisor yet. Am I ready to graduate?","Not yet based on the files. Plan B requires the project track with a faculty advisor, a GPAS Planner submitted at least one semester before the defense, an approved committee, a written report, and a final oral defense. Your credits may be close, but missing the faculty advisor/committee/final defense process is a blocker. Contact the GPC and secure an advisor before relying on this plan.","You are not ready to graduate yet. As a master's student in Plan B, you need to fulfill the following requirements:
+
+1. **Breadth Requirements**:
+   - You need to complete one course from each of the following three areas:
+     - Applications
+     - Theory and Algorithms
+     - Architecture Systems Software
+
+2. **CSCI Credits**:
+   - You have only completed 6 out of the required 16 CSCI credits.
+
+3. **Colloquium**:
+   - You have completed CSCI 8970, which satisfies the colloquium requirement.
+
+Since you do not have a faculty advisor yet, I recommend reaching out to the graduate program coordinators or your department to get assistance in finding an advisor, as they can help you plan your remaining coursework and ensure you meet your graduation requirements. You can contact them at (mailto:csgradmn@umn.edu).",1,F. DEGREE AUDIT STRESS TESTS,0.5833333333333334,0.6447913850226078,0.0
+"I’m M.S. Plan A and have 31 credits including 21 course credits and 10 CSCI 8777 thesis credits, but only 12 CSCI course credits. Is that enough?","No. Plan A requires 16 graduate credits from 5xxx or 8xxx courses with a CSCI designator, including breadth courses, advanced CSCI coursework, and CSCI 8970. Having only 12 CSCI course credits does not meet the Plan A CSCI credit requirement, even if the total credit count is 31.","In M.S. Plan A, you need a minimum of 16 CSCI course credits, along with completing the colloquium (CSCI 8970) and fulfilling form breadth requirements. Currently, you have only 12 CSCI course credits and have not completed the colloquium, so you need to earn at least 4 more CSCI credits and complete CSCI 8970 to satisfy graduation requirements.
+
+Here is a summary of what you still need:
+1. Complete 4 additional CSCI course credits.
+2. Fulfill the breadth requirements in Applications, Theory and Algorithms, and Architecture Systems Software.
+3. Complete the colloquium (CSCI 8970).
+
+If you have any more questions or need further assistance, feel free to ask!",1,F. DEGREE AUDIT STRESS TESTS,0.5454545454545454,0.5886786934767901,0.0
+"I’m MCS and have 31 credits, 16 CSCI credits, three breadth areas, and CSCI 8970. My GPA on degree courses is 2.98. Can I graduate?","Based on the handbook, no. MCS students must maintain an overall GPA of 3.0 in courses applied to degree requirements and breadth. A 2.98 GPA is below the MCS threshold, so you should contact the GPC to discuss your progress and options.","You cannot graduate yet because you still need to fulfill several requirements:
+
+1. **Breadth Requirements**: You need to complete one course from each of the following areas:
+   - Applications
+   - Theory and Algorithms
+   - Architecture Systems Software
+
+2. **CSCI Credits**: You have completed only 3 out of the required 16 CSCI credits.
+
+Additionally, your GPA of 2.98 is below the minimum requirement of 3.0 for graduation in the MCS program. 
+
+You will need to address these issues to qualify for graduation. 
+
+If you have any more questions or need help planning your remaining courses, feel free to ask!",1,F. DEGREE AUDIT STRESS TESTS,0.7777777777777778,0.6427320631954068,0.0
+"I’m Plan C and have 31 credits, 3 breadth areas, 6 advanced CSCI credits, and 16 CSCI credits, but I forgot CSCI 8970. Is my audit complete?","No. The M.S. requirements include 1 credit of CSCI Colloquium, listed as CSCI 8970 in the degree requirement section, and the colloquium must appear on the GPAS audit. Even if the rest of your credits look complete, missing the colloquium means the audit is not complete.","Your audit is not complete. You currently have:
+
+- 31 total credits.
+- 3 breadth areas filled, but you still need courses in:
+  - Applications
+  - Theory and Algorithms
+  - Architecture Systems Software
+
+You also have only 3 out of the required 16 CSCI credits completed. Since CSCI 8970 is complete, it's important to work on fulfilling the remaining requirements for breadth and additional CSCI credits.",1,F. DEGREE AUDIT STRESS TESTS,0.8,0.5057931183881899,0.0
+"I’m a Ph.D. student with 52 total credits including 28 course credits and 24 CSCI 8888 credits, but I never took CSCI 8001. Is that okay if my advisor approves?",No. CSCI 8001 is a mandatory Ph.D. course and students must complete it within 2 years of enrolling in the program. Advisor approval is not enough in the uploaded files to waive this requirement.,"In the Ph.D. program, completion of CSCI 8001 (Research Methodologies) is typically required. However, it's noted that this requirement may be waived at the discretion of your adviser or the Graduate Program Committee (GPC) under certain circumstances.
+
+Since you've mentioned that you never took CSCI 8001 and are seeking your advisor's approval, it suggests that you are aware of this requirement and are exploring a potential exception. Therefore, ensure you discuss this with your advisor and have their approval documented.
+
+Ultimately, final approval will depend on your adviser's discretion. I recommend confirming this directly to ensure you meet the program's specific requirements.",1,F. DEGREE AUDIT STRESS TESTS,0.0,0.0,0.0
+I’m Ph.D. and want to use 9 credits of CSCI 8994 directed research on my plan. Is that allowed?,"Not under the standard Ph.D. rule in the handbook. A Computer Science doctoral student may use a maximum of 6 independent study or directed research credits, including CSCI 5991/8991 or CSCI 5994/8994, in the plan. Using 9 credits would exceed that standard cap, so you should ask the GPC/DGS whether any exception process exists.","You are allowed to use a maximum of 6 credits of directed research (CSCI 5994/8994) toward your Ph.D. plan . However, since you intend to use 9 credits, you'll need to adjust your usage to comply with this limit. 
+
+Make sure to also submit a separate sheet with your GPAS planner that explains the nature of the research if you include those credits in your plan.
+
+If you have more specific questions or need further clarification on your degree plan, please reach out to the Graduate Program Coordinators at (mailto:csgradmn@umn.edu).",2,F. DEGREE AUDIT STRESS TESTS,0.8,0.7292129291916825,0.3333333333333333
+"I’m M.S. Plan C. I have CSCI 5511, CSCI 5421, CSCI 5751, CSCI 8970, CSCI 4041, CSCI 5527, and enough non-CSCI credits to reach 31. Am I done?","Not enough information to say you are done, and there is at least one blocker: CSCI 4041 is a 4xxx course and cannot be used for a CSCI M.S. or MCS graduate program. Your listed breadth looks plausible—CSCI 5511 Applications, CSCI 5421 Theory/Algorithms, and CSCI 5751 Architecture/Systems/Software—and you included CSCI 8970. But you still need to verify 16 valid 5xxx/8xxx CSCI credits, 6 advanced CSCI credits, GPA, A-F grading where required, approved related-field/elective use, and Plan C project coursework.","You have satisfied the core requirements for M.S. Plan C with:
+
+- All breadth areas covered: Applications (CSCI 5511), Theory And Algorithms (CSCI 5421), and Architecture Systems Software (CSCI 5751)
+- Colloquium requirement fulfilled with CSCI 8970.
+- You have completed 18 CSCI credits, exceeding the 16 required.
+
+As you mentioned having enough non-CSCI credits to reach a total of 31 credits, you should be on track to graduate. Just ensure that you confirm the total credit requirement is met.
+
+You can check with your advisor or Graduate Program Coordinator to finalize your graduation status.",1,F. DEGREE AUDIT STRESS TESTS,0.625,0.0,0.3333333333333333
+My M.S. Plan C includes 7 credits of CSCI 5994 directed research. Is that okay?,"Under the standard master’s policy, only 6 credits of independent study or directed research may be used toward a master’s degree without written consent of the faculty advisor and DGS. Seven credits would exceed the standard 6-credit allowance, so it is only potentially usable with the required written consent and proper GPAS explanation.","M.S. Plan C requires at least 30 total credits, and a maximum of 8 credits of CSCI 5994 (Directed Research) can be applied toward the degree. Since you have 7 credits of CSCI 5994, you are within the limit for that requirement. 
+
+However, please confirm that your total credits and other requirements, such as GPA and coursework, are also in compliance to ensure you can graduate. 
+
+If you have additional questions about your specific situation regarding other credits or requirements, please provide more details.",1,F. DEGREE AUDIT STRESS TESTS,0.0,0.0,0.0

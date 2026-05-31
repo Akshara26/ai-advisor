@@ -43,15 +43,16 @@ index = VectorStoreIndex.from_vector_store(vector_store)
 # Retrieve a wider candidate set — reranker will cut it down to top 3
 retriever = index.as_retriever(similarity_top_k=10)
 
-# Local cross-encoder reranker — runs on CPU in ~80ms, no API calls, no cost.
-# Specifically trained for (query, passage) relevance scoring, which is exactly
-# this task. Faster and equal/better quality vs LLM reranking for short policy chunks.
+# Local cross-encoder reranker — ~80ms on CPU, no API calls, no cost.
+# Wrapped in st.cache_resource when running in Streamlit so the model loads
+# once per container lifecycle instead of reinitializing on hot reloads.
+# Falls back to plain instantiation in CI/eval where Streamlit is not available.
 def _make_reranker():
     return SentenceTransformerRerank(
         model="cross-encoder/ms-marco-MiniLM-L-6-v2",
-        top_n=3
+        top_n=5  # 5 chunks for multi-requirement degree audit questions
     )
- 
+
 if _st_available:
     @st.cache_resource
     def _cached_reranker():

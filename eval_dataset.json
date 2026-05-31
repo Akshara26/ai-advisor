@@ -1,77 +1,668 @@
 [
   {
-    "question": "What is the minimum GPA required for MS students on their GPAS audit?",
-    "ground_truth": "Students must maintain a GPA of at least 3.25 for all courses listed on their GPAS audit for degree requirements and a 3.0 GPA on all coursework taken at the University of Minnesota at the graduate level. Note: the handbook contains an inconsistency on this same page — it references CSCI 8790 as the colloquium number, while other sections use CSCI 8970.",
-    "reference_page": 15
+    "id": "E001",
+    "user_question": "For the Computer Science M.S. Plan C, how many total credits do I need and do I need a committee?",
+    "category": "A. CLEAN BASELINE QUESTIONS",
+    "subcategory": "direct Plan C requirement lookup",
+    "difficulty": "easy",
+    "requires_clarification": false,
+    "expected_behavior": "direct_answer",
+    "gold_answer": "Plan C requires at least 31 graduate-credit coursework credits. It requires 16 graduate credits from 5xxx or 8xxx CSCI courses, including 3 breadth courses, 6 credits of advanced CSCI coursework, and 1 credit of CSCI colloquium. Plan C does not require a committee.",
+    "gold_answer_style": "short_factoid",
+    "should_fallback": false,
+    "fallback_reason": "",
+    "required_evidence_sources": [
+      "handbook_only"
+    ],
+    "reasoning_hops": "1",
+    "likely_failure_mode": "Straight retrieval failure",
+    "notes": "Tests simple Plan C retrieval and committee rule."
   },
   {
-    "question": "How many total credits are required for the MS degree?",
-    "ground_truth": "The M.S. degree in Computer Science requires a minimum of 31 total qualifying credits.",
-    "reference_page": 10
+    "id": "E002",
+    "user_question": "What GPA do M.S. and MCS students need to maintain?",
+    "category": "A. CLEAN BASELINE QUESTIONS",
+    "subcategory": "direct GPA lookup",
+    "difficulty": "easy",
+    "requires_clarification": false,
+    "expected_behavior": "direct_answer",
+    "gold_answer": "M.S. students must maintain at least a 3.25 GPA for courses listed on the GPAS audit and a 3.0 GPA on all graduate-level UMN coursework. MCS students must maintain a 3.0 GPA for courses applied to degree requirements, including breadth courses.",
+    "gold_answer_style": "short_factoid",
+    "should_fallback": false,
+    "fallback_reason": "",
+    "required_evidence_sources": [
+      "handbook_only"
+    ],
+    "reasoning_hops": "1",
+    "likely_failure_mode": "Confusing MS vs MCS rules",
+    "notes": "Separates M.S. and MCS GPA thresholds."
   },
   {
-    "question": "How many breadth courses are required and what is the rule?",
-    "ground_truth": "Master's students are required to take three courses, one from each area. No courses may be transferred from an outside institution to meet breadth requirements.",
-    "reference_page": 8
+    "id": "E003",
+    "user_question": "What are the prerequisites for CSCI 5751 Big Data Engineering?",
+    "category": "A. CLEAN BASELINE QUESTIONS",
+    "subcategory": "direct prerequisite lookup",
+    "difficulty": "easy",
+    "requires_clarification": false,
+    "expected_behavior": "direct_answer",
+    "gold_answer": "The course data lists CSCI 5751 Big Data Engineering as requiring either CSCI 4041 or CSCI 5707.",
+    "gold_answer_style": "short_factoid",
+    "should_fallback": false,
+    "fallback_reason": "",
+    "required_evidence_sources": [
+      "courses_only"
+    ],
+    "reasoning_hops": "1",
+    "likely_failure_mode": "Incorrect prerequisite interpretation",
+    "notes": "Tests basic structured catalog lookup."
   },
   {
-    "question": "What is the email address for the graduate program coordinators?",
-    "ground_truth": "csgradmn@umn.edu",
-    "reference_page": 6
+    "id": "E004",
+    "user_question": "Can I count a course from another department toward my breadth requirement?",
+    "category": "B. EDGE CASES THE HANDBOOK DOESN\u2019T CLEARLY COVER",
+    "subcategory": "related-field vs breadth substitution",
+    "difficulty": "medium",
+    "requires_clarification": false,
+    "expected_behavior": "cautious_answer_with_conditions",
+    "gold_answer": "No, not for the standard M.S. or MCS breadth requirement. The handbook\u2019s breadth lists are CSCI courses, and it explicitly says no outside-institution transfer courses may meet M.S./MCS breadth. Non-CSCI courses may be used as related-field, supporting-program, minor, or elective coursework when allowed and approved, but the files do not support using another-department course as a breadth substitute. Contact the GPC if you are asking about a formal exception.",
+    "gold_answer_style": "paragraph_explanation",
+    "should_fallback": true,
+    "fallback_reason": "A non-CSCI breadth substitution is not clearly authorized; exceptions require program review.",
+    "required_evidence_sources": [
+      "handbook_only"
+    ],
+    "reasoning_hops": "2",
+    "likely_failure_mode": "Confusing related-field / minor / breadth / advanced-course rules",
+    "notes": "Required pattern from prompt."
   },
   {
-    "question": "How many academic year CPT semesters can a student complete?",
-    "ground_truth": "Students who have completed one semester of academic-year CPT (Fall or Spring) are ineligible for a second academic-year semester of CPT.",
-    "reference_page": 37
+    "id": "E005",
+    "user_question": "I found a non-CSCI AI course in another CSE department. Can it replace CSCI 5511 for my Applications breadth if my advisor likes it?",
+    "category": "B. EDGE CASES THE HANDBOOK DOESN\u2019T CLEARLY COVER",
+    "subcategory": "advisor preference vs official breadth list",
+    "difficulty": "hard",
+    "requires_clarification": false,
+    "expected_behavior": "fallback_to_email_or_advisor",
+    "gold_answer": "The files do not show that advisor preference alone can replace an official breadth course. For M.S./MCS breadth, students must take one course from each listed breadth area, and CSCI 5511 is one of the listed Applications breadth options. A non-CSCI course might count as related-field, minor, supporting-program, or elective credit if approved, but replacing a breadth course is not clearly authorized. You should contact the Graduate Program Coordinators before relying on it.",
+    "gold_answer_style": "fallback_message",
+    "should_fallback": true,
+    "fallback_reason": "The policy does not clearly authorize non-CSCI substitutions for breadth.",
+    "required_evidence_sources": [
+      "handbook_only"
+    ],
+    "reasoning_hops": "2",
+    "likely_failure_mode": "Overconfident answer when handbook is unclear",
+    "notes": "Tests refusal to invent substitution policy."
   },
   {
-    "question": "What is the minimum GPA for PhD students on their GPAS planner?",
-    "ground_truth": "Students must maintain a minimum GPA of 3.45 on courses appearing in the GPAS Planner.",
-    "reference_page": 20
+    "id": "E006",
+    "user_question": "Can I use an 8000-level special topics course as both advanced CSCI credit and breadth?",
+    "category": "B. EDGE CASES THE HANDBOOK DOESN\u2019T CLEARLY COVER",
+    "subcategory": "special topics double-count edge case",
+    "difficulty": "hard",
+    "requires_clarification": false,
+    "expected_behavior": "cautious_answer_with_conditions",
+    "gold_answer": "The handbook says students may double dip when a course is eligible for both breadth and advanced CSCI categories. However, the files indicate special topics courses do not count toward breadth unless they are on the approved breadth list. An 8000-level special topics course may count toward advanced CSCI credit, but the files do not support counting it toward breadth unless the department explicitly approved it for a breadth category.",
+    "gold_answer_style": "paragraph_explanation",
+    "should_fallback": true,
+    "fallback_reason": "Breadth eligibility for special topics is not automatic and requires department-approved listing.",
+    "required_evidence_sources": [
+      "handbook_only"
+    ],
+    "reasoning_hops": "2",
+    "likely_failure_mode": "Confusing special topics, breadth, and advanced-course rules",
+    "notes": "Good model distinguishes double dipping from eligibility."
   },
   {
-    "question": "How many thesis credits are required for Plan A MS students?",
-    "ground_truth": "10 thesis credits (CSCI 8777)",
-    "reference_page": 10
+    "id": "E007",
+    "user_question": "Can I submit my Plan B final oral exam report before my committee is officially approved?",
+    "category": "B. EDGE CASES THE HANDBOOK DOESN\u2019T CLEARLY COVER",
+    "subcategory": "committee workflow sequencing",
+    "difficulty": "medium",
+    "requires_clarification": false,
+    "expected_behavior": "direct_answer",
+    "gold_answer": "No. For Plan B, the committee must be fully approved before the committee chair gets access to the master\u2019s final examination report form. Committee members also cannot be appointed until after the GPAS Planner has been approved and recorded.",
+    "gold_answer_style": "paragraph_explanation",
+    "should_fallback": false,
+    "fallback_reason": "",
+    "required_evidence_sources": [
+      "handbook_only"
+    ],
+    "reasoning_hops": "2",
+    "likely_failure_mode": "Committee / GPAS sequencing mistakes",
+    "notes": "Tests procedural ordering."
   },
   {
-    "question": "What is the maximum number of credits that can be transferred from outside for MS students?",
-    "ground_truth": "The maximum number of credits that can be transferred to satisfy program requirements is 11.",
-    "reference_page": 44
+    "id": "E008",
+    "user_question": "What do I need to graduate?",
+    "category": "C. AMBIGUOUS PHRASINGS",
+    "subcategory": "missing program and plan",
+    "difficulty": "easy",
+    "requires_clarification": true,
+    "expected_behavior": "ask_clarifying_question",
+    "gold_answer": "Which program and plan are you in: M.S. Plan A, M.S. Plan B, M.S. Plan C, MCS, or Ph.D.? The graduation requirements differ by program and plan, especially for thesis/project credits, committee requirements, breadth count, GPA threshold, CSCI 8001, and thesis credits.",
+    "gold_answer_style": "clarification_first",
+    "should_fallback": false,
+    "fallback_reason": "",
+    "required_evidence_sources": [
+      "insufficient_in_files"
+    ],
+    "reasoning_hops": "1",
+    "likely_failure_mode": "Missing program context",
+    "notes": "Required ambiguity pattern."
   },
   {
-    "question": "How many total credits are required for the PhD degree?",
-    "ground_truth": "Each student must complete 52 total credits of graduate-level coursework.",
-    "reference_page": 19
+    "id": "E009",
+    "user_question": "Do I need a committee?",
+    "category": "C. AMBIGUOUS PHRASINGS",
+    "subcategory": "missing plan",
+    "difficulty": "easy",
+    "requires_clarification": true,
+    "expected_behavior": "ask_clarifying_question",
+    "gold_answer": "It depends on your degree plan. M.S. Plan A and Plan B require committees; Plan C does not. Ph.D. students have committees for preliminary and thesis milestones. Are you asking about M.S. Plan A, Plan B, Plan C, MCS, or Ph.D.?",
+    "gold_answer_style": "clarification_first",
+    "should_fallback": false,
+    "fallback_reason": "",
+    "required_evidence_sources": [
+      "handbook_only"
+    ],
+    "reasoning_hops": "2",
+    "likely_failure_mode": "Missing plan context",
+    "notes": "Tests scoped answer plus clarifying question."
   },
   {
-    "question": "What course number is the CS colloquium and is it mandatory?",
-    "ground_truth": "The Computer Science Colloquium is mandatory for every M.S. student. The handbook contains an inconsistency — page 15 states CSCI 8790 while other sections reference CSCI 8970. Both numbers appear in the official document.",
-    "reference_page": 15
+    "id": "E010",
+    "user_question": "Can this count toward my degree?",
+    "category": "C. AMBIGUOUS PHRASINGS",
+    "subcategory": "missing course and requirement target",
+    "difficulty": "easy",
+    "requires_clarification": true,
+    "expected_behavior": "ask_clarifying_question",
+    "gold_answer": "I need more information before I can answer: what course is it, what program and plan are you in, and what requirement are you trying to satisfy\u2014breadth, advanced CSCI, related field, minor/supporting program, elective, project, thesis, or transfer credit?",
+    "gold_answer_style": "clarification_first",
+    "should_fallback": false,
+    "fallback_reason": "",
+    "required_evidence_sources": [
+      "insufficient_in_files"
+    ],
+    "reasoning_hops": "1",
+    "likely_failure_mode": "Ambiguous user phrasing",
+    "notes": "Prevents generic yes/no."
   },
   {
-    "question": "How many years do PhD students have to complete their degree?",
-    "ground_truth": "University policy requires that all requirements for the doctoral degree must be completed and the degree awarded within eight calendar years after initial enrollment in the graduate program.",
-    "reference_page": 19
+    "id": "E011",
+    "user_question": "Can I take this class next semester?",
+    "category": "C. AMBIGUOUS PHRASINGS",
+    "subcategory": "missing course and academic background",
+    "difficulty": "easy",
+    "requires_clarification": true,
+    "expected_behavior": "ask_clarifying_question",
+    "gold_answer": "Which class are you asking about, and what prerequisites have you completed? I can check the course prerequisite data once you provide the course code and your completed relevant courses. Registration availability and instructor consent may still need to be checked outside these files.",
+    "gold_answer_style": "clarification_first",
+    "should_fallback": true,
+    "fallback_reason": "Course availability/consent is not fully available in the uploaded files.",
+    "required_evidence_sources": [
+      "insufficient_in_files"
+    ],
+    "reasoning_hops": "1",
+    "likely_failure_mode": "Missing course context",
+    "notes": "Tests asking for missing course and recognizing file limits."
   },
   {
-    "question": "What happens if a student fails the Written Preliminary Exam?",
-    "ground_truth": "A student who does not pass the WPE may or may not be given the opportunity to retake the examination depending on the decision of the WPE committee. If not allowed a second attempt, the student will be terminated from the Ph.D. program. If a student fails to pass after two official attempts, termination from the program is automatic.",
-    "reference_page": 21
+    "id": "E012",
+    "user_question": "I\u2019m an M.S. student. Should I choose Plan A or Plan B?",
+    "category": "C. AMBIGUOUS PHRASINGS",
+    "subcategory": "advising preference not determined by policy",
+    "difficulty": "medium",
+    "requires_clarification": true,
+    "expected_behavior": "cautious_answer_with_conditions",
+    "gold_answer": "The handbook can explain the policy differences, but it cannot choose for you. Plan A is thesis-based and requires 10 CSCI 8777 thesis credits, a written thesis, and an oral defense. Plan B requires CSCI 8760 project credits, a written report, and an oral defense, and thesis credits are not accepted for Plan B. To recommend one, I would need your goals, advisor/project availability, research interests, and timeline; you should also discuss this with the GPC and a potential faculty advisor.",
+    "gold_answer_style": "paragraph_explanation",
+    "should_fallback": true,
+    "fallback_reason": "Personal advising choice depends on facts not in the files.",
+    "required_evidence_sources": [
+      "handbook_only",
+      "insufficient_in_files"
+    ],
+    "reasoning_hops": "2",
+    "likely_failure_mode": "Overconfident answer when handbook is unclear",
+    "notes": "Good answer explains differences but avoids choosing."
   },
   {
-    "question": "What tuition benefit does a 50% TA appointment provide?",
-    "ground_truth": "A 50% appointment provides a 100% tuition benefit.",
-    "reference_page": 27
+    "id": "E013",
+    "user_question": "What are the prerequisites for the hardest course in the ML breadth area?",
+    "category": "D. MULTI-HOP QUESTIONS",
+    "subcategory": "identify advanced ML-related course then prerequisites",
+    "difficulty": "hard",
+    "requires_clarification": false,
+    "expected_behavior": "cautious_answer_with_conditions",
+    "gold_answer": "Assuming \u201chardest\u201d means the most advanced/highest-numbered ML-related breadth course in the handbook\u2019s Theory/Applications ML cluster, CSCI 5527 Deep Learning is a strong candidate among listed ML-related breadth courses. The course data lists its prerequisite as CSCI 5521. If you mean \u201chardest\u201d by grade distribution, workload, or instructor difficulty, the files do not define that reliably.",
+    "gold_answer_style": "paragraph_explanation",
+    "should_fallback": true,
+    "fallback_reason": "\u201cHardest\u201d is ambiguous; the answer uses a stated interpretation.",
+    "required_evidence_sources": [
+      "handbook_plus_courses"
+    ],
+    "reasoning_hops": "3+",
+    "likely_failure_mode": "Multi-hop reasoning failure",
+    "notes": "Required pattern; combines breadth list and prerequisites."
   },
   {
-    "question": "What is the maximum number of semesters a student can hold a TA appointment?",
-    "ground_truth": "To limit eligibility for graduate TA appointments to six total semesters.",
-    "reference_page": 28
+    "id": "E014",
+    "user_question": "I completed CSCI 4041. Am I eligible for CSCI 5751, and does it help my M.S. breadth?",
+    "category": "D. MULTI-HOP QUESTIONS",
+    "subcategory": "prereq plus breadth category",
+    "difficulty": "medium",
+    "requires_clarification": false,
+    "expected_behavior": "direct_answer",
+    "gold_answer": "Based on the course data, CSCI 5751 requires either CSCI 4041 or CSCI 5707, so CSCI 4041 satisfies the listed prerequisite. In the handbook, CSCI 5751 is listed under Architecture, Systems, and Software breadth, so it can help satisfy that breadth area if taken for graduate credit, A-F, and otherwise counted on your plan.",
+    "gold_answer_style": "step_by_step_reasoning",
+    "should_fallback": false,
+    "fallback_reason": "",
+    "required_evidence_sources": [
+      "handbook_plus_courses"
+    ],
+    "reasoning_hops": "2",
+    "likely_failure_mode": "Cross-file reasoning failure",
+    "notes": "Combines structured prereq data and handbook breadth category."
   },
   {
-    "question": "What is the minimum number of credits required for a minor field for MS students?",
-    "ground_truth": "The Minor Field is defined as a minimum of 6 semester credits of coursework outside CSCI in a single department of the College of Science and Engineering, Statistics, Management, Cognitive Science and/or other related fields for a designated minor.",
-    "reference_page": 11
+    "id": "E015",
+    "user_question": "If I take CSCI 5521 and CSCI 5527, how many breadth areas have I covered for an M.S.?",
+    "category": "D. MULTI-HOP QUESTIONS",
+    "subcategory": "same-area duplicate breadth bookkeeping",
+    "difficulty": "medium",
+    "requires_clarification": false,
+    "expected_behavior": "direct_answer",
+    "gold_answer": "You have covered only one breadth area for the M.S. breadth requirement: Applications breadth. CSCI 5521 and CSCI 5527 are both listed in the Applications breadth area. Master\u2019s students need three breadth courses, one from each area, so you would still need Theory/Algorithms and Architecture/Systems/Software breadth courses.",
+    "gold_answer_style": "step_by_step_reasoning",
+    "should_fallback": false,
+    "fallback_reason": "",
+    "required_evidence_sources": [
+      "handbook_only"
+    ],
+    "reasoning_hops": "2",
+    "likely_failure_mode": "Degree-audit bookkeeping errors",
+    "notes": "Catches counting two courses as two areas."
+  },
+  {
+    "id": "E016",
+    "user_question": "I took CSCI 5521. Can I now take CSCI 5527, and can both count toward my M.S. requirements?",
+    "category": "D. MULTI-HOP QUESTIONS",
+    "subcategory": "prereq chain plus degree applicability",
+    "difficulty": "medium",
+    "requires_clarification": false,
+    "expected_behavior": "cautious_answer_with_conditions",
+    "gold_answer": "The course data lists CSCI 5527 Deep Learning as requiring CSCI 5521, so completing CSCI 5521 satisfies the listed prerequisite. For M.S. requirements, both are 5xxx CSCI courses and both appear in the Applications breadth list, but they do not cover two different breadth areas. They may count as CSCI graduate credits, and any advanced-credit use depends on whether they are on the department\u2019s advanced CSCI list and your plan requirements.",
+    "gold_answer_style": "paragraph_explanation",
+    "should_fallback": false,
+    "fallback_reason": "",
+    "required_evidence_sources": [
+      "handbook_plus_courses"
+    ],
+    "reasoning_hops": "3+",
+    "likely_failure_mode": "Cross-file reasoning failure",
+    "notes": "Tests avoiding overcounting breadth."
+  },
+  {
+    "id": "E017",
+    "user_question": "I want an MCS course plan with CSCI 5511, CSCI 5521, and CSCI 5123 as my breadth courses. Is that okay?",
+    "category": "D. MULTI-HOP QUESTIONS",
+    "subcategory": "breadth areas all from one category",
+    "difficulty": "medium",
+    "requires_clarification": false,
+    "expected_behavior": "direct_answer",
+    "gold_answer": "No, not as a complete MCS breadth plan. All three courses\u2014CSCI 5511, CSCI 5521, and CSCI 5123\u2014are listed under Applications breadth. M.S. and MCS students need three breadth courses with one from each breadth area, so you would still need a Theory/Algorithms course and an Architecture/Systems/Software course.",
+    "gold_answer_style": "step_by_step_reasoning",
+    "should_fallback": false,
+    "fallback_reason": "",
+    "required_evidence_sources": [
+      "handbook_only"
+    ],
+    "reasoning_hops": "2",
+    "likely_failure_mode": "Degree-audit bookkeeping errors",
+    "notes": "Surface-level model may count any three breadth courses."
+  },
+  {
+    "id": "E018",
+    "user_question": "Can I take CSCI 5521 before CSCI 4041?",
+    "category": "E. NEGATION / TRAP QUESTIONS",
+    "subcategory": "prerequisite trap with wrong assumed dependency",
+    "difficulty": "medium",
+    "requires_clarification": false,
+    "expected_behavior": "cautious_answer_with_conditions",
+    "gold_answer": "The course data does not list CSCI 4041 as a prerequisite for CSCI 5521. It lists CSCI 5521 as requiring STAT 3021 and one of CSCI 2033, MATH 2142, or MATH 4242. So CSCI 4041 is not the blocker in the uploaded prerequisite data; you still need to satisfy the actual listed prerequisites or get any needed department/instructor approval.",
+    "gold_answer_style": "paragraph_explanation",
+    "should_fallback": false,
+    "fallback_reason": "",
+    "required_evidence_sources": [
+      "courses_only"
+    ],
+    "reasoning_hops": "2",
+    "likely_failure_mode": "Incorrect prerequisite interpretation",
+    "notes": "Required prompt pattern, but corrected to match uploaded data."
+  },
+  {
+    "id": "E019",
+    "user_question": "Can my outside transfer course satisfy M.S. breadth if it is basically the same as CSCI 5421?",
+    "category": "E. NEGATION / TRAP QUESTIONS",
+    "subcategory": "transfer breadth prohibition",
+    "difficulty": "medium",
+    "requires_clarification": false,
+    "expected_behavior": "direct_answer",
+    "gold_answer": "No, not for M.S. or MCS breadth. The handbook says no courses may be transferred from an outside institution to meet breadth requirements for the Computer Science M.S. and MCS programs. If approved, the transfer credit would be used as elective credit instead, not breadth.",
+    "gold_answer_style": "short_factoid",
+    "should_fallback": false,
+    "fallback_reason": "",
+    "required_evidence_sources": [
+      "handbook_only"
+    ],
+    "reasoning_hops": "2",
+    "likely_failure_mode": "Transfer-credit edge cases",
+    "notes": "Tests explicit negative rule."
+  },
+  {
+    "id": "E020",
+    "user_question": "I\u2019m Plan B. Can I use 10 credits of CSCI 8777 thesis credits instead of CSCI 8760?",
+    "category": "E. NEGATION / TRAP QUESTIONS",
+    "subcategory": "thesis credits in Plan B",
+    "difficulty": "medium",
+    "requires_clarification": false,
+    "expected_behavior": "direct_answer",
+    "gold_answer": "No. Plan B requires 3 credits of the Plan B project course, CSCI 8760, and the handbook explicitly says thesis credits are not accepted for a Plan B M.S. degree. CSCI 8777 is the master\u2019s thesis credit used for Plan A, not Plan B.",
+    "gold_answer_style": "short_factoid",
+    "should_fallback": false,
+    "fallback_reason": "",
+    "required_evidence_sources": [
+      "handbook_only"
+    ],
+    "reasoning_hops": "2",
+    "likely_failure_mode": "Confusing Plan A / B / C requirements",
+    "notes": "Catches thesis/project confusion."
+  },
+  {
+    "id": "E021",
+    "user_question": "Can I count CSCI 4041 toward my M.S. because it is an algorithms course?",
+    "category": "E. NEGATION / TRAP QUESTIONS",
+    "subcategory": "4xxx course invalid for graduate program",
+    "difficulty": "medium",
+    "requires_clarification": false,
+    "expected_behavior": "direct_answer",
+    "gold_answer": "No. Even though CSCI 4041 is relevant background for algorithms, the handbook says all credits used in CSCI M.S. or MCS graduate programs must be 5xxx or above, and 4xxx courses will not be accepted.",
+    "gold_answer_style": "short_factoid",
+    "should_fallback": false,
+    "fallback_reason": "",
+    "required_evidence_sources": [
+      "handbook_plus_courses"
+    ],
+    "reasoning_hops": "2",
+    "likely_failure_mode": "Negation / trap logic failure",
+    "notes": "Tests rejecting semantically relevant but level-invalid course."
+  },
+  {
+    "id": "E022",
+    "user_question": "I passed my Ph.D. preliminary oral exam last week. Can I register for CSCI 8888 thesis credits now?",
+    "category": "E. NEGATION / TRAP QUESTIONS",
+    "subcategory": "doctoral thesis credit timing",
+    "difficulty": "medium",
+    "requires_clarification": false,
+    "expected_behavior": "cautious_answer_with_conditions",
+    "gold_answer": "The handbook says doctoral thesis credits, CSCI 8888, are to be taken after passing the preliminary oral exam. So passing the OPE is the key milestone for thesis-credit eligibility, but you should still confirm registration timing and any administrative status requirements with the GPC/GSSP before enrolling.",
+    "gold_answer_style": "paragraph_explanation",
+    "should_fallback": true,
+    "fallback_reason": "Registration timing/status details may require administrative confirmation.",
+    "required_evidence_sources": [
+      "handbook_only"
+    ],
+    "reasoning_hops": "2",
+    "likely_failure_mode": "Committee / GPAS sequencing mistakes",
+    "notes": "Tests milestone sequencing without overclaiming registration approval."
+  },
+  {
+    "id": "E023",
+    "user_question": "I\u2019m M.S. Plan C. Completed CSCI 5511, CSCI 5521, CSCI 5103, CSCI 5751, CSCI 8970, and five non-CSCI STAT courses. Do I satisfy breadth?",
+    "category": "F. DEGREE AUDIT STRESS TESTS",
+    "subcategory": "partial Plan C audit, duplicate breadth area",
+    "difficulty": "hard",
+    "requires_clarification": false,
+    "expected_behavior": "step_by_step_reasoning",
+    "gold_answer": "For breadth, you have Applications breadth from CSCI 5511/5521 and Architecture/Systems/Software breadth from CSCI 5103/5751. You are missing a Theory and Algorithms breadth course. The five STAT courses may help as related-field/elective/minor coursework if allowed and approved, but they do not replace the missing Theory/Algorithms breadth course.",
+    "gold_answer_style": "step_by_step_reasoning",
+    "should_fallback": false,
+    "fallback_reason": "",
+    "required_evidence_sources": [
+      "handbook_only"
+    ],
+    "reasoning_hops": "3+",
+    "likely_failure_mode": "Degree-audit bookkeeping errors",
+    "notes": "Realistic audit with hidden missing breadth area."
+  },
+  {
+    "id": "E024",
+    "user_question": "I\u2019m M.S. Plan B with 31 credits: 16 CSCI credits, 3 breadth areas, CSCI 8970, 3 credits CSCI 8760, but no faculty advisor yet. Am I ready to graduate?",
+    "category": "F. DEGREE AUDIT STRESS TESTS",
+    "subcategory": "Plan B hidden advisor/committee blocker",
+    "difficulty": "hard",
+    "requires_clarification": false,
+    "expected_behavior": "cautious_answer_with_conditions",
+    "gold_answer": "Not yet based on the files. Plan B requires the project track with a faculty advisor, a GPAS Planner submitted at least one semester before the defense, an approved committee, a written report, and a final oral defense. Your credits may be close, but missing the faculty advisor/committee/final defense process is a blocker. Contact the GPC and secure an advisor before relying on this plan.",
+    "gold_answer_style": "step_by_step_reasoning",
+    "should_fallback": true,
+    "fallback_reason": "Graduation readiness depends on administrative milestones and approved committee/defense.",
+    "required_evidence_sources": [
+      "handbook_only"
+    ],
+    "reasoning_hops": "3+",
+    "likely_failure_mode": "Missing project / thesis / committee / planner constraints",
+    "notes": "Audit with credit-complete but milestone-incomplete."
+  },
+  {
+    "id": "E025",
+    "user_question": "I\u2019m M.S. Plan A and have 31 credits including 21 course credits and 10 CSCI 8777 thesis credits, but only 12 CSCI course credits. Is that enough?",
+    "category": "F. DEGREE AUDIT STRESS TESTS",
+    "subcategory": "insufficient CSCI credits",
+    "difficulty": "hard",
+    "requires_clarification": false,
+    "expected_behavior": "direct_answer",
+    "gold_answer": "No. Plan A requires 16 graduate credits from 5xxx or 8xxx courses with a CSCI designator, including breadth courses, advanced CSCI coursework, and CSCI 8970. Having only 12 CSCI course credits does not meet the Plan A CSCI credit requirement, even if the total credit count is 31.",
+    "gold_answer_style": "step_by_step_reasoning",
+    "should_fallback": false,
+    "fallback_reason": "",
+    "required_evidence_sources": [
+      "handbook_only"
+    ],
+    "reasoning_hops": "2",
+    "likely_failure_mode": "Degree-audit bookkeeping errors",
+    "notes": "Separates total credits from CSCI credits."
+  },
+  {
+    "id": "E026",
+    "user_question": "I\u2019m MCS and have 31 credits, 16 CSCI credits, three breadth areas, and CSCI 8970. My GPA on degree courses is 2.98. Can I graduate?",
+    "category": "F. DEGREE AUDIT STRESS TESTS",
+    "subcategory": "GPA blocker",
+    "difficulty": "medium",
+    "requires_clarification": false,
+    "expected_behavior": "direct_answer",
+    "gold_answer": "Based on the handbook, no. MCS students must maintain an overall GPA of 3.0 in courses applied to degree requirements and breadth. A 2.98 GPA is below the MCS threshold, so you should contact the GPC to discuss your progress and options.",
+    "gold_answer_style": "paragraph_explanation",
+    "should_fallback": true,
+    "fallback_reason": "Student is below stated GPA threshold and needs advising.",
+    "required_evidence_sources": [
+      "handbook_only"
+    ],
+    "reasoning_hops": "2",
+    "likely_failure_mode": "Failure to trigger fallback when policy is not explicit",
+    "notes": "Catches GPA rounding/threshold mistakes."
+  },
+  {
+    "id": "E027",
+    "user_question": "I\u2019m Plan C and have 31 credits, 3 breadth areas, 6 advanced CSCI credits, and 16 CSCI credits, but I forgot CSCI 8970. Is my audit complete?",
+    "category": "F. DEGREE AUDIT STRESS TESTS",
+    "subcategory": "missing colloquium",
+    "difficulty": "medium",
+    "requires_clarification": false,
+    "expected_behavior": "direct_answer",
+    "gold_answer": "No. The M.S. requirements include 1 credit of CSCI Colloquium, listed as CSCI 8970 in the degree requirement section, and the colloquium must appear on the GPAS audit. Even if the rest of your credits look complete, missing the colloquium means the audit is not complete.",
+    "gold_answer_style": "step_by_step_reasoning",
+    "should_fallback": false,
+    "fallback_reason": "",
+    "required_evidence_sources": [
+      "handbook_only"
+    ],
+    "reasoning_hops": "2",
+    "likely_failure_mode": "Degree-audit bookkeeping errors",
+    "notes": "Note handbook inconsistency elsewhere mentions CSCI 8790; gold follows degree requirement/course data CSCI 8970 while noting audit requirement."
+  },
+  {
+    "id": "E028",
+    "user_question": "I\u2019m a Ph.D. student with 52 total credits including 28 course credits and 24 CSCI 8888 credits, but I never took CSCI 8001. Is that okay if my advisor approves?",
+    "category": "F. DEGREE AUDIT STRESS TESTS",
+    "subcategory": "missing required doctoral course",
+    "difficulty": "hard",
+    "requires_clarification": false,
+    "expected_behavior": "direct_answer",
+    "gold_answer": "No. CSCI 8001 is a mandatory Ph.D. course and students must complete it within 2 years of enrolling in the program. Advisor approval is not enough in the uploaded files to waive this requirement.",
+    "gold_answer_style": "paragraph_explanation",
+    "should_fallback": false,
+    "fallback_reason": "",
+    "required_evidence_sources": [
+      "handbook_only"
+    ],
+    "reasoning_hops": "2",
+    "likely_failure_mode": "Confusing PhD requirements",
+    "notes": "Tests required course vs advisor discretion."
+  },
+  {
+    "id": "E029",
+    "user_question": "I\u2019m Ph.D. and want to use 9 credits of CSCI 8994 directed research on my plan. Is that allowed?",
+    "category": "F. DEGREE AUDIT STRESS TESTS",
+    "subcategory": "directed research credit cap",
+    "difficulty": "medium",
+    "requires_clarification": false,
+    "expected_behavior": "cautious_answer_with_conditions",
+    "gold_answer": "Not under the standard Ph.D. rule in the handbook. A Computer Science doctoral student may use a maximum of 6 independent study or directed research credits, including CSCI 5991/8991 or CSCI 5994/8994, in the plan. Using 9 credits would exceed that standard cap, so you should ask the GPC/DGS whether any exception process exists.",
+    "gold_answer_style": "paragraph_explanation",
+    "should_fallback": true,
+    "fallback_reason": "The handbook states a cap; exceptions are not clearly authorized in the provided text.",
+    "required_evidence_sources": [
+      "handbook_only"
+    ],
+    "reasoning_hops": "2",
+    "likely_failure_mode": "Overconfident answer when handbook is unclear",
+    "notes": "Tests cap and fallback on exceptions."
+  },
+  {
+    "id": "E030",
+    "user_question": "I\u2019m M.S. Plan C. I have CSCI 5511, CSCI 5421, CSCI 5751, CSCI 8970, CSCI 4041, CSCI 5527, and enough non-CSCI credits to reach 31. Am I done?",
+    "category": "F. DEGREE AUDIT STRESS TESTS",
+    "subcategory": "invalid 4xxx plus audit calculation",
+    "difficulty": "adversarial",
+    "requires_clarification": false,
+    "expected_behavior": "cautious_answer_with_conditions",
+    "gold_answer": "Not enough information to say you are done, and there is at least one blocker: CSCI 4041 is a 4xxx course and cannot be used for a CSCI M.S. or MCS graduate program. Your listed breadth looks plausible\u2014CSCI 5511 Applications, CSCI 5421 Theory/Algorithms, and CSCI 5751 Architecture/Systems/Software\u2014and you included CSCI 8970. But you still need to verify 16 valid 5xxx/8xxx CSCI credits, 6 advanced CSCI credits, GPA, A-F grading where required, approved related-field/elective use, and Plan C project coursework.",
+    "gold_answer_style": "step_by_step_reasoning",
+    "should_fallback": true,
+    "fallback_reason": "Full degree completion depends on credits, grading basis, advanced list, GPA, and project-course approval not fully stated.",
+    "required_evidence_sources": [
+      "handbook_plus_courses"
+    ],
+    "reasoning_hops": "3+",
+    "likely_failure_mode": "Degree-audit bookkeeping errors",
+    "notes": "Adversarial scenario with one hidden invalid course."
+  },
+  {
+    "id": "E031",
+    "user_question": "My M.S. Plan C includes 7 credits of CSCI 5994 directed research. Is that okay?",
+    "category": "F. DEGREE AUDIT STRESS TESTS",
+    "subcategory": "independent/directed research cap",
+    "difficulty": "hard",
+    "requires_clarification": false,
+    "expected_behavior": "cautious_answer_with_conditions",
+    "gold_answer": "Under the standard master\u2019s policy, only 6 credits of independent study or directed research may be used toward a master\u2019s degree without written consent of the faculty advisor and DGS. Seven credits would exceed the standard 6-credit allowance, so it is only potentially usable with the required written consent and proper GPAS explanation.",
+    "gold_answer_style": "paragraph_explanation",
+    "should_fallback": true,
+    "fallback_reason": "Use above 6 credits depends on written consent and approval.",
+    "required_evidence_sources": [
+      "handbook_only"
+    ],
+    "reasoning_hops": "2",
+    "likely_failure_mode": "Failure to trigger fallback when approval is required",
+    "notes": "Approval-dependent edge case."
+  },
+  {
+    "id": "E032",
+    "user_question": "Can the assistant tell me which professor will be easiest for CSCI 5521 next semester?",
+    "category": "G. FALLBACK / ESCALATION CASES",
+    "subcategory": "future instructor/availability not in files",
+    "difficulty": "medium",
+    "requires_clarification": false,
+    "expected_behavior": "refuse_due_to_insufficient_information",
+    "gold_answer": "The uploaded files do not reliably determine next semester\u2019s instructor assignments or who will be \u201ceasiest.\u201d The course data can show prerequisites, and the grades database may contain historical grade distributions if queried, but that still would not prove future instructor difficulty or availability. Check the official schedule and discuss course fit with the GPC or instructor.",
+    "gold_answer_style": "fallback_message",
+    "should_fallback": true,
+    "fallback_reason": "Future schedule/instructor difficulty is not reliably resolved by the files.",
+    "required_evidence_sources": [
+      "insufficient_in_files"
+    ],
+    "reasoning_hops": "1",
+    "likely_failure_mode": "Overconfident answer when files are insufficient",
+    "notes": "Tests refusal to rank professors based on incomplete data."
+  },
+  {
+    "id": "E033",
+    "user_question": "The handbook says errors or ambiguity do not change the rules. I found conflicting info about CSCI colloquium being 8970 vs 8790. Which should I use?",
+    "category": "G. FALLBACK / ESCALATION CASES",
+    "subcategory": "internal inconsistency in handbook",
+    "difficulty": "adversarial",
+    "requires_clarification": false,
+    "expected_behavior": "fallback_to_email_or_advisor",
+    "gold_answer": "The files are internally inconsistent: the degree requirement sections and course data point to CSCI 8970 as the Computer Science Colloquium, while another policy bullet mentions CSCI 8790. Because the handbook itself says errors or ambiguity do not change official rules and asks students to email csgradmn@umn.edu about errors or ambiguity, the safest answer is to contact the Graduate Program Coordinators and verify the correct colloquium number before submitting your GPAS plan.",
+    "gold_answer_style": "fallback_message",
+    "should_fallback": true,
+    "fallback_reason": "There is an apparent handbook inconsistency that requires program confirmation.",
+    "required_evidence_sources": [
+      "handbook_plus_courses"
+    ],
+    "reasoning_hops": "3+",
+    "likely_failure_mode": "Overconfident answer when handbook is unclear",
+    "notes": "Important adversarial inconsistency discovered in files."
+  },
+  {
+    "id": "E034",
+    "user_question": "Can I use extra CSCI courses instead of a Ph.D. supporting program?",
+    "category": "G. FALLBACK / ESCALATION CASES",
+    "subcategory": "approval-based PhD supporting program substitution",
+    "difficulty": "hard",
+    "requires_clarification": false,
+    "expected_behavior": "cautious_answer_with_conditions",
+    "gold_answer": "Maybe, but not automatically. The Ph.D. requires at least 6 credits in a supporting program or 12 credits in a minor field. The handbook says students who wish to use additional CSCI courses to fulfill the supporting program requirement must seek approval from the GPC. So the safe answer is: only with GPC approval; do not assume extra CSCI courses satisfy the supporting-program requirement by default.",
+    "gold_answer_style": "paragraph_explanation",
+    "should_fallback": false,
+    "fallback_reason": "Answerable from handbook with GPC approval condition \u2014 not a true fallback",
+    "required_evidence_sources": [
+      "handbook_only"
+    ],
+    "reasoning_hops": "2",
+    "likely_failure_mode": "Confusing supporting program/minor/CSCI credits",
+    "notes": "Tests approval language."
+  },
+  {
+    "id": "E035",
+    "user_question": "I took graduate coursework at UMN before joining the CSCI department. Can I just move all of it into my CSCI M.S. plan?",
+    "category": "G. FALLBACK / ESCALATION CASES",
+    "subcategory": "prior UMN coursework transfer/use limits",
+    "difficulty": "hard",
+    "requires_clarification": false,
+    "expected_behavior": "cautious_answer_with_conditions",
+    "gold_answer": "No, not automatically. Prior UMN coursework from outside your CSCI graduate-degree pursuit may be usable, but not all coursework is eligible. For a Computer Science master\u2019s degree, at least 20 credits must be taken after beginning that specific graduate degree program, so the maximum that can be used is 11 credits and the actual eligible amount may be lower. You must consult the Graduate Program Coordinators and submit the request in writing for review.",
+    "gold_answer_style": "paragraph_explanation",
+    "should_fallback": true,
+    "fallback_reason": "Eligibility and exact credit amount require GPC review.",
+    "required_evidence_sources": [
+      "handbook_only"
+    ],
+    "reasoning_hops": "2",
+    "likely_failure_mode": "Transfer-credit edge cases",
+    "notes": "Tests prior UMN vs outside-institution distinction."
   }
 ]

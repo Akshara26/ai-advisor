@@ -1,0 +1,12 @@
+question,category,passed,reason,drafted_email,response_snip
+What do I need to graduate?,C. AMBIGUOUS PHRASINGS,True,asked clarifying question,True,"Graduation requirements depend on your program (M.S., MCS, or Ph.D.) and on specific plans within those programs (such a"
+Do I need a committee?,C. AMBIGUOUS PHRASINGS,True,escalated to email,True,"Committee requirements depend on your program and plan. M.S. Plan A and Plan B require committees, while Plan C does not"
+Can this count toward my degree?,C. AMBIGUOUS PHRASINGS,True,asked clarifying question,True,"To provide you with an accurate answer, I need to know more details about your situation. Specifically, which program ar"
+Can I take this class next semester?,C. AMBIGUOUS PHRASINGS,True,escalated to email,True,Could you please provide the specific course code and any prerequisites you've already completed? This will help me asse
+I’m an M.S. student. Should I choose Plan A or Plan B?,C. AMBIGUOUS PHRASINGS,True,escalated to email,True,"The choice between Plan A and Plan B for your M.S. degree depends on your academic and career goals. 
+
+- **Plan A** typi"
+Can the assistant tell me which professor will be easiest for CSCI 5521 next semester?,G. FALLBACK / ESCALATION CASES,False,no email drafted,False,"CSCI 5521, Machine Learning Fundamentals, has an average GPA of 3.59, with 61.9% of students earning an A or A- grade. T"
+The handbook says errors or ambiguity do not change the rules. I found conflicting info about CSCI colloquium being 8970 vs 8790. Which should I use?,G. FALLBACK / ESCALATION CASES,False,no email drafted,False,"The correct course for the CSCI colloquium is CSCI 8970. This is clearly stated in the handbook, which specifies that st"
+Can I use extra CSCI courses instead of a Ph.D. supporting program?,G. FALLBACK / ESCALATION CASES,True,answered directly,False,"For the Ph.D. program, you must complete the supporting program requirement, which cannot be substituted by additional C"
+I took graduate coursework at UMN before joining the CSCI department. Can I just move all of it into my CSCI M.S. plan?,G. FALLBACK / ESCALATION CASES,True,escalated to email,True,"Transfer of graduate coursework into your CSCI M.S. plan is subject to certain guidelines. Typically, you may transfer u"
