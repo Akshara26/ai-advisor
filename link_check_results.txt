@@ -1,0 +1,65 @@
+
+✅ SCRAPEABLE (31):
+  200: https://cse.umn.edu/cs/faculty-instructor-directory
+  200: http://www.cs.umn.edu
+  200: https://csgrad.appointments.umn.edu
+  200: https://policy.umn.edu/education
+  200: https://faculty-roles.umn.edu/
+  200: https://onestop.umn.edu/academics/degree-completion-steps
+  200: https://onestop.umn.edu/academics/examination-committees
+  200: https://onestop.umn.edu/academics/grad-and-professional/degree-completion-steps
+  200: https://cse.umn.edu/cs/ms-overview#ProjectCoursework
+  200: http://www.unite.umn.edu/
+  200: https://onestop.umn.edu/academics/submit-your-gpas-approval
+  200: https://cse.umn.edu/cs/integrated-program-bachelorsmasters
+  200: https://www.cs.umn.edu/academics/graduate/phd/transfer-credits
+  200: https://faculty-roles.umn.edu/institution/UMNTC/programs/019660207/responsibilities
+  200: https://onestop.umn.edu/academics/doctoral-oral-exam-scheduling
+  200: https://cei.umn.edu/services-graduate-students-and-postdocs
+  200: https://www.cs.umn.edu/academics/undergraduate/engagement/ta_positions
+  200: https://onestop.umn.edu/finances/costs/tuition
+  200: https://onestop.umn.edu/finances/tuition
+  200: https://www.cs.umn.edu/academics/graduate/ta_handbook?page=ta
+  200: https://humanresources.umn.edu/find-job/graduate-assistant-jobs
+  200: https://cse.umn.edu/r/career-center/
+  200: https://grad.umn.edu/funding
+  200: https://grad.umn.edu/funding/current-students/apply-through-program/doctoral-dissertation-fellowship
+  200: http://policy.umn.edu/education/gradstudentleave
+  200: https://grad.umn.edu/admissions/readmission
+  200: https://onestop.umn.edu/academics/registration-times
+  200: https://onestop.umn.edu/academics/special-registration-categories-graduate-and-professional-students#accord-4
+  200: https://cse.umn.edu/cs/graduate-cpt
+  200: https://cse.umn.edu/cseit/classrooms-labs
+  200: https://cseit.umn.edu/
+
+❌ NOT SCRAPEABLE (30):
+  404 (text/html; charset=UTF-8): https://onestop.umn.edu/sites/onestop.umn.edu/files/forms/um1779_masters_time_extension_request_form.pdf
+  404 (text/html; charset=UTF-8): https://onestop.umn.edu/sites/onestop.umn.edu/files/forms/otr028_transfer_credits_undergraduate_to_graduate.pdf
+  404 (text/html; charset=UTF-8): https://onestop.umn.edu/sites/onestop.umn.edu/files/forms/um1777_doctoral_time_extension_request_form.pdf
+  401 (text/html; charset=utf-8): https://docs.google.com/a/umn.edu/forms/d/e/1FAIpQLSeDhNhmgQkktVAsyr8NBi4zWmzEBMieFUEOy6ujBrGKUbK9pg/viewform
+  200 (PDF - skip): https://assets.asr.umn.edu/files/gssp/otr204_Doctor_Phil_Edu_GDP.pdf
+  403 (text/html; charset=UTF-8): https://hr.umn.edu/Jobs/Student-Job-Center/Graduate-Assistant-Employment/About-Graduate-Assistant-Employment
+  404 (text/html; charset=UTF-8): https://onestop.umn.edu/sites/onestop.umn.edu/files/forms/otr194_application_for_advanced_masters_status.pdf
+  404 (text/html; charset=UTF-8): https://onestop.umn.edu/sites/onestop.umn.edu/files/forms/otr195_application_for_advanced_doctoral_status.pdf
+  403 (text/html; charset=UTF-8): https://isss.umn.edu/fstudents/employment/cpt
+  403 (text/html; charset=UTF-8): https://isss.umn.edu/fstudents/employment/opt
+  200 (PDF - skip): https://isss.dev.umn.edu/sites/isss.umn.edu/files/documents/cpt-course.pdf
+  403 (text/html; charset=UTF-8): https://onestop.umn.edu/sites/onestop.umn.edu/files/forms/_graduate_student_petition_gdp.pdf
+  403 (text/html; charset=UTF-8): https://isss.umn.edu/fstudent/rcl.html
+  403 (text/html; charset=UTF-8): https://onestop.umn.edu/sites/onestop.umn.edu/files/forms/otr174_umn_medical_supplement.pdf
+  401 (text/html; charset=utf-8): https://docs.google.com/forms/d/e/1FAIpQLSf_zd8lsW6LLELhVBK5xPAaNUV3hWXv5Y5AoaGCgJA71xGfjw/viewform
+  403 (text/html; charset=UTF-8): https://www.cs.umn.edu/academics/graduate/phd/transfer-credits
+  403 (text/html; charset=UTF-8): https://csgsa.umn.edu/
+  403 (text/html; charset=UTF-8): http://www.grad.umn.edu/admissions/index.html
+  403 (text/html; charset=UTF-8): https://humanresources.umn.edu/find-job/graduateemployment
+  403 (text/html; charset=UTF-8): https://onestop.umn.edu/academics/contact-gssp
+  403 (text/html; charset=UTF-8): https://www.cs.umn.edu/people/faculty
+  403 (text/html; charset=UTF-8): https://www.cs.umn.edu/research/research_areas
+  403 (text/html; charset=UTF-8): https://gsc.umn.edu/
+  403 (text/html; charset=UTF-8): https://gsc.umn.edu/health-care/health-services
+  403 (text/html; charset=UTF-8): https://gsc.umn.edu/programs
+  403 (text/html; charset=UTF-8): https://sass.umn.edu/
+  403 (text/html; charset=UTF-8): https://sass.umn.edu/academic-skills-coaching
+  403 (text/html; charset=UTF-8): https://sass.umn.edu/self-help
+  403 (text/html; charset=UTF-8): https://www.cs.umn.edu/academics/graduate/grad-handbook-archive
+  403 (text/html; charset=UTF-8): https://z.umn.edu/transfercreditstograd
