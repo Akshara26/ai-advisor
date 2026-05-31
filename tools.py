@@ -50,7 +50,7 @@ retriever = index.as_retriever(similarity_top_k=10)
 def _make_reranker():
     return SentenceTransformerRerank(
         model="cross-encoder/ms-marco-MiniLM-L-6-v2",
-        top_n=5  # 5 chunks for multi-requirement degree audit questions
+        top_n=7  # 7 chunks to cover multi-fact gold answers across degree audit and multi-hop questions
     )
 
 if _st_available:

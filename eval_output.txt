@@ -5,7 +5,7 @@
 /Users/aksharamadhu/Desktop/ai-advisor/eval.py:35: DeprecationWarning: Importing ContextRecall from 'ragas.metrics' is deprecated and will be removed in v1.0. Please use 'ragas.metrics.collections' instead. Example: from ragas.metrics.collections import ContextRecall
   from ragas.metrics import Faithfulness, AnswerRelevancy, ContextRecall
 Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
-Loading weights:   0%|          | 0/105 [00:00<?, ?it/s]Loading weights: 100%|██████████| 105/105 [00:00<00:00, 5727.09it/s]
+Loading weights:   0%|          | 0/105 [00:00<?, ?it/s]Loading weights: 100%|██████████| 105/105 [00:00<00:00, 6626.67it/s]
 /Users/aksharamadhu/Desktop/ai-advisor/eval.py:48: DeprecationWarning: LangchainLLMWrapper is deprecated and will be removed in a future version. Use llm_factory instead: from openai import OpenAI; from ragas.llms import llm_factory; llm = llm_factory('gpt-4o-mini', client=OpenAI(api_key='...'))
   judge_llm = LangchainLLMWrapper(ChatOpenAI(model="gpt-4o-mini", api_key=openai_key))
 /Users/aksharamadhu/Desktop/ai-advisor/eval.py:49: DeprecationWarning: LangchainEmbeddingsWrapper is deprecated and will be removed in a future version. Use the modern embedding providers instead: embedding_factory('openai', model='text-embedding-3-small', client=openai_client) or from ragas.embeddings import OpenAIEmbeddings, GoogleEmbeddings, HuggingFaceEmbeddings
@@ -18,156 +18,150 @@ Dataset: 35 total questions
 
 ── Track 1: RAGAS ──────────────────────────────────────────────
 [1/26] For the Computer Science M.S. Plan C, how many total credits do I need...
-Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00,  2.16it/s]Batches: 100%|██████████| 1/1 [00:00<00:00,  2.16it/s]
+Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00,  2.29it/s]Batches: 100%|██████████| 1/1 [00:00<00:00,  2.29it/s]
 INFO:httpx:HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
-Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 47.32it/s]
+Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 30.60it/s]
 INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
-INFO:graph:State data: {'answered': True, 'confidence': 'high', 'question_type': 'policy', 'reason': 'The answer is directly supported by the UMN CS Graduate Handbook.'}
+INFO:graph:State data: {'answered': True, 'confidence': 'high', 'question_type': 'policy', 'reason': 'The response directly addresses the credit requirement and committee requirement for M.S. Plan C based on the handbook.'}
 INFO:graph:Parse failed: False
 INFO:graph:Routing to: end
 INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
 INFO:httpx:HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
 [2/26] What GPA do M.S. and MCS students need to maintain?...
-Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 17.15it/s]
+Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 24.66it/s]
 INFO:httpx:HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
-Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 54.19it/s]
+Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 34.75it/s]
 INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
-INFO:graph:State data: {'answered': True, 'confidence': 'high', 'question_type': 'policy', 'reason': 'The GPA requirements are clearly defined in the handbook.'}
+INFO:graph:State data: {'answered': True, 'confidence': 'high', 'question_type': 'policy', 'reason': 'The GPA requirements for both M.S. and MCS programs are explicitly stated in the handbook.'}
 INFO:graph:Parse failed: False
 INFO:graph:Routing to: end
 INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
 INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
-INFO:graph:State data: {'answered': True, 'confidence': 'high', 'question_type': 'course_prerequisite', 'reason': 'Prerequisite information is straightforward and directly retrieved.'}
+INFO:graph:State data: {'answered': True, 'confidence': 'high', 'question_type': 'course_prerequisite', 'reason': 'The prerequisites were directly retrieved from the course information.'}
+INFO:graph:Parse failed: False
+INFO:graph:Routing to: end
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:graph:State data: {'answered': True, 'confidence': 'high', 'question_type': 'policy', 'reason': 'The answer is directly supported by specific handbook policy regarding breadth requirements.'}
 INFO:graph:Parse failed: False
 INFO:graph:Routing to: end
 INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
 WARNING:graph:No STATE block found in response
-INFO:graph:State data: {'answered': False, 'confidence': 'none', 'question_type': 'unknown', 'reason': 'No state block found'}
+INFO:graph:State data: {'answered': True, 'confidence': 'medium', 'question_type': 'unknown', 'reason': 'State block missing — defaulting to medium'}
 INFO:graph:Parse failed: True
 INFO:graph:Routing to: email_agent
 INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
-INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
-INFO:graph:State data: {'answered': True, 'confidence': 'high', 'question_type': 'policy', 'reason': 'The information about course substitution is clearly stated in the handbook.'}
-INFO:graph:Parse failed: False
-INFO:graph:Routing to: end
 INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
 INFO:httpx:HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
 [3/26] What are the prerequisites for CSCI 5751 Big Data Engineering?...
 [4/26] Can I count a course from another department toward my breadth require...
 [5/26] I found a non-CSCI AI course in another CSE department. Can it replace...
 [6/26] Can I use an 8000-level special topics course as both advanced CSCI cr...
-Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 16.93it/s]
+Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 16.92it/s]
 INFO:httpx:HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
-Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 36.73it/s]
+Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 36.40it/s]
 INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
-INFO:graph:State data: {'answered': True, 'confidence': 'high', 'question_type': 'policy', 'reason': 'The handbook clearly states that double dipping is allowed if courses meet the criteria for both advanced and breadth categories.'}
+INFO:graph:State data: {'answered': True, 'confidence': 'high', 'question_type': 'policy', 'reason': 'The answer is explicitly supported by the handbook.'}
+INFO:graph:Parse failed: False
+INFO:graph:Routing to: end
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:graph:State data: {'answered': True, 'confidence': 'high', 'question_type': 'policy', 'reason': 'The handbook explicitly states that committee approval is required before submitting the final oral exam report.'}
+INFO:graph:Parse failed: False
+INFO:graph:Routing to: end
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:graph:State data: {'answered': True, 'confidence': 'high', 'question_type': 'course_prerequisite', 'reason': 'The prerequisites for the hardest ML course and its previous course have been provided from authoritative sources.'}
 INFO:graph:Parse failed: False
 INFO:graph:Routing to: end
 INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
 INFO:httpx:HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
 [7/26] Can I submit my Plan B final oral exam report before my committee is o...
-Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 17.63it/s]
-INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
-INFO:graph:State data: {'answered': True, 'confidence': 'high', 'question_type': 'policy', 'reason': 'The policy on committee approval and submission of the exam report is clearly stated in the handbook.'}
-INFO:graph:Parse failed: False
-INFO:graph:Routing to: end
-INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
-INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
-INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
-INFO:graph:State data: {'answered': True, 'confidence': 'high', 'question_type': 'course_prerequisite', 'reason': 'Prerequisites for CSCI 5521 are clearly listed in the course data.'}
-INFO:graph:Parse failed: False
-INFO:graph:Routing to: end
-INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
-INFO:httpx:HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
 [8/26] What are the prerequisites for the hardest course in the ML breadth ar...
 [9/26] I completed CSCI 4041. Am I eligible for CSCI 5751, and does it help m...
-Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 15.44it/s]
+Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00,  7.36it/s]Batches: 100%|██████████| 1/1 [00:00<00:00,  7.34it/s]
 INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
-INFO:graph:State data: {'answered': True, 'confidence': 'high', 'question_type': 'policy', 'reason': 'The eligibility for the course and its applicability towards breadth requirements are directly supported by the retrieved course and handbook context.'}
+INFO:graph:State data: {'answered': True, 'confidence': 'high', 'question_type': 'policy', 'reason': 'Both the prerequisite eligibility and breadth course requirement details are explicitly supported by the handbook.'}
 INFO:graph:Parse failed: False
 INFO:graph:Routing to: end
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
 INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
 INFO:httpx:HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
 [10/26] If I take CSCI 5521 and CSCI 5527, how many breadth areas have I cover...
-Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 20.16it/s]
+Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 14.02it/s]
 INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
-INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
-INFO:graph:State data: {'answered': True, 'confidence': 'high', 'question_type': 'policy', 'reason': 'The answer is based on clear program policies regarding breadth area requirements.'}
+INFO:graph:State data: {'answered': True, 'confidence': 'high', 'question_type': 'policy', 'reason': 'The answer is based on clear requirements stated in the handbook.'}
 INFO:graph:Parse failed: False
 INFO:graph:Routing to: end
 INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
 INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
-INFO:graph:State data: {'answered': True, 'confidence': 'high', 'question_type': 'personal', 'reason': 'CSCI 5521 is a prerequisite for CSCI 5527, and both can count toward your M.S. requirements.'}
-INFO:graph:Parse failed: False
-INFO:graph:Routing to: end
-INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
-WARNING:graph:No STATE block found in response
-INFO:graph:State data: {'answered': False, 'confidence': 'none', 'question_type': 'unknown', 'reason': 'No state block found'}
-INFO:graph:Parse failed: True
-INFO:graph:Routing to: email_agent
-INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
-INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
-INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
-INFO:graph:State data: {'answered': True, 'confidence': 'high', 'question_type': 'course_prerequisite', 'reason': 'Both courses have separate prerequisites without overlap.'}
-INFO:graph:Parse failed: False
-INFO:graph:Routing to: end
-INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
-INFO:graph:State data: {'answered': True, 'confidence': 'high', 'question_type': 'policy', 'reason': 'Approval from the advisor or GPC is needed for transfer course equivalency.'}
+INFO:graph:State data: {'answered': True, 'confidence': 'high', 'question_type': 'degree_audit', 'reason': 'The prerequisites and degree audit results clearly indicate eligibility and requirements.'}
 INFO:graph:Parse failed: False
 INFO:graph:Routing to: end
 INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
 INFO:httpx:HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
 [11/26] I took CSCI 5521. Can I now take CSCI 5527, and can both count toward ...
 [12/26] I want an MCS course plan with CSCI 5511, CSCI 5521, and CSCI 5123 as ...
+Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 18.19it/s]
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:graph:State data: {'answered': True, 'confidence': 'high', 'question_type': 'policy', 'reason': 'The program allows the specified courses as long as they meet the breadth course requirements.'}
+INFO:graph:Parse failed: False
+INFO:graph:Routing to: end
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:graph:State data: {'answered': True, 'confidence': 'high', 'question_type': 'course_prerequisite', 'reason': 'The prerequisites for each course do not overlap requiring CSCI 4041 to be completed before CSCI 5521.'}
+INFO:graph:Parse failed: False
+INFO:graph:Routing to: end
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:graph:State data: {'answered': True, 'confidence': 'high', 'question_type': 'policy', 'reason': 'The handbook explicitly states that transfer credits do not satisfy M.S. breadth requirements.'}
+INFO:graph:Parse failed: False
+INFO:graph:Routing to: end
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:graph:State data: {'answered': True, 'confidence': 'high', 'question_type': 'policy', 'reason': 'The handbook clearly states that thesis credits cannot be used for Plan B degrees.'}
+INFO:graph:Parse failed: False
+INFO:graph:Routing to: end
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
 [13/26] Can I take CSCI 5521 before CSCI 4041?...
 [14/26] Can my outside transfer course satisfy M.S. breadth if it is basically...
 [15/26] I’m Plan B. Can I use 10 credits of CSCI 8777 thesis credits instead o...
-Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 17.49it/s]
-INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
-INFO:graph:State data: {'answered': True, 'confidence': 'high', 'question_type': 'policy', 'reason': 'The information regarding the use of thesis credits is clearly stated in the handbook.'}
-INFO:graph:Parse failed: False
-INFO:graph:Routing to: end
-INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
-INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
-INFO:httpx:HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
 [16/26] Can I count CSCI 4041 toward my M.S. because it is an algorithms cours...
-Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 13.82it/s]
+Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 16.67it/s]
 INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
-INFO:graph:State data: {'answered': False, 'confidence': 'medium', 'question_type': 'personal', 'reason': 'The answer depends on the specific M.S. plan the student is enrolled in.'}
+INFO:graph:State data: {'answered': True, 'confidence': 'high', 'question_type': 'policy', 'reason': 'The prohibition against 4000-level courses is clearly stated in the handbook.'}
 INFO:graph:Parse failed: False
-INFO:graph:Routing to: email_agent
+INFO:graph:Routing to: end
 INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
-INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
-INFO:graph:State data: {'answered': True, 'confidence': 'high', 'question_type': 'policy', 'reason': 'The policy clearly allows registration for thesis credits after passing the preliminary oral exam.'}
+INFO:graph:State data: {'answered': True, 'confidence': 'high', 'question_type': 'policy', 'reason': 'Registration for thesis credits is allowed after passing the preliminary exam.'}
 INFO:graph:Parse failed: False
 INFO:graph:Routing to: end
 INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
 INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
-INFO:graph:State data: {'answered': True, 'confidence': 'high', 'question_type': 'degree_audit', 'reason': 'The degree audit clearly indicates which breadth requirements are fulfilled and which are still needed.'}
+INFO:graph:State data: {'answered': True, 'confidence': 'high', 'question_type': 'degree_audit', 'reason': 'The audit confirms which breadth areas are fulfilled and which are not.'}
 INFO:graph:Parse failed: False
 INFO:graph:Routing to: end
 INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
 INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
-INFO:graph:State data: {'answered': True, 'confidence': 'high', 'question_type': 'degree_audit', 'reason': 'Degree audit confirmed unmet requirements for graduation.'}
+INFO:graph:State data: {'answered': True, 'confidence': 'high', 'question_type': 'degree_audit', 'reason': 'The audit clearly indicates unmet breadth requirements.'}
 INFO:graph:Parse failed: False
 INFO:graph:Routing to: end
 INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
 INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
-INFO:graph:State data: {'answered': True, 'confidence': 'high', 'question_type': 'degree_audit', 'reason': 'The audit clearly indicates what is needed for graduation.'}
+INFO:graph:State data: {'answered': True, 'confidence': 'high', 'question_type': 'degree_audit', 'reason': 'The total CSCI credits and other requirements have been confirmed through a degree audit.'}
 INFO:graph:Parse failed: False
 INFO:graph:Routing to: end
 INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
 INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
-INFO:graph:State data: {'answered': True, 'confidence': 'high', 'question_type': 'degree_audit', 'reason': 'All relevant information regarding your degree audit and graduation requirements was analyzed.'}
+INFO:graph:State data: {'answered': True, 'confidence': 'high', 'question_type': 'degree_audit', 'reason': 'The degree audit indicates unmet breadth requirements and GPA concerns.'}
 INFO:graph:Parse failed: False
 INFO:graph:Routing to: end
 INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
 INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
-INFO:graph:State data: {'answered': True, 'confidence': 'high', 'question_type': 'degree_audit', 'reason': 'The degree audit clearly indicates unmet requirements.'}
+INFO:graph:State data: {'answered': True, 'confidence': 'high', 'question_type': 'degree_audit', 'reason': 'The audit review indicates unmet breadth requirements and insufficient CSCI credits.'}
 INFO:graph:Parse failed: False
 INFO:graph:Routing to: end
 INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
-INFO:graph:State data: {'answered': True, 'confidence': 'high', 'question_type': 'policy', 'reason': 'The response was based on established requirements for the Ph.D. program and the role of advisor discretion.'}
+INFO:graph:State data: {'answered': True, 'confidence': 'high', 'question_type': 'policy', 'reason': 'The requirement for CSCI 8001 is clear, and exceptions can be made with advisor approval.'}
 INFO:graph:Parse failed: False
 INFO:graph:Routing to: end
 INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
@@ -180,121 +174,37 @@ INFO:httpx:HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200
 [22/26] I’m Plan C and have 31 credits, 3 breadth areas, 6 advanced CSCI credi...
 [23/26] I’m a Ph.D. student with 52 total credits including 28 course credits ...
 [24/26] I’m Ph.D. and want to use 9 credits of CSCI 8994 directed research on ...
-Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 18.77it/s]
+Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 16.54it/s]
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 38.62it/s]
 INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
-INFO:graph:State data: {'answered': True, 'confidence': 'high', 'question_type': 'policy', 'reason': 'The answer is directly supported by the retrieved handbook context.'}
+INFO:graph:State data: {'answered': True, 'confidence': 'high', 'question_type': 'policy', 'reason': 'The handbook explicitly limits the number of directed research credits that can be used.'}
 INFO:graph:Parse failed: False
 INFO:graph:Routing to: end
 INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
 INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
-INFO:graph:State data: {'answered': True, 'confidence': 'high', 'question_type': 'degree_audit', 'reason': 'All requirements for M.S. Plan C are satisfied based on completed courses.'}
+INFO:graph:State data: {'answered': True, 'confidence': 'high', 'question_type': 'degree_audit', 'reason': 'The degree audit confirms completion of requirements based on your provided courses.'}
 INFO:graph:Parse failed: False
 INFO:graph:Routing to: end
 INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
-INFO:graph:State data: {'answered': True, 'confidence': 'high', 'question_type': 'policy', 'reason': 'The maximum allowed CSCI 5994 credits are specified in the program requirements.'}
-INFO:graph:Parse failed: False
-INFO:graph:Routing to: end
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
 [25/26] I’m M.S. Plan C. I have CSCI 5511, CSCI 5421, CSCI 5751, CSCI 8970, CS...
 [26/26] My M.S. Plan C includes 7 credits of CSCI 5994 directed research. Is t...
+Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 17.76it/s]
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 33.38it/s]
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:graph:State data: {'answered': True, 'confidence': 'high', 'question_type': 'policy', 'reason': 'The maximum use of directed research credits is supported by handbook policy.'}
+INFO:graph:Parse failed: False
+INFO:graph:Routing to: end
 
 Running RAGAS scoring...
 Evaluating:   0%|          | 0/78 [00:00<?, ?it/s]INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
-WARNING:ragas.prompt.pydantic_prompt:LLM returned 1 generations instead of requested 3. Proceeding with 1 generations.
-INFO:httpx:HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
-INFO:httpx:HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
-Evaluating:   1%|▏         | 1/78 [00:01<01:25,  1.12s/it]INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
-INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
-INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
-INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
 INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
 WARNING:ragas.prompt.pydantic_prompt:LLM returned 1 generations instead of requested 3. Proceeding with 1 generations.
 INFO:httpx:HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
 INFO:httpx:HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
-WARNING:ragas.prompt.pydantic_prompt:LLM returned 1 generations instead of requested 3. Proceeding with 1 generations.
-INFO:httpx:HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
-INFO:httpx:HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
-WARNING:ragas.prompt.pydantic_prompt:LLM returned 1 generations instead of requested 3. Proceeding with 1 generations.
-INFO:httpx:HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
-INFO:httpx:HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
-WARNING:ragas.prompt.pydantic_prompt:LLM returned 1 generations instead of requested 3. Proceeding with 1 generations.
-INFO:httpx:HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
-INFO:httpx:HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
-Evaluating:   3%|▎         | 2/78 [00:02<01:37,  1.28s/it]INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
-INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
-INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
-INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
-INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
-INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
-INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
-INFO:httpx:HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
-INFO:httpx:HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
-Evaluating:   8%|▊         | 6/78 [00:30<06:48,  5.67s/it]INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
-INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
-INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
-INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
-INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
-INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
-INFO:openai._base_client:Retrying request to /chat/completions in 0.425443 seconds
-WARNING:ragas.prompt.pydantic_prompt:LLM returned 1 generations instead of requested 3. Proceeding with 1 generations.
-INFO:httpx:HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
-INFO:httpx:HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
-Evaluating:  10%|█         | 8/78 [00:51<08:42,  7.46s/it]INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
-INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
-INFO:openai._base_client:Retrying request to /chat/completions in 0.492181 seconds
-INFO:openai._base_client:Retrying request to /chat/completions in 0.390614 seconds
-INFO:openai._base_client:Retrying request to /chat/completions in 0.456766 seconds
-INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
-INFO:httpx:HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
-INFO:httpx:HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
-Evaluating:  21%|██        | 16/78 [00:53<02:38,  2.56s/it]INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
-INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
-INFO:httpx:HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
-INFO:httpx:HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
-INFO:httpx:HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
-INFO:httpx:HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
-Evaluating:  22%|██▏       | 17/78 [00:53<02:24,  2.37s/it]INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
-INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
-INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
-INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
-INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
-INFO:httpx:HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
-INFO:httpx:HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
-Evaluating:  24%|██▍       | 19/78 [00:54<01:49,  1.86s/it]INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
-INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
-Evaluating:  26%|██▌       | 20/78 [00:54<01:34,  1.64s/it]INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
-INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
-INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
-INFO:httpx:HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
-INFO:httpx:HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
-Evaluating:  29%|██▉       | 23/78 [00:55<01:00,  1.11s/it]INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
-INFO:httpx:HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
-INFO:httpx:HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
-Evaluating:  31%|███       | 24/78 [00:55<00:54,  1.01s/it]INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
-INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
-INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
-INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
-INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
-WARNING:ragas.prompt.pydantic_prompt:LLM returned 1 generations instead of requested 3. Proceeding with 1 generations.
-INFO:httpx:HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
-INFO:httpx:HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
-Evaluating:  33%|███▎      | 26/78 [00:56<00:45,  1.15it/s]INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
-INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
-INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
-INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
-INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
-Evaluating:  41%|████      | 32/78 [00:56<00:17,  2.58it/s]INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
-INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
-INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
-INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
-Evaluating:  44%|████▎     | 34/78 [00:57<00:16,  2.66it/s]INFO:httpx:HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
-INFO:httpx:HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
-INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
-INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
-INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
-INFO:httpx:HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
-INFO:httpx:HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
-Evaluating:  46%|████▌     | 36/78 [00:58<00:18,  2.26it/s]INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
-INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+Evaluating:   1%|▏         | 1/78 [00:01<01:22,  1.07s/it]INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
 INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
 INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
 INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
@@ -303,33 +213,19 @@ INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1
 WARNING:ragas.prompt.pydantic_prompt:LLM returned 1 generations instead of requested 3. Proceeding with 1 generations.
 INFO:httpx:HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
 INFO:httpx:HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
-Evaluating:  54%|█████▍    | 42/78 [00:59<00:09,  3.70it/s]INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
-INFO:httpx:HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
-INFO:httpx:HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
-Evaluating:  55%|█████▌    | 43/78 [01:00<00:10,  3.32it/s]INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
-INFO:httpx:HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
-INFO:httpx:HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
-Evaluating:  56%|█████▋    | 44/78 [01:00<00:10,  3.13it/s]INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+Evaluating:   3%|▎         | 2/78 [00:01<00:50,  1.51it/s]INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
 INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
-INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
-INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
-INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
-INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
-INFO:httpx:HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
-INFO:httpx:HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
-Evaluating:  63%|██████▎   | 49/78 [01:01<00:06,  4.38it/s]INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
 INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
 WARNING:ragas.prompt.pydantic_prompt:LLM returned 1 generations instead of requested 3. Proceeding with 1 generations.
 INFO:httpx:HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
 INFO:httpx:HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
-Evaluating:  64%|██████▍   | 50/78 [01:01<00:07,  3.88it/s]INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
-INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
-INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
-INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
-INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+WARNING:ragas.prompt.pydantic_prompt:LLM returned 1 generations instead of requested 3. Proceeding with 1 generations.
 INFO:httpx:HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
 INFO:httpx:HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
-Evaluating:  69%|██████▉   | 54/78 [01:02<00:05,  4.80it/s]INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+WARNING:ragas.prompt.pydantic_prompt:LLM returned 1 generations instead of requested 3. Proceeding with 1 generations.
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+Evaluating:   4%|▍         | 3/78 [00:02<01:03,  1.18it/s]INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
 INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
 INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
 INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
@@ -337,90 +233,191 @@ INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1
 WARNING:ragas.prompt.pydantic_prompt:LLM returned 1 generations instead of requested 3. Proceeding with 1 generations.
 INFO:httpx:HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
 INFO:httpx:HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
-Evaluating:  73%|███████▎  | 57/78 [01:02<00:04,  4.66it/s]INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+Evaluating:   9%|▉         | 7/78 [00:02<00:21,  3.31it/s]INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
 INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
 WARNING:ragas.prompt.pydantic_prompt:LLM returned 1 generations instead of requested 3. Proceeding with 1 generations.
 INFO:httpx:HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
 INFO:httpx:HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
-Evaluating:  74%|███████▍  | 58/78 [01:03<00:04,  4.21it/s]INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
-INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
-INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
-INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
-Evaluating:  81%|████████  | 63/78 [01:03<00:02,  7.41it/s]INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+Evaluating:  15%|█▌        | 12/78 [00:03<00:15,  4.22it/s]INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
 INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
 INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
 WARNING:ragas.prompt.pydantic_prompt:LLM returned 1 generations instead of requested 3. Proceeding with 1 generations.
 INFO:httpx:HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
 INFO:httpx:HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+Evaluating:  17%|█▋        | 13/78 [00:04<00:17,  3.80it/s]INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+WARNING:ragas.prompt.pydantic_prompt:LLM returned 1 generations instead of requested 3. Proceeding with 1 generations.
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+Evaluating:  19%|█▉        | 15/78 [00:04<00:14,  4.23it/s]INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
 INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
 INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
 WARNING:ragas.prompt.pydantic_prompt:LLM returned 1 generations instead of requested 3. Proceeding with 1 generations.
 INFO:httpx:HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
 INFO:httpx:HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
-Evaluating:  83%|████████▎ | 65/78 [01:04<00:03,  3.89it/s]INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+Evaluating:  22%|██▏       | 17/78 [00:05<00:16,  3.80it/s]INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
 INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
 INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
 INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
-Evaluating:  88%|████████▊ | 69/78 [01:04<00:01,  5.79it/s]INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+Evaluating:  26%|██▌       | 20/78 [00:05<00:12,  4.65it/s]INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
 INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
 INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
-Evaluating:  91%|█████████ | 71/78 [01:06<00:02,  2.89it/s]INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
 INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
-Evaluating:  94%|█████████▎| 73/78 [01:07<00:01,  3.18it/s]INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
 INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
-Evaluating:  96%|█████████▌| 75/78 [01:08<00:01,  2.96it/s]INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
-Evaluating:  97%|█████████▋| 76/78 [01:09<00:00,  2.18it/s]INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
-Evaluating:  99%|█████████▊| 77/78 [01:10<00:00,  1.85it/s]INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
-Evaluating: 100%|██████████| 78/78 [01:10<00:00,  1.74it/s]Evaluating: 100%|██████████| 78/78 [01:10<00:00,  1.10it/s]
+Evaluating:  32%|███▏      | 25/78 [00:05<00:06,  8.08it/s]INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+WARNING:ragas.prompt.pydantic_prompt:LLM returned 1 generations instead of requested 3. Proceeding with 1 generations.
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+Evaluating:  35%|███▍      | 27/78 [00:06<00:09,  5.52it/s]INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+WARNING:ragas.prompt.pydantic_prompt:LLM returned 1 generations instead of requested 3. Proceeding with 1 generations.
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+Evaluating:  37%|███▋      | 29/78 [00:07<00:11,  4.26it/s]INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+Evaluating:  40%|███▉      | 31/78 [00:07<00:09,  4.86it/s]INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+WARNING:ragas.prompt.pydantic_prompt:LLM returned 1 generations instead of requested 3. Proceeding with 1 generations.
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+Evaluating:  41%|████      | 32/78 [00:08<00:13,  3.33it/s]INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+Evaluating:  42%|████▏     | 33/78 [00:08<00:14,  3.11it/s]INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+Evaluating:  53%|█████▎    | 41/78 [00:09<00:05,  7.39it/s]INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+Evaluating:  55%|█████▌    | 43/78 [00:10<00:07,  4.70it/s]INFO:httpx:HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+Evaluating:  56%|█████▋    | 44/78 [00:10<00:08,  3.90it/s]INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+Evaluating:  58%|█████▊    | 45/78 [00:11<00:07,  4.16it/s]INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+Evaluating:  59%|█████▉    | 46/78 [00:11<00:07,  4.25it/s]INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+Evaluating:  62%|██████▏   | 48/78 [00:11<00:05,  5.59it/s]INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+WARNING:ragas.prompt.pydantic_prompt:LLM returned 1 generations instead of requested 3. Proceeding with 1 generations.
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+Evaluating:  64%|██████▍   | 50/78 [00:11<00:05,  5.10it/s]INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+Evaluating:  67%|██████▋   | 52/78 [00:12<00:05,  4.46it/s]INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+Evaluating:  68%|██████▊   | 53/78 [00:12<00:06,  3.96it/s]INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+Evaluating:  69%|██████▉   | 54/78 [00:12<00:05,  4.23it/s]INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+Evaluating:  71%|███████   | 55/78 [00:13<00:06,  3.38it/s]INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+Evaluating:  74%|███████▍  | 58/78 [00:13<00:04,  4.86it/s]INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+Evaluating:  76%|███████▌  | 59/78 [00:13<00:03,  5.33it/s]INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+Evaluating:  78%|███████▊  | 61/78 [00:14<00:02,  6.77it/s]INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+Evaluating:  79%|███████▉  | 62/78 [00:14<00:03,  4.03it/s]INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+Evaluating:  82%|████████▏ | 64/78 [00:15<00:03,  4.39it/s]INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+Evaluating:  85%|████████▍ | 66/78 [00:15<00:02,  4.51it/s]INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+Evaluating:  87%|████████▋ | 68/78 [00:15<00:02,  4.85it/s]INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+Evaluating:  91%|█████████ | 71/78 [00:16<00:01,  4.60it/s]INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+Evaluating:  92%|█████████▏| 72/78 [00:16<00:01,  4.80it/s]INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+Evaluating:  95%|█████████▍| 74/78 [00:16<00:00,  6.08it/s]INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+Evaluating:  96%|█████████▌| 75/78 [00:18<00:01,  2.38it/s]INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+Evaluating:  97%|█████████▋| 76/78 [00:19<00:01,  1.63it/s]INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+Evaluating:  99%|█████████▊| 77/78 [00:20<00:00,  1.54it/s]INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+Evaluating: 100%|██████████| 78/78 [00:21<00:00,  1.33it/s]Evaluating: 100%|██████████| 78/78 [00:21<00:00,  3.62it/s]
 INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
 WARNING:graph:No STATE block found in response
-INFO:graph:State data: {'answered': False, 'confidence': 'none', 'question_type': 'unknown', 'reason': 'No state block found'}
+INFO:graph:State data: {'answered': True, 'confidence': 'medium', 'question_type': 'unknown', 'reason': 'State block missing — defaulting to medium'}
+INFO:graph:Parse failed: True
+INFO:graph:Routing to: email_agent
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:graph:State data: {'answered': False, 'confidence': 'high', 'question_type': 'personal', 'reason': 'The answer depends on which specific graduate program and plan the student is in.'}
+INFO:graph:Parse failed: False
+INFO:graph:Routing to: email_agent
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+WARNING:graph:No STATE block found in response
+INFO:graph:State data: {'answered': True, 'confidence': 'medium', 'question_type': 'unknown', 'reason': 'State block missing — defaulting to medium'}
 INFO:graph:Parse failed: True
 INFO:graph:Routing to: email_agent
 INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
 INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
 WARNING:graph:No STATE block found in response
-INFO:graph:State data: {'answered': False, 'confidence': 'none', 'question_type': 'unknown', 'reason': 'No state block found'}
+INFO:graph:State data: {'answered': True, 'confidence': 'medium', 'question_type': 'unknown', 'reason': 'State block missing — defaulting to medium'}
 INFO:graph:Parse failed: True
 INFO:graph:Routing to: email_agent
 INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
 INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
 WARNING:graph:No STATE block found in response
-INFO:graph:State data: {'answered': False, 'confidence': 'none', 'question_type': 'unknown', 'reason': 'No state block found'}
-INFO:graph:Parse failed: True
-INFO:graph:Routing to: email_agent
-INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
-INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
-WARNING:graph:No STATE block found in response
-INFO:graph:State data: {'answered': False, 'confidence': 'none', 'question_type': 'unknown', 'reason': 'No state block found'}
-INFO:graph:Parse failed: True
-INFO:graph:Routing to: email_agent
-INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
-INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
-WARNING:graph:No STATE block found in response
-INFO:graph:State data: {'answered': False, 'confidence': 'none', 'question_type': 'unknown', 'reason': 'No state block found'}
+INFO:graph:State data: {'answered': True, 'confidence': 'medium', 'question_type': 'unknown', 'reason': 'State block missing — defaulting to medium'}
 INFO:graph:Parse failed: True
 INFO:graph:Routing to: email_agent
 INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
 INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
 INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
-INFO:graph:State data: {'answered': True, 'confidence': 'high', 'question_type': 'unknown', 'reason': 'The GPA distribution shows course difficulty but does not specify professor easiness.'}
+INFO:graph:State data: {'answered': True, 'confidence': 'high', 'question_type': 'unknown', 'reason': 'Provided historical grading data indicates favorable outcomes for CSCI 5521.'}
 INFO:graph:Parse failed: False
 INFO:graph:Routing to: end
 INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
 INFO:httpx:HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
 
 === RAGAS RESULTS (26 questions) ===
-Faithfulness:     51.07%
-Answer Relevancy: 53.57%
-Context Recall:   37.82%
-Overall:          47.49%
+Faithfulness:     52.53%
+Answer Relevancy: 63.79%
+Context Recall:   38.46%
+Overall:          51.59%
 
 ── Track 2: Behavioral ─────────────────────────────────────────
 [1/9] What do I need to graduate?...
   ✅ PASS — asked clarifying question
 [2/9] Do I need a committee?...
-  ✅ PASS — escalated to email
+  ✅ PASS — asked clarifying question
 [3/9] Can this count toward my degree?...
   ✅ PASS — asked clarifying question
 [4/9] Can I take this class next semester?...
@@ -430,33 +427,31 @@ Overall:          47.49%
 [6/9] Can the assistant tell me which professor will be easiest for CSCI 552...
   ❌ FAIL — no email drafted
 [7/9] The handbook says errors or ambiguity do not change the rules. I found...
-Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 11.72it/s]
+Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 11.06it/s]
 INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
-INFO:graph:State data: {'answered': True, 'confidence': 'high', 'question_type': 'policy', 'reason': 'The handbook confirms that CSCI 8970 is the course required for the colloquium.'}
+INFO:graph:State data: {'answered': True, 'confidence': 'high', 'question_type': 'policy', 'reason': 'CSCI 8970 is explicitly required as the colloquium course in the handbook.'}
 INFO:graph:Parse failed: False
 INFO:graph:Routing to: end
 INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
-INFO:graph:State data: {'answered': True, 'confidence': 'high', 'question_type': 'policy', 'reason': 'The response is based on established program requirements.'}
+INFO:graph:State data: {'answered': True, 'confidence': 'high', 'question_type': 'policy', 'reason': 'The handbook explicitly states that supporting programs must follow specific guidelines.'}
 INFO:graph:Parse failed: False
 INFO:graph:Routing to: end
 INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
-WARNING:graph:No STATE block found in response
-INFO:graph:State data: {'answered': False, 'confidence': 'none', 'question_type': 'unknown', 'reason': 'No state block found'}
-INFO:graph:Parse failed: True
-INFO:graph:Routing to: email_agent
-INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:graph:State data: {'answered': True, 'confidence': 'high', 'question_type': 'policy', 'reason': 'The response is based on the explicit policies regarding transfer credits from the handbook.'}
+INFO:graph:Parse failed: False
+INFO:graph:Routing to: end
   ❌ FAIL — no email drafted
 [8/9] Can I use extra CSCI courses instead of a Ph.D. supporting program?...
   ✅ PASS — answered directly
 [9/9] I took graduate coursework at UMN before joining the CSCI department. ...
-  ✅ PASS — escalated to email
+  ❌ FAIL — no email drafted
 
 === BEHAVIORAL RESULTS (9 questions) ===
-Pass rate: 77.78%  (7/9)
+Pass rate: 66.67%  (6/9)
 
 ── Quality Gates ───────────────────────────────────────────────
-RAGAS      (47.49% >= 74%):      ❌ FAIL
-Behavioral (78% >= 75%): ✅ PASS
+RAGAS      (51.59% >= 66%):      ❌ FAIL
+Behavioral (67% >= 75%): ❌ FAIL
 
 ❌ QUALITY GATE FAILED
 

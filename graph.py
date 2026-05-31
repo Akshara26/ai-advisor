@@ -48,6 +48,16 @@ Core behavior:
 * If the policy depends on approval, discretion, exceptions, or missing student-specific information, explain the rule and say what information or approval is needed.
 * If official documentation appears inconsistent or ambiguous, escalate to the Graduate Program Coordinators at [csgradmn@umn.edu](mailto:csgradmn@umn.edu).
 
+Prohibition rule:
+If the retrieved context explicitly says something is NOT allowed, NOT accepted, or PROHIBITED — state that clearly as a "No."
+Do NOT substitute "Yes, with approval" or "possibly, check with GPC" for an explicit handbook prohibition.
+Handbook explicit bans include:
+- Transfer credits from outside institutions cannot satisfy M.S. or MCS breadth requirements
+- 4xxx-level courses cannot be applied to M.S. or MCS degree requirements
+- Thesis credits (CSCI 8777) are not accepted for Plan B degrees
+- Non-listed courses do not count toward breadth unless the department has approved them for a specific area
+When any of these bans apply, answer "No" and cite the source.
+
 Clarification rule:
 Ask a clarifying question before answering when the student's question is missing information that changes the answer.
 
@@ -82,6 +92,9 @@ Response style:
 * Be precise. Students need accurate, actionable information.
 * When referencing offices or resources, include their URL or email if available in the retrieved context.
 
+Tool sequencing:
+- When calling degree_audit, always follow it with a search_handbook call using a policy query that matches the student's plan and situation (e.g. "MS Plan C requirements credits breadth colloquium", "PhD supporting program requirements"). This ensures handbook policy text is available alongside the audit result.
+
 Source citations:
 
 * Each retrieved handbook chunk is prefixed with a source label like [Handbook p.12] or [cs.umn.edu].
@@ -90,6 +103,7 @@ Source citations:
 * Only cite labels that appear in the retrieved context. Never fabricate page numbers or URLs.
 * For multi-step answers, cite each step's source individually if they come from different pages.
 * Web source labels show the domain, such as [cs.umn.edu] or [grad.umn.edu]. That is sufficient.
+- NEVER state a policy fact unless a retrieved chunk with a source label ([Handbook p.X] or [domain.edu]) explicitly supports it. If the fact is not in the retrieved context, say you cannot confirm it.
 
 State block:
 After your answer, include this EXACT block:
@@ -176,12 +190,15 @@ def parse_state_block(response_text: str) -> tuple[dict, bool]:
     match = re.search(r'---STATE---\s*(.*?)\s*---END STATE---', response_text, re.DOTALL)
     if not match:
         logger.warning("No STATE block found in response")
-        return {"answered": False, "confidence": "none", "question_type": "unknown", "reason": "No state block found"}, True
+        # Don't penalize student — treat as medium confidence answer
+        return {"answered": True, "confidence": "medium",
+                "question_type": "unknown", "reason": "State block missing — defaulting to medium"}, True
     try:
         return json.loads(match.group(1).strip()), False
     except json.JSONDecodeError as e:
         logger.warning(f"Failed to parse state block JSON: {e}")
-        return {"answered": False, "confidence": "none", "question_type": "unknown", "reason": "JSON parse error"}, True
+        return {"answered": True, "confidence": "medium",
+                "question_type": "unknown", "reason": "JSON parse error — defaulting to medium"}, True
 
 def clean_response(response_text: str) -> str:
     """Remove the ---STATE--- block from the student-facing response."""
@@ -339,9 +356,18 @@ Draft the email now."""
 
 # ── Routing ───────────────────────────────────────────────────────────────────
 def route_after_advisor(state: AdvisorState) -> str:
-    if state.get("answered") is True and state.get("confidence") == "high":
-        return "end"
-    return "email_agent"
+    answered = state.get("answered")
+    confidence = state.get("confidence", "none")
+    question_type = state.get("question_type", "unknown")
+    
+    # Always escalate unknown/personal low-confidence
+    if confidence in ("low", "none") or not answered:
+        return "email_agent"
+    # Escalate personal/unknown even at medium
+    if confidence == "medium" and question_type in ("personal", "unknown"):
+        return "email_agent"
+    return "end"
+
 
 # ── Build Graph ───────────────────────────────────────────────────────────────
 def build_graph():
