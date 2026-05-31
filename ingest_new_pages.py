@@ -1,10 +1,11 @@
 """
 Ingest high-value UMN web pages into the existing umn_handbook PGVector table.
-Run once to backfill; safe to re-run (skips already-ingested URLs).
+Safe to re-run — skips URLs whose doc_id already exists in the table.
 
 Usage:
-    python ingest_new_pages.py                  # dry run — shows what would be ingested
-    python ingest_new_pages.py --ingest         # actually ingests
+    python ingest_new_pages.py                           # dry run — shows what would be ingested
+    python ingest_new_pages.py --ingest                  # ingest new URLs, skip already-ingested ones
+    python ingest_new_pages.py --ingest --refresh        # re-scrape and replace all existing content
     python ingest_new_pages.py --ingest --category immigration/status   # one category at a time
 """
 
@@ -15,6 +16,7 @@ import time
 import hashlib
 from urllib.parse import urlparse
 
+import psycopg2
 import requests
 from bs4 import BeautifulSoup
 from dotenv import load_dotenv
@@ -89,9 +91,10 @@ def fetch_page(url: str) -> str | None:
         soup = BeautifulSoup(r.text, "html.parser")
 
         # Remove navigation, headers, footers, scripts, and styles
-        for tag in soup(["nav", "header", "footer", "script", "style",
-                          "aside", ".sidebar", "#sidebar"]):
+        for tag in soup(["nav", "header", "footer", "script", "style", "aside"]):
             tag.decompose()
+        for el in soup.select(".sidebar, #sidebar"):
+            el.decompose()
 
         # Prefer main content area
         main = (
@@ -126,11 +129,43 @@ def url_hash(url: str) -> str:
     return hashlib.md5(url.encode()).hexdigest()[:8]
 
 
+def already_ingested(url: str) -> bool:
+    """Return True if any row for this URL exists in the vector table."""
+    conn = psycopg2.connect(db_url)
+    try:
+        with conn.cursor() as cur:
+            cur.execute(
+                "SELECT 1 FROM data_umn_handbook WHERE metadata_->>'url' = %s LIMIT 1",
+                (url,)
+            )
+            return cur.fetchone() is not None
+    finally:
+        conn.close()
+
+
+def delete_existing(url: str) -> int:
+    """Delete all chunks for a URL. Returns number of rows deleted."""
+    conn = psycopg2.connect(db_url)
+    try:
+        with conn.cursor() as cur:
+            cur.execute(
+                "DELETE FROM data_umn_handbook WHERE metadata_->>'url' = %s",
+                (url,)
+            )
+            deleted = cur.rowcount
+        conn.commit()
+        return deleted
+    finally:
+        conn.close()
+
+
 # ── Main ──────────────────────────────────────────────────────────────────────
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--ingest", action="store_true",
                         help="Actually ingest (default is dry run)")
+    parser.add_argument("--refresh", action="store_true",
+                        help="Re-scrape and replace existing content (use for semester refreshes)")
     parser.add_argument("--category", default=None,
                         help="Only ingest a specific category (e.g. 'immigration/status')")
     args = parser.parse_args()
@@ -148,6 +183,7 @@ def main():
     print(f"Categories: {sorted(set(r['category'] for r in rows))}\n")
 
     ingested, skipped, failed = 0, 0, 0
+    index = VectorStoreIndex([], storage_context=storage_context) if args.ingest else None
 
     for i, row in enumerate(rows):
         url = row["url"]
@@ -156,9 +192,23 @@ def main():
 
         print(f"[{i+1}/{len(rows)}] [{category}] {url}")
 
+        exists = already_ingested(url)
+
         if not args.ingest:
-            print(f"  → would ingest")
+            if exists:
+                print(f"  ✓ already in DB {'(would refresh)' if args.refresh else '(would skip)'}")
+            else:
+                print(f"  → would ingest")
             continue
+
+        doc_id = url_hash(url)
+        if exists:
+            if not args.refresh:
+                print(f"  ✓ already ingested, skipping")
+                skipped += 1
+                continue
+            n = delete_existing(url)
+            print(f"  ↻ refreshing ({n} old chunks deleted)")
 
         text = fetch_page(url)
         time.sleep(REQUEST_DELAY)
@@ -176,7 +226,7 @@ def main():
                 "category":    category,
                 "depth":       depth,
                 "source_type": "web_page",
-                "doc_id":      url_hash(url),
+                "doc_id":      doc_id,
             },
             excluded_embed_metadata_keys=["doc_id", "depth"],
             excluded_llm_metadata_keys=["doc_id", "depth", "source_type"],
@@ -186,15 +236,11 @@ def main():
         nodes = splitter.get_nodes_from_documents([doc])
         print(f"  → {len(nodes)} chunks")
 
-        index = VectorStoreIndex(
-            nodes,
-            storage_context=storage_context,
-            show_progress=False,
-        )
+        index.insert_nodes(nodes)
         ingested += len(nodes)
 
     if args.ingest:
-        print(f"\n✅ Done: {ingested} chunks ingested, {failed} URLs failed")
+        print(f"\n✅ Done: {ingested} chunks ingested, {skipped} URLs skipped (already ingested), {failed} URLs failed")
     else:
         print(f"\nDry run complete. Run with --ingest to actually ingest.")
         print(f"Tip: start with one category:")
