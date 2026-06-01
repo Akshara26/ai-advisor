@@ -1,10 +1,10 @@
 {
-  "timestamp": "2026-05-31T04:19:48.735269+00:00",
+  "timestamp": "2026-06-01T00:34:37.455847+00:00",
   "ragas_questions": 26,
   "behavioral_questions": 9,
-  "faithfulness": 0.6497,
-  "answer_relevancy": 0.6588,
-  "context_recall": 0.6506,
-  "ragas_overall": 0.653,
+  "faithfulness": 0.7213,
+  "answer_relevancy": 0.6439,
+  "context_recall": 0.8045,
+  "ragas_overall": 0.7232,
   "behavioral_pass_rate": 0.6667
 }

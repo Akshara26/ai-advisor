@@ -1,12 +1,12 @@
 question,category,passed,reason,drafted_email,response_snip
-What do I need to graduate?,C. AMBIGUOUS PHRASINGS,True,asked clarifying question,True,"Graduation requirements vary depending on your specific program (M.S., M.C.S., or Ph.D.) and plan (Plan A, Plan B, or Pl"
-Do I need a committee?,C. AMBIGUOUS PHRASINGS,True,asked clarifying question,True,"Committee requirements depend on your program plan. M.S. Plan A and Plan B require committees, while Plan C does not. Ar"
-Can this count toward my degree?,C. AMBIGUOUS PHRASINGS,True,asked clarifying question,True,"To provide an accurate answer, I'll need some additional information. Which program are you in (M.S., MCS, or Ph.D.)? Ad"
-Can I take this class next semester?,C. AMBIGUOUS PHRASINGS,True,escalated to email,True,"To answer your question accurately, I need to know which class you're referring to. Can you please provide the course co"
-I’m an M.S. student. Should I choose Plan A or Plan B?,C. AMBIGUOUS PHRASINGS,True,escalated to email,True,"Choosing between Plan A and Plan B for your M.S. in Computer Science depends on your goals and preferences. 
+What do I need to graduate?,C. AMBIGUOUS PHRASINGS,True,asked clarifying question,True,"Graduation requirements depend on your specific program (M.S., MCS, or Ph.D.) and, for M.S. students, on your chosen pla"
+Do I need a committee?,C. AMBIGUOUS PHRASINGS,True,asked clarifying question,True,"Committee requirements depend on your specific program and plan. For example, M.S. Plan A and Plan B require committees,"
+Can this count toward my degree?,C. AMBIGUOUS PHRASINGS,True,asked clarifying question,True,"To provide a specific answer, could you please clarify which course you are referring to, and which program (M.S., MCS, "
+Can I take this class next semester?,C. AMBIGUOUS PHRASINGS,True,escalated to email,True,"To help answer your question accurately, I need to know which class you are referring to. Could you please provide the c"
+I’m an M.S. student. Should I choose Plan A or Plan B?,C. AMBIGUOUS PHRASINGS,True,escalated to email,True,"The choice between Plan A and Plan B primarily depends on your academic goals and interests. 
 
-- **Plan A"
-Can the assistant tell me which professor will be easiest for CSCI 5521 next semester?,G. FALLBACK / ESCALATION CASES,False,no email drafted,False,"I don't have specific information on which professor for CSCI 5521 will be ""easiest"" next semester, as that can vary by "
-The handbook says errors or ambiguity do not change the rules. I found conflicting info about CSCI colloquium being 8970 vs 8790. Which should I use?,G. FALLBACK / ESCALATION CASES,False,no email drafted,False,"The CSCI Colloquium course is designated as CSCI 8970. This is supported by the handbook, which specifies that 1 credit "
-Can I use extra CSCI courses instead of a Ph.D. supporting program?,G. FALLBACK / ESCALATION CASES,True,answered directly,False,"No, you cannot use extra CSCI courses instead of a Ph.D. supporting program without approval. The Ph.D. program requires"
-I took graduate coursework at UMN before joining the CSCI department. Can I just move all of it into my CSCI M.S. plan?,G. FALLBACK / ESCALATION CASES,False,no email drafted,False,"No, transfer credits from outside institutions cannot satisfy M.S. or MCS breadth requirements. However, internal gradua"
+- **Plan A** is a researc"
+Can the assistant tell me which professor will be easiest for CSCI 5521 next semester?,G. FALLBACK / ESCALATION CASES,False,no email drafted,False,"While I cannot provide specific details about individual professors or their teaching styles, I can share that CSCI 5521"
+The handbook says errors or ambiguity do not change the rules. I found conflicting info about CSCI colloquium being 8970 vs 8790. Which should I use?,G. FALLBACK / ESCALATION CASES,False,no email drafted,False,The Computer Science handbook specifies that the course you should use for the colloquium requirement is CSCI 8970. This
+Can I use extra CSCI courses instead of a Ph.D. supporting program?,G. FALLBACK / ESCALATION CASES,True,answered directly,False,The Ph.D. program in Computer Science requires that you complete a minimum of 6 credits in a supporting program or 12 cr
+I took graduate coursework at UMN before joining the CSCI department. Can I just move all of it into my CSCI M.S. plan?,G. FALLBACK / ESCALATION CASES,False,no email drafted,False,You cannot automatically move all of your previous coursework into your CSCI M.S. plan. While coursework taken at the Un
