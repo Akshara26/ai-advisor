@@ -1,0 +1,134 @@
+{
+  "metadata": {
+    "description": "Escalation rules for the CS grad advising assistant. Rules are evaluated before answer generation. Hard escalations must trigger regardless of model confidence.",
+    "last_verified": "2026-05-31"
+  },
+  "escalation_policy": {
+    "principle": "When in doubt, escalate. An unnecessary referral is better than incorrect high-stakes advice.",
+    "hard_escalation_note": "Hard escalations must be enforced by the graph/routing layer, NOT by LLM prompt compliance alone."
+  },
+  "intent_escalation_rules": [
+    {
+      "intent_pattern": ["cpt", "curricular practical training"],
+      "escalation_level": "hard",
+      "office": "isss",
+      "message_template": "CPT authorization must be arranged directly with ISSS. I can help you draft an email to them, but I cannot confirm your eligibility or process details. Contact ISSS at isss@umn.edu or 612-626-7100.",
+      "offer_email_draft": true
+    },
+    {
+      "intent_pattern": ["opt", "optional practical training", "stem opt", "work authorization"],
+      "escalation_level": "hard",
+      "office": "isss",
+      "message_template": "OPT applications and work authorization must be handled by ISSS. I can provide general context, but official guidance must come from ISSS at isss@umn.edu or 612-626-7100.",
+      "offer_email_draft": true
+    },
+    {
+      "intent_pattern": ["reduced course load", "fewer credits international", "less than full time international", "rcl"],
+      "escalation_level": "hard",
+      "office": "isss",
+      "message_template": "International students need explicit ISSS authorization to enroll in fewer than full-time credits. I cannot determine your eligibility — please contact ISSS at isss@umn.edu before making any enrollment changes.",
+      "offer_email_draft": true
+    },
+    {
+      "intent_pattern": ["visa", "f-1", "f1", "j-1", "j1", "i-20", "i20", "ds-2019", "immigration status"],
+      "escalation_level": "hard",
+      "office": "isss",
+      "message_template": "Immigration and visa questions require official guidance from ISSS. I can point you in the right direction, but please contact ISSS at isss@umn.edu or 612-626-7100 for any decisions that affect your status.",
+      "offer_email_draft": true
+    },
+    {
+      "intent_pattern": ["can i graduate", "am i on track to graduate", "graduate next semester", "graduation eligibility", "will i graduate"],
+      "escalation_level": "hard",
+      "office": "cs_grad",
+      "message_template": "I can give you a preliminary checklist based on the CS handbook, but official graduation eligibility must be confirmed with the CS Graduate Office at csgradmn@umn.edu and verified through your GPAS audit. Would you like me to walk through the checklist, draft an email to the grad office, or both?",
+      "offer_email_draft": true,
+      "allow_preliminary_answer": true,
+      "preliminary_answer_note": "Bot may show requirement checklist but MUST include disclaimer and offer escalation."
+    },
+    {
+      "intent_pattern": ["probation", "academic warning", "dismissal", "standing"],
+      "escalation_level": "hard",
+      "office": "cs_grad",
+      "message_template": "Academic standing questions are specific to your record and must be reviewed with the CS Graduate Office at csgradmn@umn.edu. I can explain the general policy, but I cannot assess your individual standing.",
+      "offer_email_draft": true
+    },
+    {
+      "intent_pattern": ["transfer credit", "transfer course", "count from previous", "credit from other institution", "count my master"],
+      "escalation_level": "hard",
+      "office": "cs_grad",
+      "message_template": "Transfer credit applicability must be formally reviewed by the CS Graduate Office. The general CS policy does not allow transfer credits toward the degree, but exceptions require coordinator and DGS approval. Would you like help drafting an inquiry email?",
+      "offer_email_draft": true
+    },
+    {
+      "intent_pattern": ["petition", "exception to policy", "request exception", "waive requirement"],
+      "escalation_level": "hard",
+      "office": "cs_grad",
+      "message_template": "Policy exceptions and petitions require formal review by the CS Graduate Office and/or DGS. I can explain the general process and help you draft a petition email, but the decision must come from the office.",
+      "offer_email_draft": true
+    },
+    {
+      "intent_pattern": ["funding", "ra position", "ta position", "stipend", "fellowship renewal", "lose funding"],
+      "escalation_level": "hard",
+      "office": "cs_faculty_advisor",
+      "message_template": "Funding decisions are made by your advisor and the CS department. I cannot advise on funding availability or decisions. Please discuss directly with your advisor, or contact csgradmn@umn.edu if you cannot reach them.",
+      "offer_email_draft": true
+    },
+    {
+      "intent_pattern": ["crisis", "emergency", "suicidal", "harm myself", "hurt myself", "mental health emergency"],
+      "escalation_level": "hard",
+      "office": "boynton",
+      "message_template": "If you or someone you know is in crisis, please reach out for support immediately:\n\n🆘 Boynton Health Crisis Line: 612-301-4673\n🚨 Campus Police / 911 for emergencies\n📞 National Suicide Prevention Lifeline: 988\n\nYou can also visit Boynton Health at boynton.umn.edu. Please reach out — you don't have to handle this alone.",
+      "offer_email_draft": false,
+      "stop_advising": true
+    }
+  ],
+  "ambiguity_rules": [
+    {
+      "ambiguous_intent": "does this count",
+      "missing_slots": ["course_code_or_name", "requirement_type"],
+      "clarification_prompt": "I'd be happy to help check that! Could you tell me: (1) which course you're asking about (course number or name), and (2) which requirement you're hoping it counts toward (e.g., breadth area, related field, advanced credits)?"
+    },
+    {
+      "ambiguous_intent": "what do i still need",
+      "missing_slots": ["program", "plan", "completed_courses"],
+      "clarification_prompt": "To give you an accurate picture of remaining requirements, I need a few details: (1) Are you in the M.S. or Ph.D. program? (2) Which plan are you on — Plan A (thesis), Plan B (coursework), or Plan C (MCS)? (3) Can you share which CSCI courses you've already completed?"
+    },
+    {
+      "ambiguous_intent": "can i graduate next semester",
+      "missing_slots": ["program", "plan", "completed_courses", "credits_completed", "gpa", "colloquium_done", "thesis_status"],
+      "clarification_prompt": "I can walk through the CS graduation checklist with you. To do that, I'll need: (1) Your program and plan (M.S. Plan A/B/C or Ph.D.), (2) Total credits completed so far, (3) Which breadth areas you've covered, (4) Whether you've completed the colloquium requirement, (5) GPA (optional but helpful). Want to go through it together?"
+    },
+    {
+      "ambiguous_intent": "can i take fewer credits",
+      "missing_slots": ["international_student_status"],
+      "clarification_prompt": "Are you asking as an international student on an F-1 or J-1 visa? The answer differs significantly for international students, and I want to make sure I give you the right guidance."
+    }
+  ],
+  "out_of_scope_intents": [
+    {
+      "category": "housing",
+      "referral": "https://housing.umn.edu",
+      "message": "Housing questions are outside my scope as an academic advisor. Please visit housing.umn.edu for on-campus options."
+    },
+    {
+      "category": "financial_aid_decisions",
+      "referral": "https://onestop.umn.edu/finances/financial-aid",
+      "message": "Financial aid decisions are handled by OneStop. Visit onestop.umn.edu/finances or call 612-624-1111."
+    },
+    {
+      "category": "legal_advice",
+      "referral": "https://sua.umn.edu/legal-services",
+      "message": "I'm not able to provide legal advice. The Student Legal Services office at UMN offers free consultations: sua.umn.edu/legal-services."
+    },
+    {
+      "category": "medical_advice",
+      "referral": "https://boynton.umn.edu",
+      "message": "For medical questions, please contact Boynton Health at boynton.umn.edu or 612-625-8400."
+    },
+    {
+      "category": "non_cs_graduate_programs",
+      "referral": null,
+      "message": "I'm currently configured specifically for UMN CS graduate students. For other programs, please contact your department's graduate coordinator."
+    }
+  ]
+}

@@ -1,4 +1,5 @@
 from typing import TypedDict, Annotated
+from langchain import messages
 from langgraph.graph import StateGraph, END
 from langgraph.graph.message import add_messages
 import json
@@ -7,6 +8,28 @@ import logging
 from openai import OpenAI
 from dotenv import load_dotenv
 import os
+
+import os as os
+
+# ── Load escalation config ────────────────────────────────────────────────────
+def _load_json(filename):
+    path = os.path.join(os.path.dirname(__file__), filename)
+    try:
+        with open(path) as f:
+            return json.load(f)
+    except FileNotFoundError:
+        logger.warning(f"{filename} not found — related features disabled")
+        return {}
+
+_ESCALATION_CONFIG  = _load_json("escalation_config.json")
+_OFFICE_DIRECTORY   = {
+    o["id"]: o
+    for o in _load_json("office_directory.json").get("offices", [])
+}
+_HARD_RULES = [
+    r for r in _ESCALATION_CONFIG.get("intent_escalation_rules", [])
+    if r.get("escalation_level") == "hard"
+]
 
 load_dotenv()
 
@@ -31,6 +54,7 @@ class AdvisorState(TypedDict):
     drafted_email: str
     parse_failed: bool
     tool_contexts: list
+    escalation_office: str   # office ID from hard escalation, empty string otherwise
 
 
 # ── System prompts ────────────────────────────────────────────────────────────
@@ -267,9 +291,56 @@ def normalize_content(msg) -> str:
         return msg.content or ""
     return msg.get("content", "")
 
+def check_hard_escalation(question: str) -> dict | None:
+    """
+    Check if the question matches a hard escalation intent pattern.
+    Runs BEFORE the LLM — matched questions never reach the advisor loop.
+    Returns the matching rule dict or None.
+    """
+    q_lower = question.lower()
+    for rule in _HARD_RULES:
+        if any(pattern in q_lower for pattern in rule.get("intent_pattern", [])):
+            logger.info(f"Hard escalation: {rule.get('intent_pattern', [])[:2]}")
+            return rule
+    return None
+
 # ── Advisor Node ──────────────────────────────────────────────────────────────
 def advisor_node(state: AdvisorState) -> AdvisorState:
     messages = state["messages"]
+
+    # ── Hard escalation pre-check ─────────────────────────────────────────────────
+# Evaluate BEFORE any LLM call. Matched intents short-circuit the advisor loop.
+    user_message = next(
+        (normalize_content(m) for m in reversed(messages) if normalize_role(m) == "user"),
+        ""
+    )
+    escalation = check_hard_escalation(user_message)
+    if escalation:
+        msg       = escalation.get("message_template", "Please contact the appropriate office.")
+        crisis    = escalation.get("stop_advising", False)
+        office_id = escalation.get("office", "")
+
+        # Look up office contact info and append to message if available
+        office = _OFFICE_DIRECTORY.get(office_id, {})
+        if office and not crisis:
+            contact = office.get("email") or office.get("phone") or office.get("url", "")
+            if contact and contact not in msg:
+                msg = f"{msg}\n\nContact: {contact}"
+
+        return {
+            **state,
+            "answer":            msg,
+            "answered":          crisis,   # crisis → END (no email); others → email_agent
+            "confidence":        "high" if crisis else "none",
+            "question_type":     "crisis_escalation" if crisis else "hard_escalation",
+            "tools_tried":       [],
+            "parse_failed":      False,
+            "tool_contexts":     [],
+            "escalation_office": office_id,
+            "messages":          messages + [{"role": "assistant", "content": msg}],
+        }
+# ── end pre-check ─────────────────────────────────────────────────────────────
+
     tools_tried = []
     tool_contexts = []
 
@@ -442,7 +513,8 @@ def chat(user_message: str, conversation_history: list) -> tuple:
         "tools_tried": [],
         "drafted_email": "",
         "parse_failed": False,
-        "tool_contexts": []
+        "tool_contexts": [],
+        "escalation_office": ""
     }
 
     result = advisor_graph.invoke(initial_state)

@@ -1,0 +1,134 @@
+{
+  "metadata": {
+    "description": "Key academic deadlines for UMN Twin Cities graduate students. Dates are APPROXIMATE and term-specific. Always verify at onestop.umn.edu/calendar for the current term.",
+    "source": "UMN OneStop Academic Calendar structure",
+    "last_verified": "2026-05-31",
+    "canonical_url": "https://onestop.umn.edu/calendar",
+    "warning": "NEVER cite these as authoritative dates without directing the student to verify at the canonical URL. Dates change every term."
+  },
+  "verification_instruction": "For any deadline question, ALWAYS include: 'Verify the exact date for your term at https://onestop.umn.edu/calendar'",
+  "process_deadlines": [
+    {
+      "process": "registration_open",
+      "label": "Registration Opens (by appointment time)",
+      "typical_timing": "~4 weeks before term start for continuing students",
+      "where_to_check": "https://onestop.umn.edu/calendar > Registration times",
+      "notes": "Appointment times are assigned by credit count. Check MyU for your specific time."
+    },
+    {
+      "process": "add_class",
+      "label": "Add a Class",
+      "typical_timing": "Through the end of the second week of the term (100% tuition liability begins earlier)",
+      "where_to_check": "https://onestop.umn.edu/calendar > Drop/add deadlines",
+      "notes": "After the second week, requires instructor and department approval. Self-service add closes earlier."
+    },
+    {
+      "process": "drop_class_full_refund",
+      "label": "Drop a Class – Full Tuition Credit",
+      "typical_timing": "Through the end of the first week of the term",
+      "where_to_check": "https://onestop.umn.edu/calendar > Drop/add deadlines",
+      "notes": "Dropping before this date results in no tuition charge for the course."
+    },
+    {
+      "process": "drop_class_no_w",
+      "label": "Drop a Class – No 'W' on Record",
+      "typical_timing": "Through the end of the second week of the term (check specific date)",
+      "where_to_check": "https://onestop.umn.edu/calendar > Drop/add deadlines",
+      "notes": "After this date, a 'W' (Withdrawal) appears on the transcript."
+    },
+    {
+      "process": "drop_class_with_w",
+      "label": "Drop a Class – 'W' on Record (Late Drop)",
+      "typical_timing": "Between end of week 2 and end of week 10 (approximate)",
+      "where_to_check": "https://onestop.umn.edu/calendar > Drop/add deadlines",
+      "notes": "Requires instructor approval after week 2. After the late-drop deadline, withdrawal from the full term may be required."
+    },
+    {
+      "process": "grade_basis_change",
+      "label": "Change Grade Basis (A-F to S/N)",
+      "typical_timing": "Through the end of the second week of the term",
+      "where_to_check": "https://onestop.umn.edu/change-grade-basis",
+      "notes": "Graduate students should be cautious about S/N basis — many programs require A-F for degree-applicable courses."
+    },
+    {
+      "process": "graduation_application",
+      "label": "Apply to Graduate (Degree Completion Intent)",
+      "typical_timing": "Typically the first month of the intended graduation term. For May graduation: ~January deadline.",
+      "where_to_check": "https://onestop.umn.edu/academics/graduation-steps",
+      "notes": "Graduate students must submit their 'month of intended graduation' via MyU. Separate from the GPAS audit."
+    },
+    {
+      "process": "degree_program_form_deadline",
+      "label": "CS Degree Program Form (Plan of Study) Submission",
+      "typical_timing": "By end of first semester of enrollment (CS handbook requirement)",
+      "where_to_check": "https://cse.umn.edu/cs/graduate",
+      "notes": "CS-specific. Must list all planned courses and be signed by advisor and DGS. Contact csgradmn@umn.edu."
+    },
+    {
+      "process": "thesis_submission",
+      "label": "Thesis / Dissertation Submission to Grad School",
+      "typical_timing": "Varies; typically 2–4 weeks before degree conferral date",
+      "where_to_check": "https://grad.umn.edu/degree-completion",
+      "notes": "Electronic submission via ETD system. Requires formatting review. Allow extra time for revisions."
+    },
+    {
+      "process": "doctoral_oral_exam_scheduling",
+      "label": "Doctoral Oral Exam Scheduling",
+      "typical_timing": "Must give at least 2 weeks advance notice to Grad School",
+      "where_to_check": "https://grad.umn.edu/doctoral-oral-exam",
+      "notes": "Committee must be submitted to Grad School before scheduling. Contact cs_grad and grad_school."
+    },
+    {
+      "process": "tuition_payment",
+      "label": "Tuition Payment Deadline",
+      "typical_timing": "Typically mid-to-late month in the first month of the term",
+      "where_to_check": "https://onestop.umn.edu/finances/billing-and-payment",
+      "notes": "Late payment results in a financial hold and late fee. RA/TA tuition benefit timing may differ."
+    },
+    {
+      "process": "financial_aid_disbursement",
+      "label": "Financial Aid Disbursement",
+      "typical_timing": "First week of term (after enrollment is confirmed)",
+      "where_to_check": "https://onestop.umn.edu/finances/financial-aid-timeline",
+      "notes": "Aid is credited to student account. Requires enrollment at aid-eligible credit level."
+    },
+    {
+      "process": "colloquium_enrollment",
+      "label": "CSCI 8970 Colloquium Enrollment",
+      "typical_timing": "By end of add deadline for the term",
+      "where_to_check": "https://cse.umn.edu/cs/graduate",
+      "notes": "CS-specific requirement. Must be enrolled in 8970 each semester in residence (check handbook for exceptions)."
+    },
+    {
+      "process": "cpt_application_lead_time",
+      "label": "CPT Application Lead Time (ISSS)",
+      "typical_timing": "Submit to ISSS at least 3–4 weeks BEFORE employment start date",
+      "where_to_check": "https://isss.umn.edu/work/cpt",
+      "notes": "CRITICAL: Allow extra time for ISSS processing. Course enrollment for CPT must come first. Contact ISSS early."
+    },
+    {
+      "process": "opt_application_lead_time",
+      "label": "OPT Application Lead Time (ISSS + USCIS)",
+      "typical_timing": "Apply to USCIS up to 90 days before program end date; USCIS processing ~3–5 months",
+      "where_to_check": "https://isss.umn.edu/work/opt",
+      "notes": "CRITICAL: Apply EARLY. USCIS processing takes months. Contact ISSS as soon as timeline is known."
+    }
+  ],
+  "term_structure": {
+    "fall": {
+      "typical_start": "Late August",
+      "typical_end": "Mid-December",
+      "registration_opens_approx": "Early April (for continuing grad students)"
+    },
+    "spring": {
+      "typical_start": "Mid-January",
+      "typical_end": "Early May",
+      "registration_opens_approx": "Late October / Early November"
+    },
+    "summer": {
+      "typical_start": "Late May",
+      "typical_end": "Mid-August",
+      "registration_opens_approx": "Late March"
+    }
+  }
+}

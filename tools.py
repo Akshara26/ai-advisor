@@ -12,6 +12,19 @@ from degree_audit import degree_audit
 
 load_dotenv()
 
+# ── Load structured data files ────────────────────────────────────────────────
+def load_json(filename):
+    path = os.path.join(os.path.dirname(__file__), filename)
+    try:
+        with open(path) as f:
+            return json.load(f)
+    except FileNotFoundError:
+        return {}
+
+DEADLINES_DATA = load_json("academic_deadlines.json")
+ROUTING_DATA   = {r["issue_id"]: r for r in load_json("issue_to_office_routing.json").get("routes", [])}
+OFFICES_DATA   = {o["id"]: o for o in load_json("office_directory.json").get("offices", [])}
+
 _st_available = False
 try:
     import streamlit as st
@@ -101,6 +114,48 @@ def search_handbook(query: str) -> str:
     chunks = [f"{_source_label(n)}\n{n.text}" for n in reranked]
     return "\n\n---\n\n".join(chunks)
 
+def get_deadline(process: str) -> str:
+    """Return typical timing and verification link for an academic deadline process."""
+    process_lower = process.lower()
+    for entry in _DEADLINES_DATA.get("process_deadlines", []):
+        if (process_lower in entry["process"].lower() or
+                process_lower in entry["label"].lower()):
+            return (
+                f"{entry['label']}\n"
+                f"Typical timing: {entry['typical_timing']}\n"
+                f"Where to check: {entry['where_to_check']}\n"
+                f"Notes: {entry['notes']}\n\n"
+                f"⚠️ {_DEADLINES_DATA.get('verification_instruction', 'Verify exact dates at onestop.umn.edu/calendar')}"
+            )
+    return (
+        f"No specific deadline found for '{process}'. "
+        f"Check https://onestop.umn.edu/calendar for current term dates."
+    )
+
+
+def route_contact(issue_type: str) -> str:
+    """Return the correct office and contact info for a student issue type."""
+    route = ROUTING_DATA.get(issue_type)
+    if not route:
+        issue_lower = issue_type.lower()
+        route = next(
+            (r for r in ROUTING_DATA.values()
+             if issue_lower in r.get("label", "").lower()),
+            None
+        )
+    if not route:
+        return "Contact the CS Graduate Office: csgradmn@umn.edu"
+
+    office_ids = route.get("office_ids", [])
+    lines = [f"Issue: {route['label']}", f"Escalation level: {route['escalation_level']}"]
+    for oid in office_ids:
+        office = OFFICES_DATA.get(oid, {})
+        if office:
+            contact = office.get("email") or office.get("phone") or office.get("url", "")
+            lines.append(f"→ {office['name']}: {contact}")
+    if route.get("bot_answer_note"):
+        lines.append(f"Guidance: {route['bot_answer_note']}")
+    return "\n".join(lines)
 
 # ── Tool schemas for GPT ───────────────────────────────────────────────────────
 tools = [
@@ -168,6 +223,34 @@ tools = [
                 "required": ["completed_courses", "program"]
             }
         }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "get_deadline",
+            "description": "Look up typical timing and verification link for an academic deadline process — registration, add/drop, graduation application, thesis submission, CPT lead time, tuition payment, etc.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "process": {"type": "string", "description": "Deadline process name e.g. 'graduation_application', 'add_class', 'cpt_application_lead_time'"}
+                },
+                "required": ["process"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "route_contact",
+            "description": "Return the correct UMN office and contact info for a student issue type — use when student needs to know who to contact about registration holds, transfer credits, petitions, GPAS, doctoral exams, etc.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "issue_type": {"type": "string", "description": "Issue type e.g. 'transfer_credit', 'graduation_eligibility', 'registration_hold', 'doctoral_oral_exam'"}
+                },
+                "required": ["issue_type"]
+            }
+        }
     }
 ]
 
@@ -181,4 +264,8 @@ def run_tool(tool_name: str, tool_args: dict) -> str:
         return get_grade_distribution(**tool_args)
     elif tool_name == "degree_audit":
         return degree_audit(**tool_args)
+    elif tool_name == "get_deadline":
+        return get_deadline(**tool_args)
+    elif tool_name == "route_contact":
+        return route_contact(**tool_args)
     return "Tool not found"
