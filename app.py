@@ -5,44 +5,8 @@ from memory import load_history, save_history
 import io
 import re
 from pypdf import PdfReader
+from transcript_utils import parse_transcript
 
-def parse_transcript(pdf_bytes: bytes) -> dict:
-    """
-    Parse a UMN unofficial transcript PDF.
-    Returns completed course codes (e.g. CSCI5523) and cumulative GPA.
-    Only includes courses with earned credits > 0 and a valid grade.
-    """
-    reader = PdfReader(io.BytesIO(pdf_bytes))
-    text = "\n".join(page.extract_text() or "" for page in reader.pages)
-
-    courses, gpa = [], None
-
-    for line in text.split("\n"):
-        line = line.strip()
-        if not line or "TERM GPA" in line or "TERM TOTALS" in line:
-            continue
-
-        cum_match = re.search(r"CUM GPA:\s*([\d.]+)", line)
-        if cum_match:
-            gpa = cum_match.group(1)
-
-        dept_match = re.match(r"^([A-Z]{2,5})\s+(\d{4})\b", line)
-        if not dept_match:
-            continue
-
-        dept, num = dept_match.group(1), dept_match.group(2)
-
-        # Completed courses have: ... earned grade points at end of line
-        grade_match = re.search(
-            r"(\d+\.\d+)\s+(\d+\.\d+)\s+([A-Z][+-]?|S|U)\s+\d+\.\d+\s*$",
-            line
-        )
-        if grade_match:
-            _, earned, _ = grade_match.groups()
-            if float(earned) > 0:
-                courses.append(f"{dept}{num}")
-
-    return {"courses": courses, "gpa": gpa}
 
 st.title("UMN CS Graduate Advisor")
 st.caption("Ask me anything about the CS graduate program at University of Minnesota.")
@@ -50,7 +14,7 @@ st.caption("Ask me anything about the CS graduate program at University of Minne
 # ── Sidebar: Transcript → Degree Audit ───────────────────────────────────────
 with st.sidebar:
     st.header("📄 Degree Audit")
-    st.caption("Upload your UMN unofficial transcript to skip typing your courses.")
+    st.caption("Upload your UMN unofficial transcript to skip typing your courses. ℹ️ Only course codes and GPA are extracted — the PDF is not stored.")
 
     uploaded = st.file_uploader(
         "Transcript PDF", type=["pdf"], label_visibility="collapsed"

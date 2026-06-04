@@ -117,7 +117,7 @@ def search_handbook(query: str) -> str:
 def get_deadline(process: str) -> str:
     """Return typical timing and verification link for an academic deadline process."""
     process_lower = process.lower()
-    for entry in _DEADLINES_DATA.get("process_deadlines", []):
+    for entry in DEADLINES_DATA.get("process_deadlines", []):
         if (process_lower in entry["process"].lower() or
                 process_lower in entry["label"].lower()):
             return (
@@ -125,7 +125,7 @@ def get_deadline(process: str) -> str:
                 f"Typical timing: {entry['typical_timing']}\n"
                 f"Where to check: {entry['where_to_check']}\n"
                 f"Notes: {entry['notes']}\n\n"
-                f"⚠️ {_DEADLINES_DATA.get('verification_instruction', 'Verify exact dates at onestop.umn.edu/calendar')}"
+                f"⚠️ {DEADLINES_DATA.get('verification_instruction', 'Verify exact dates at onestop.umn.edu/calendar')}"
             )
     return (
         f"No specific deadline found for '{process}'. "

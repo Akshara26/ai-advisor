@@ -73,7 +73,7 @@ def degree_audit(completed_courses: list, program: str = "ms") -> str:
     breadth_complete = len(breadth_met) == len(breadth_categories)
     results.append("SUMMARY:")
     if breadth_complete and colloquium in completed:
-        results.append("  Core requirements on track. Focus on reaching total credit requirement.")
+        results.append("  ✅ Core CSCI requirements appear satisfied based on the courses you provided. This is a preliminary checklist only — verify your official status via GPAS in MyU and confirm with csgradmn@umn.edu before making graduation decisions.")
     else:
         missing = []
         if not breadth_complete:
