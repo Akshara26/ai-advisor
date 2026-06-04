@@ -44,17 +44,22 @@ Settings.embed_model = embed_model
 
 async_db_url = db_url.replace("postgresql://", "postgresql+asyncpg://", 1)
 
-vector_store = PGVectorStore.from_params(
-    connection_string=db_url,
-    async_connection_string=async_db_url,
-    table_name="umn_handbook",
-    embed_dim=1536
-)
+_db_available = False
+retriever = None
 
-index = VectorStoreIndex.from_vector_store(vector_store)
-
-# Retrieve a wider candidate set — reranker will cut it down to top 3
-retriever = index.as_retriever(similarity_top_k=10)
+try:
+    vector_store = PGVectorStore.from_params(
+        connection_string=db_url,
+        async_connection_string=async_db_url,
+        table_name="umn_handbook",
+        embed_dim=1536,
+    )
+    index = VectorStoreIndex.from_vector_store(vector_store)
+    retriever = index.as_retriever(similarity_top_k=10)
+    _db_available = True
+except Exception as e:
+    print(f"Warning: Could not connect to vector store: {e}")
+    print("search_handbook will return a fallback message until the DB is available.")
 
 # Local cross-encoder reranker — ~80ms on CPU, no API calls, no cost.
 # Wrapped in st.cache_resource when running in Streamlit so the model loads
@@ -104,6 +109,15 @@ def search_handbook(query: str) -> str:
     Each chunk is prefixed with its source label so the advisor can
     include inline citations ([Handbook p.12], [cs.umn.edu], etc.).
     """
+    if not _db_available or retriever is None:
+        return (
+            "The handbook search is temporarily unavailable due to a database connection issue. "
+            "For your question, please refer directly to the CS Graduate Handbook at "
+            "https://cse.umn.edu/cs/graduate or contact csgradmn@umn.edu."
+        )
+    # rest of function unchanged
+    nodes = retriever.retrieve(query)
+
     nodes = retriever.retrieve(query)
     if not nodes:
         return "No relevant information found in the handbook."

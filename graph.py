@@ -43,14 +43,14 @@ def parse_state_block(response_text: str) -> tuple[dict, bool]:
     match = re.search(r'---STATE---\s*(.*?)\s*---END STATE---', response_text, re.DOTALL)
     if not match:
         logger.warning("No STATE block found in response")
-        return {"answered": True, "confidence": "medium",
-                "question_type": "unknown", "reason": "State block missing — defaulting to medium"}, True
+        return {"answered": False, "confidence": "none",
+                "question_type": "unknown", "reason": "State block missing"}, True
     try:
         return json.loads(match.group(1).strip()), False
     except json.JSONDecodeError as e:
         logger.warning(f"Failed to parse state block JSON: {e}")
-        return {"answered": True, "confidence": "medium",
-                "question_type": "unknown", "reason": "JSON parse error — defaulting to medium"}, True
+        return {"answered": False, "confidence": "none",
+                "question_type": "unknown", "reason": "State block JSON malformed"}, True
 
 
 def clean_response(response_text: str) -> str:
@@ -130,7 +130,7 @@ def advisor_node(state: AdvisorState) -> AdvisorState:
         message = response.choices[0].message
 
         if not message.tool_calls:
-            raw_answer = message.content
+            raw_answer = message.content or ""
             state_data, parse_failed = parse_state_block(raw_answer)
             clean_answer = clean_response(raw_answer)
 
@@ -186,7 +186,10 @@ def advisor_node(state: AdvisorState) -> AdvisorState:
 
     return {
         **state,
-        "answer":        "I was unable to find a satisfactory answer.",
+        "answer": (
+                    "I wasn't able to find a reliable answer to your question from the handbook. "
+                    "I've drafted an email to the CS graduate coordinators who can help directly."
+                ),
         "answered":      False,
         "confidence":    "none",
         "question_type": "unknown",
@@ -231,6 +234,11 @@ Draft the email now."""
 
 # ── Routing ───────────────────────────────────────────────────────────────────
 def route_after_advisor(state: AdvisorState) -> str:
+    # Explicit guard: if STATE block couldn't be parsed, always escalate.
+    # Don't rely on fallback confidence values for routing decisions.
+    if state.get("parse_failed"):
+        return "email_agent"
+
     confidence = state.get("confidence", "none")
     question_type = state.get("question_type", "unknown")
     answered = state.get("answered")
