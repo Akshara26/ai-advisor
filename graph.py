@@ -12,7 +12,7 @@ import os
 import os as os
 
 # ── Load escalation config ────────────────────────────────────────────────────
-def _load_json(filename):
+def load_json(filename):
     path = os.path.join(os.path.dirname(__file__), filename)
     try:
         with open(path) as f:
@@ -21,13 +21,13 @@ def _load_json(filename):
         logger.warning(f"{filename} not found — related features disabled")
         return {}
 
-_ESCALATION_CONFIG  = _load_json("escalation_config.json")
-_OFFICE_DIRECTORY   = {
+ESCALATION_CONFIG  = load_json("escalation_config.json")
+OFFICE_DIRECTORY   = {
     o["id"]: o
-    for o in _load_json("office_directory.json").get("offices", [])
+    for o in load_json("office_directory.json").get("offices", [])
 }
-_HARD_RULES = [
-    r for r in _ESCALATION_CONFIG.get("intent_escalation_rules", [])
+HARD_RULES = [
+    r for r in ESCALATION_CONFIG.get("intent_escalation_rules", [])
     if r.get("escalation_level") == "hard"
 ]
 

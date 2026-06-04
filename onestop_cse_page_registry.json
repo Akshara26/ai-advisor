@@ -1,0 +1,229 @@
+{
+  "metadata": {
+    "description": "Curated registry of high-value OneStop and CSE pages for the UMN CS Grad advisor. Each entry is a stub: what the page covers, its URL, owning office, and whether to ingest the full content or only reference it.",
+    "last_verified": "2026-05-31",
+    "ingestion_strategy": "Pages marked 'ingest: true' should be scraped and added to the RAG knowledge base. Pages marked 'reference_only: true' should be represented as stubs with URL + description — do not ingest full text as it changes frequently."
+  },
+  "pages": [
+    {
+      "id": "onestop_academic_calendar",
+      "title": "Academic Calendar",
+      "url": "https://onestop.umn.edu/calendar",
+      "owner": "onestop",
+      "category": "deadlines",
+      "ingest": false,
+      "reference_only": true,
+      "stub_description": "UMN Twin Cities academic calendar with term start/end dates, drop/add deadlines, registration windows, final exam times, and financial aid timeline. Always direct students here for current-term dates.",
+      "bot_use": "Direct students here for any date/deadline question. Do not state specific dates without this source — they change each term."
+    },
+    {
+      "id": "onestop_drop_add",
+      "title": "Drop/Add Deadlines",
+      "url": "https://onestop.umn.edu/calendar",
+      "owner": "onestop",
+      "category": "deadlines",
+      "ingest": false,
+      "reference_only": true,
+      "stub_description": "Term-specific deadlines for adding, dropping, and withdrawing from courses, including tuition refund cutoffs and W-grade deadlines.",
+      "bot_use": "Quote general policy (e.g., 'drop without W is typically end of week 2') but always direct to this page for current dates."
+    },
+    {
+      "id": "onestop_registration",
+      "title": "Register for Classes",
+      "url": "https://onestop.umn.edu/registration",
+      "owner": "onestop",
+      "category": "registration",
+      "ingest": true,
+      "reference_only": false,
+      "stub_description": "How to register for classes at UMN: self-service registration in MyU, class permission numbers, waitlists, time conflicts, registration rules for grad students.",
+      "bot_use": "Use for registration how-to questions. Registration rules section is useful for CS grad students."
+    },
+    {
+      "id": "onestop_registration_times",
+      "title": "Registration Times (Appointment Times)",
+      "url": "https://onestop.umn.edu/registration/registration-times",
+      "owner": "onestop",
+      "category": "registration",
+      "ingest": false,
+      "reference_only": true,
+      "stub_description": "Explains how registration appointment times are assigned by credit count and student type. Students check their specific time in MyU.",
+      "bot_use": "Explain that appointment times are assigned by credit count and found in MyU. Direct here for details."
+    },
+    {
+      "id": "onestop_holds",
+      "title": "Holds on Student Account",
+      "url": "https://onestop.umn.edu/student-record/holds",
+      "owner": "onestop",
+      "category": "registration",
+      "ingest": true,
+      "reference_only": false,
+      "stub_description": "Types of registration and financial holds at UMN, how to check holds in MyU, which office resolves each hold type.",
+      "bot_use": "Use to answer 'why can't I register' or 'I have a hold' questions. Provides office routing by hold type."
+    },
+    {
+      "id": "onestop_class_permission",
+      "title": "Class Permission Numbers",
+      "url": "https://onestop.umn.edu/registration/class-permission",
+      "owner": "onestop",
+      "category": "registration",
+      "ingest": true,
+      "reference_only": false,
+      "stub_description": "When and how to get a class permission number (consent code) from instructors or departments to register for closed, restricted, or instructor-consent courses.",
+      "bot_use": "Use for 'how do I get a permission number' questions."
+    },
+    {
+      "id": "onestop_waitlist",
+      "title": "Wait Lists",
+      "url": "https://onestop.umn.edu/registration/wait-lists",
+      "owner": "onestop",
+      "category": "registration",
+      "ingest": true,
+      "reference_only": false,
+      "stub_description": "How UMN course waitlists work, how students get moved from waitlist to enrolled, and what to do if waitlist doesn't resolve.",
+      "bot_use": "Use for waitlist-related registration questions."
+    },
+    {
+      "id": "onestop_grad_completion",
+      "title": "Grad and Professional: Degree Completion Steps",
+      "url": "https://onestop.umn.edu/academics/grad-and-professional",
+      "owner": "onestop",
+      "category": "graduation",
+      "ingest": true,
+      "reference_only": false,
+      "stub_description": "University-level steps for graduate degree completion: GPAS, declaring graduation month, thesis submission, oral exam, change of degree award date.",
+      "bot_use": "Use for university-level graduation process questions. CS-specific requirements come from CS handbook."
+    },
+    {
+      "id": "onestop_gpas",
+      "title": "GPAS – Graduate Planning and Audit System",
+      "url": "https://onestop.umn.edu/academics/grad-and-professional/gpas",
+      "owner": "onestop",
+      "category": "graduation",
+      "ingest": true,
+      "reference_only": false,
+      "stub_description": "What GPAS is, how to access it in MyU, how to read the audit, and what to do if there are discrepancies.",
+      "bot_use": "Use for 'what is GPAS', 'how do I check my degree progress', 'GPAS says I'm missing X' questions."
+    },
+    {
+      "id": "onestop_graduation_steps",
+      "title": "Graduation Steps (Graduate Students)",
+      "url": "https://onestop.umn.edu/academics/graduation-steps",
+      "owner": "onestop",
+      "category": "graduation",
+      "ingest": true,
+      "reference_only": false,
+      "stub_description": "Step-by-step university process to apply for graduation: submitting month of intended graduation, GPAS clearance, ceremony registration.",
+      "bot_use": "Use alongside CS handbook to answer graduation process questions."
+    },
+    {
+      "id": "onestop_transcripts",
+      "title": "Transcripts",
+      "url": "https://onestop.umn.edu/student-record/transcripts",
+      "owner": "onestop",
+      "category": "records",
+      "ingest": true,
+      "reference_only": false,
+      "stub_description": "How to order official and unofficial transcripts, processing times, costs, electronic vs. paper delivery.",
+      "bot_use": "Use for transcript request questions."
+    },
+    {
+      "id": "onestop_enrollment_verification",
+      "title": "Verify Enrollment",
+      "url": "https://onestop.umn.edu/student-record/verify-enrollment",
+      "owner": "onestop",
+      "category": "records",
+      "ingest": true,
+      "reference_only": false,
+      "stub_description": "How to get an enrollment verification letter (for employers, insurance, visa, etc.) via OneStop or National Student Clearinghouse.",
+      "bot_use": "Use for 'I need proof of enrollment' or 'how do I show I'm enrolled full-time' questions."
+    },
+    {
+      "id": "onestop_full_time_credits",
+      "title": "Full-Time Credits (Graduate)",
+      "url": "https://onestop.umn.edu/academics/full-time-credits",
+      "owner": "onestop",
+      "category": "registration",
+      "ingest": true,
+      "reference_only": false,
+      "stub_description": "Definition of full-time enrollment for graduate students at UMN, typically 6+ credits per semester. Relevant for financial aid, visa status, and tuition benefit eligibility.",
+      "bot_use": "Use for full-time enrollment definition questions. ALWAYS escalate international student implications to ISSS."
+    },
+    {
+      "id": "onestop_exception_petition",
+      "title": "Exception to Policy Petition",
+      "url": "https://onestop.umn.edu/leaving-u/exception-to-policy-petition",
+      "owner": "onestop",
+      "category": "petitions",
+      "ingest": true,
+      "reference_only": false,
+      "stub_description": "When and how to file a university-level exception to policy petition (e.g., retroactive add/drop, late withdrawal). Separate from CS department petitions.",
+      "bot_use": "Use for university-level exception questions. CS-specific petitions go through cs_grad."
+    },
+    {
+      "id": "onestop_leave_of_absence",
+      "title": "Leave of Absence",
+      "url": "https://onestop.umn.edu/leaving-u/leave-of-absence",
+      "owner": "onestop",
+      "category": "enrollment_status",
+      "ingest": true,
+      "reference_only": false,
+      "stub_description": "Process to request a leave of absence from UMN: eligibility, how to apply, implications for financial aid and enrollment. International students must contact ISSS.",
+      "bot_use": "Use for LOA questions. Always add ISSS escalation note for international students."
+    },
+    {
+      "id": "onestop_transfer_credit",
+      "title": "Transfer Credit (Graduate)",
+      "url": "https://onestop.umn.edu/academics/transfer",
+      "owner": "onestop",
+      "category": "transfer",
+      "ingest": true,
+      "reference_only": false,
+      "stub_description": "University-level policies on transfer credit for graduate students. CS-specific transfer credit policy is more restrictive — always cross-reference CS handbook.",
+      "bot_use": "Use alongside CS handbook. Hard escalation to cs_grad for any specific transfer credit determination."
+    },
+    {
+      "id": "onestop_contact",
+      "title": "Contact One Stop",
+      "url": "https://onestop.umn.edu/contact-us",
+      "owner": "onestop",
+      "category": "contact",
+      "ingest": true,
+      "reference_only": false,
+      "stub_description": "OneStop contact info: phone 612-624-1111, in-person locations (Coffey Hall, West Bank Skyway, Bruininks Hall), hours, and online chat/appointment options.",
+      "bot_use": "Always include this when routing to OneStop."
+    },
+    {
+      "id": "cse_grad_current_students",
+      "title": "CSE Graduate: Current Students",
+      "url": "https://cse.umn.edu/grad/current-students",
+      "owner": "cse_grad",
+      "category": "policies",
+      "ingest": true,
+      "reference_only": false,
+      "stub_description": "CSE college-level resources for current grad students: forms, policies, funding, professional development, and contact info.",
+      "bot_use": "Use for CSE-level policy questions and forms not covered in the CS department handbook."
+    },
+    {
+      "id": "cse_grad_probation",
+      "title": "CSE Academic Probation and Dismissal Policy",
+      "url": "https://cse.umn.edu/grad/current-students",
+      "owner": "cse_grad",
+      "category": "academic_standing",
+      "ingest": true,
+      "reference_only": false,
+      "stub_description": "CSE college-level policy on academic probation, dismissal, and reinstatement for graduate students. Triggered by GPA falling below 3.0 or other conditions.",
+      "bot_use": "Hard escalation required. Use only for explaining general policy, never for individual standing assessment."
+    },
+    {
+      "id": "cse_cs_graduate_page",
+      "title": "CS Graduate Program",
+      "url": "https://cse.umn.edu/cs/graduate",
+      "owner": "cs_grad",
+      "category": "program",
+      "ingest": true,
+      "reference_only": false,
+      "stub_description": "CS department graduate program overview, degree requirements summary, forms, contacts, and links to the full CS Graduate Handbook.",
+      "bot_use": "Primary reference for CS-specific program questions. Supplement with full handbook content."
+    }
+  ]
+}
