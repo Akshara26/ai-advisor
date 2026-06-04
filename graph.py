@@ -298,7 +298,7 @@ def check_hard_escalation(question: str) -> dict | None:
     Returns the matching rule dict or None.
     """
     q_lower = question.lower()
-    for rule in _HARD_RULES:
+    for rule in HARD_RULES:
         if any(pattern in q_lower for pattern in rule.get("intent_pattern", [])):
             logger.info(f"Hard escalation: {rule.get('intent_pattern', [])[:2]}")
             return rule
@@ -321,7 +321,7 @@ def advisor_node(state: AdvisorState) -> AdvisorState:
         office_id = escalation.get("office", "")
 
         # Look up office contact info and append to message if available
-        office = _OFFICE_DIRECTORY.get(office_id, {})
+        office = OFFICE_DIRECTORY.get(office_id, {})
         if office and not crisis:
             contact = office.get("email") or office.get("phone") or office.get("url", "")
             if contact and contact not in msg:
