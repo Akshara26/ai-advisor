@@ -18,7 +18,7 @@ def load_json(filename):
         with open(path) as f:
             return json.load(f)
     except FileNotFoundError:
-        logger.warning(f"{filename} not found — related features disabled")
+        print(f"Warning: {filename} not found — related features disabled")
         return {}
 
 ESCALATION_CONFIG  = load_json("escalation_config.json")
