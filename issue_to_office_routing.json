@@ -1,0 +1,308 @@
+{
+  "metadata": {
+    "description": "Maps student issue types to the correct office, escalation level, and suggested bot behavior.",
+    "last_verified": "2026-05-31",
+    "escalation_levels": {
+      "auto": "Bot can answer directly with sources.",
+      "soft": "Bot provides info but strongly recommends contacting the office.",
+      "hard": "Bot MUST NOT give a final answer. Must escalate to listed office immediately."
+    }
+  },
+  "routes": [
+    {
+      "issue_id": "degree_requirements_general",
+      "label": "General degree requirements (breadth, credits, GPA)",
+      "office_ids": ["cs_grad"],
+      "escalation_level": "soft",
+      "bot_can_answer": true,
+      "bot_answer_note": "Provide handbook-sourced answer. Always add: 'For official confirmation, contact csgradmn@umn.edu.'",
+      "offer_email_draft": false
+    },
+    {
+      "issue_id": "graduation_eligibility",
+      "label": "Whether student is on track to graduate",
+      "office_ids": ["cs_grad", "onestop"],
+      "escalation_level": "hard",
+      "bot_can_answer": false,
+      "bot_answer_note": "Provide preliminary checklist only. State clearly: 'Official graduation eligibility must be confirmed with your CS graduate coordinator at csgradmn@umn.edu and through your GPAS audit.'",
+      "offer_email_draft": true
+    },
+    {
+      "issue_id": "prerequisite_check",
+      "label": "Whether student meets prerequisites for a course",
+      "office_ids": [],
+      "escalation_level": "auto",
+      "bot_can_answer": true,
+      "bot_answer_note": "Answer directly using prerequisite tool. Note if prerequisites require department consent.",
+      "offer_email_draft": false
+    },
+    {
+      "issue_id": "course_counts_toward_requirement",
+      "label": "Whether a specific course counts toward a specific requirement",
+      "office_ids": ["cs_grad"],
+      "escalation_level": "soft",
+      "bot_can_answer": true,
+      "bot_answer_note": "Answer if course is in official approved list. If unclear, state uncertainty and refer to cs_grad. Always note if department approval is required.",
+      "offer_email_draft": true
+    },
+    {
+      "issue_id": "breadth_requirement",
+      "label": "Breadth area categories and which courses count",
+      "office_ids": ["cs_grad"],
+      "escalation_level": "soft",
+      "bot_can_answer": true,
+      "bot_answer_note": "Answer from handbook. Add caveat that substitutions require coordinator approval.",
+      "offer_email_draft": false
+    },
+    {
+      "issue_id": "transfer_credit",
+      "label": "Whether transfer credits can count toward degree",
+      "office_ids": ["cs_grad", "grad_school"],
+      "escalation_level": "hard",
+      "bot_can_answer": false,
+      "bot_answer_note": "Explain general policy (transfer credit typically not allowed per CS handbook). For any exceptions or external coursework, route to cs_grad. Do not confirm applicability.",
+      "offer_email_draft": true
+    },
+    {
+      "issue_id": "petition_exception",
+      "label": "Filing a petition or requesting a policy exception",
+      "office_ids": ["cs_grad", "dgs"],
+      "escalation_level": "hard",
+      "bot_can_answer": false,
+      "bot_answer_note": "Explain the general petition process from handbook. Route all approvals to cs_grad/dgs. Offer email draft.",
+      "offer_email_draft": true
+    },
+    {
+      "issue_id": "registration_hold",
+      "label": "Registration hold preventing enrollment",
+      "office_ids": ["onestop"],
+      "escalation_level": "soft",
+      "bot_can_answer": true,
+      "bot_answer_note": "Explain how to check holds in MyU. Route resolution to OneStop (612-624-1111 or onestop.umn.edu).",
+      "offer_email_draft": false
+    },
+    {
+      "issue_id": "add_drop_deadline",
+      "label": "Add/drop or late withdrawal deadlines",
+      "office_ids": ["onestop"],
+      "escalation_level": "auto",
+      "bot_can_answer": true,
+      "bot_answer_note": "Direct student to onestop.umn.edu/calendar for current term dates. Bot can provide general policy but not specific current-term dates unless deadline table is loaded.",
+      "offer_email_draft": false
+    },
+    {
+      "issue_id": "grade_basis_change",
+      "label": "Changing a course from A-F to S/N grade basis",
+      "office_ids": ["onestop"],
+      "escalation_level": "soft",
+      "bot_can_answer": true,
+      "bot_answer_note": "Explain the S/N basis policy and the deadline to change (typically end of second week). Route the change request to OneStop or MyU.",
+      "offer_email_draft": false
+    },
+    {
+      "issue_id": "cpt_authorization",
+      "label": "CPT (Curricular Practical Training) authorization",
+      "office_ids": ["isss"],
+      "escalation_level": "hard",
+      "bot_can_answer": false,
+      "bot_answer_note": "ALWAYS escalate to ISSS. Bot may explain what CPT is in general terms but MUST NOT confirm eligibility, timing, or process details beyond 'contact ISSS at isss@umn.edu or 612-626-7100.'",
+      "offer_email_draft": true,
+      "critical": true
+    },
+    {
+      "issue_id": "opt_application",
+      "label": "OPT (Optional Practical Training) application",
+      "office_ids": ["isss"],
+      "escalation_level": "hard",
+      "bot_can_answer": false,
+      "bot_answer_note": "ALWAYS escalate to ISSS. Same rule as CPT — no final determination from bot.",
+      "offer_email_draft": true,
+      "critical": true
+    },
+    {
+      "issue_id": "stem_opt_extension",
+      "label": "STEM OPT 24-month extension",
+      "office_ids": ["isss"],
+      "escalation_level": "hard",
+      "bot_can_answer": false,
+      "bot_answer_note": "ALWAYS escalate to ISSS.",
+      "offer_email_draft": true,
+      "critical": true
+    },
+    {
+      "issue_id": "reduced_course_load",
+      "label": "Taking fewer than full-time credits as international student",
+      "office_ids": ["isss"],
+      "escalation_level": "hard",
+      "bot_can_answer": false,
+      "bot_answer_note": "ALWAYS escalate to ISSS. Reduced course load for international students requires explicit ISSS authorization. Do not speculate on eligibility.",
+      "offer_email_draft": true,
+      "critical": true
+    },
+    {
+      "issue_id": "full_time_enrollment_international",
+      "label": "Full-time enrollment requirement for international students",
+      "office_ids": ["isss"],
+      "escalation_level": "hard",
+      "bot_can_answer": false,
+      "bot_answer_note": "Explain general rule (typically 6 credits for grad students) but route ALL specific questions to ISSS.",
+      "offer_email_draft": true,
+      "critical": true
+    },
+    {
+      "issue_id": "visa_general",
+      "label": "General visa or immigration status questions",
+      "office_ids": ["isss"],
+      "escalation_level": "hard",
+      "bot_can_answer": false,
+      "bot_answer_note": "Refer all visa/immigration questions to ISSS. Bot is not a legal or immigration resource.",
+      "offer_email_draft": true,
+      "critical": true
+    },
+    {
+      "issue_id": "transcript_request",
+      "label": "Requesting an official or unofficial transcript",
+      "office_ids": ["onestop"],
+      "escalation_level": "auto",
+      "bot_can_answer": true,
+      "bot_answer_note": "Direct to onestop.umn.edu/transcripts or MyU Self-Service. No escalation needed.",
+      "offer_email_draft": false
+    },
+    {
+      "issue_id": "enrollment_verification",
+      "label": "Verifying enrollment status (for employer, insurance, etc.)",
+      "office_ids": ["onestop"],
+      "escalation_level": "auto",
+      "bot_can_answer": true,
+      "bot_answer_note": "Direct to OneStop or National Student Clearinghouse (online self-service).",
+      "offer_email_draft": false
+    },
+    {
+      "issue_id": "gpas_audit",
+      "label": "GPAS (Graduate Planning and Audit System) questions",
+      "office_ids": ["onestop", "cs_grad"],
+      "escalation_level": "soft",
+      "bot_can_answer": true,
+      "bot_answer_note": "Explain GPAS is accessible via MyU > Academics > GPAS. For interpretation of GPAS output, route to cs_grad.",
+      "offer_email_draft": false
+    },
+    {
+      "issue_id": "thesis_dissertation",
+      "label": "Thesis or dissertation submission",
+      "office_ids": ["grad_school", "cs_grad"],
+      "escalation_level": "soft",
+      "bot_can_answer": true,
+      "bot_answer_note": "Answer from graduate school guidelines. Route formal submission questions to grad_school.",
+      "offer_email_draft": false
+    },
+    {
+      "issue_id": "doctoral_oral_exam",
+      "label": "Scheduling doctoral oral (preliminary or final) exam",
+      "office_ids": ["grad_school", "cs_grad"],
+      "escalation_level": "soft",
+      "bot_can_answer": true,
+      "bot_answer_note": "Explain process from handbook/grad school. Route scheduling to grad school and cs_grad.",
+      "offer_email_draft": true
+    },
+    {
+      "issue_id": "leave_of_absence",
+      "label": "Leave of absence",
+      "office_ids": ["onestop", "cs_grad"],
+      "escalation_level": "soft",
+      "bot_can_answer": true,
+      "bot_answer_note": "Explain general process. Remind international students they MUST contact ISSS before taking a leave.",
+      "offer_email_draft": true
+    },
+    {
+      "issue_id": "withdrawal",
+      "label": "Withdrawing from the university",
+      "office_ids": ["onestop", "cs_grad"],
+      "escalation_level": "soft",
+      "bot_can_answer": true,
+      "bot_answer_note": "Explain process and financial implications. Remind international students to contact ISSS.",
+      "offer_email_draft": true
+    },
+    {
+      "issue_id": "financial_aid_general",
+      "label": "Financial aid, loans, grants questions",
+      "office_ids": ["onestop"],
+      "escalation_level": "soft",
+      "bot_can_answer": false,
+      "bot_answer_note": "Out of core scope. Direct to OneStop financial aid pages. Do not interpret financial aid decisions.",
+      "offer_email_draft": false
+    },
+    {
+      "issue_id": "tuition_billing",
+      "label": "Tuition, billing, or payment questions",
+      "office_ids": ["onestop"],
+      "escalation_level": "auto",
+      "bot_can_answer": false,
+      "bot_answer_note": "Direct to onestop.umn.edu/finances. Out of core scope.",
+      "offer_email_draft": false
+    },
+    {
+      "issue_id": "probation_dismissal",
+      "label": "Academic probation or dismissal",
+      "office_ids": ["cs_grad", "cse_grad", "grad_school"],
+      "escalation_level": "hard",
+      "bot_can_answer": false,
+      "bot_answer_note": "Explain general policy only. Route ALL specific standing questions to cs_grad and cse_grad. Offer email draft.",
+      "offer_email_draft": true
+    },
+    {
+      "issue_id": "advisor_unresponsive",
+      "label": "Advisor is not responding",
+      "office_ids": ["cs_grad", "dgs"],
+      "escalation_level": "soft",
+      "bot_can_answer": true,
+      "bot_answer_note": "Suggest following up politely after 1–2 weeks, then escalating to cs_grad or DGS. Offer email draft.",
+      "offer_email_draft": true
+    },
+    {
+      "issue_id": "mental_health_emergency",
+      "label": "Mental health crisis or distress",
+      "office_ids": ["boynton"],
+      "escalation_level": "hard",
+      "bot_can_answer": false,
+      "bot_answer_note": "IMMEDIATELY provide: Boynton Crisis Line 612-301-4673. Campus Police 911. Do not continue advising. Do not offer to draft emails.",
+      "offer_email_draft": false,
+      "critical": true
+    },
+    {
+      "issue_id": "housing_general",
+      "label": "Housing questions",
+      "office_ids": [],
+      "escalation_level": "auto",
+      "bot_can_answer": false,
+      "bot_answer_note": "Out of scope. Direct to housing.umn.edu.",
+      "offer_email_draft": false
+    },
+    {
+      "issue_id": "colloquium_requirement",
+      "label": "CS colloquium requirement enrollment and completion",
+      "office_ids": ["cs_grad"],
+      "escalation_level": "auto",
+      "bot_can_answer": true,
+      "bot_answer_note": "Answer from handbook. Explain colloquium is CSCI 8970 and the registration process.",
+      "offer_email_draft": false
+    },
+    {
+      "issue_id": "degree_program_form",
+      "label": "Filing the degree program form (Plan of Study)",
+      "office_ids": ["cs_grad"],
+      "escalation_level": "soft",
+      "bot_can_answer": true,
+      "bot_answer_note": "Explain the process and deadline from handbook. Route submission/approval to cs_grad.",
+      "offer_email_draft": true
+    },
+    {
+      "issue_id": "funding_ra_ta",
+      "label": "RA/TA funding questions",
+      "office_ids": ["cs_faculty_advisor", "cs_grad"],
+      "escalation_level": "hard",
+      "bot_can_answer": false,
+      "bot_answer_note": "Funding decisions are advisor/department-specific. Bot cannot advise on funding. Route to faculty advisor and cs_grad.",
+      "offer_email_draft": true
+    }
+  ]
+}

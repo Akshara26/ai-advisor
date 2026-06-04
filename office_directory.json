@@ -1,0 +1,226 @@
+{
+  "metadata": {
+    "source": "UMN OneStop, CSE Graduate Office, ISSS, CS Grad Program",
+    "last_verified": "2026-05-31",
+    "note": "Verify contact details each semester. Email addresses and hours subject to change."
+  },
+  "offices": [
+    {
+      "id": "cs_grad",
+      "name": "CS Graduate Program Office",
+      "short_name": "CS Grad Office",
+      "email": "csgradmn@umn.edu",
+      "phone": null,
+      "location": "Keller Hall",
+      "url": "https://cse.umn.edu/cs/graduate",
+      "hours": "Check website for current hours",
+      "handles": [
+        "degree_program_form",
+        "plan_of_study",
+        "breadth_requirement_questions",
+        "colloquium_enrollment",
+        "petitions_cs_policy",
+        "transfer_credit_cs",
+        "graduation_audit_cs",
+        "advisor_assignment",
+        "program_exceptions",
+        "thesis_plan_a",
+        "cs_specific_registration_issues",
+        "general_grad_advising_cs"
+      ],
+      "escalate_from_bot": true,
+      "escalation_note": "For any question requiring official approval, graduation confirmation, or policy exception, route to this office."
+    },
+    {
+      "id": "cse_grad",
+      "name": "CSE Graduate Student Services",
+      "short_name": "CSE Grad Services",
+      "email": "csegrad@umn.edu",
+      "phone": null,
+      "location": "Lind Hall 105",
+      "url": "https://cse.umn.edu/grad/current-students",
+      "hours": "Check website for current hours",
+      "handles": [
+        "cse_college_level_policies",
+        "cse_probation_dismissal",
+        "cse_minimum_enrollment",
+        "cse_interdisciplinary_programs",
+        "cse_fellowship_questions",
+        "cse_forms",
+        "cross_department_cs_issues"
+      ],
+      "escalate_from_bot": true,
+      "escalation_note": "For college-level (CSE) policy questions that go beyond the CS department handbook."
+    },
+    {
+      "id": "grad_school",
+      "name": "Graduate School",
+      "short_name": "Grad School",
+      "email": "grad@umn.edu",
+      "phone": "612-625-3014",
+      "location": "321 Johnston Hall",
+      "url": "https://grad.umn.edu",
+      "hours": "Mon–Fri 8am–4:30pm",
+      "handles": [
+        "graduate_school_policies",
+        "doctoral_oral_exam_scheduling",
+        "thesis_dissertation_submission",
+        "examination_committees",
+        "graduate_minor_add_remove",
+        "degree_completion_steps",
+        "change_degree_award_date",
+        "gpas_system_questions",
+        "graduate_leave_of_absence",
+        "graduate_academic_warning"
+      ],
+      "escalate_from_bot": true,
+      "escalation_note": "For university-level graduate school requirements, thesis/dissertation submission, and doctoral committee questions."
+    },
+    {
+      "id": "onestop",
+      "name": "One Stop Student Services",
+      "short_name": "OneStop",
+      "email": null,
+      "phone": "612-624-1111",
+      "location": "130 Coffey Hall / 130 West Bank Skyway / 190 Bruininks Hall",
+      "url": "https://onestop.umn.edu",
+      "contact_url": "https://onestop.umn.edu/contact-us",
+      "hours": "Mon–Fri 9am–4pm (check website for current hours)",
+      "handles": [
+        "registration_holds",
+        "enrollment_verification",
+        "transcript_requests",
+        "diploma_requests",
+        "billing_payment",
+        "financial_aid_general",
+        "tuition_questions",
+        "refunds",
+        "personal_information_updates",
+        "late_registration",
+        "exception_to_policy_petition",
+        "grade_basis_change",
+        "withdrawal",
+        "leave_of_absence_general",
+        "apas_gpas_questions",
+        "graduation_steps_general"
+      ],
+      "escalate_from_bot": false,
+      "escalation_note": "Refer students here for all administrative, financial, and registration-related questions. No escalation email needed — students can contact directly."
+    },
+    {
+      "id": "isss",
+      "name": "International Student and Scholar Services",
+      "short_name": "ISSS",
+      "email": "isss@umn.edu",
+      "phone": "612-626-7100",
+      "location": "190 Hubert H. Humphrey School",
+      "url": "https://isss.umn.edu",
+      "hours": "Mon–Fri 10am–4pm (check website; drop-in hours vary)",
+      "handles": [
+        "cpt_authorization",
+        "opt_application",
+        "stem_opt_extension",
+        "reduced_course_load_authorization",
+        "full_time_enrollment_international",
+        "f1_status_questions",
+        "j1_status_questions",
+        "i20_questions",
+        "ds2019_questions",
+        "travel_signature",
+        "change_of_status",
+        "social_security_number_letter",
+        "employment_authorization",
+        "visa_questions"
+      ],
+      "escalate_from_bot": true,
+      "escalation_note": "ANY question involving visa status, CPT, OPT, reduced course load, or international student compliance MUST be escalated to ISSS. Bot should not give final answers on these topics.",
+      "critical_escalation": true
+    },
+    {
+      "id": "cs_faculty_advisor",
+      "name": "CS Faculty Advisor / Research Advisor",
+      "short_name": "Faculty Advisor",
+      "email": "Varies by student",
+      "phone": null,
+      "location": "Varies",
+      "url": "https://cse.umn.edu/cs/graduate-faculty",
+      "handles": [
+        "research_direction",
+        "thesis_committee_formation",
+        "dissertation_approval",
+        "independent_study_enrollment",
+        "research_credits",
+        "plan_a_thesis_approval",
+        "funding_ra_ta_decisions",
+        "academic_progress_review"
+      ],
+      "escalate_from_bot": true,
+      "escalation_note": "For research, thesis, funding, and advisor-specific approvals. Students should contact their assigned advisor directly."
+    },
+    {
+      "id": "dgs",
+      "name": "Director of Graduate Studies (CS)",
+      "short_name": "DGS",
+      "email": "csgradmn@umn.edu",
+      "phone": null,
+      "location": "Keller Hall",
+      "url": "https://cse.umn.edu/cs/graduate",
+      "handles": [
+        "petition_approval_cs",
+        "program_exception_formal",
+        "advisor_conflict_escalation",
+        "probation_appeal_cs",
+        "formal_academic_complaint_cs"
+      ],
+      "escalate_from_bot": true,
+      "escalation_note": "For formal petitions, appeals, and cases where the student's assigned advisor is unresponsive or in conflict."
+    },
+    {
+      "id": "student_conduct",
+      "name": "Office for Community Standards",
+      "short_name": "OCS",
+      "email": null,
+      "phone": "612-624-6073",
+      "url": "https://communitystandards.umn.edu",
+      "handles": [
+        "academic_dishonesty",
+        "student_conduct_complaint",
+        "appeals_academic_misconduct"
+      ],
+      "escalate_from_bot": true,
+      "escalation_note": "Out of scope for advising bot. Refer directly without drafting emails."
+    },
+    {
+      "id": "boynton",
+      "name": "Boynton Health / Student Mental Health",
+      "short_name": "Boynton Health",
+      "email": null,
+      "phone": "612-625-8400",
+      "crisis_line": "612-301-4673",
+      "url": "https://boynton.umn.edu",
+      "handles": [
+        "mental_health_crisis",
+        "counseling_services",
+        "medical_concerns"
+      ],
+      "escalate_from_bot": true,
+      "escalation_note": "IMMEDIATE referral for any mental health crisis. Do not engage further — provide the crisis line immediately.",
+      "critical_escalation": true
+    },
+    {
+      "id": "disability_services",
+      "name": "Disability Resource Center",
+      "short_name": "DRC",
+      "email": "drc@umn.edu",
+      "phone": "612-626-1333",
+      "url": "https://disability.umn.edu",
+      "handles": [
+        "disability_accommodations",
+        "extended_time_testing",
+        "accessibility_questions"
+      ],
+      "escalate_from_bot": true,
+      "escalation_note": "Refer students here for any disability accommodation questions."
+    }
+  ]
+}
