@@ -1,35 +1,15 @@
-from typing import TypedDict, Annotated
-from langchain import messages
-from langgraph.graph import StateGraph, END
-from langgraph.graph.message import add_messages
 import json
-import re
 import logging
-from openai import OpenAI
-from dotenv import load_dotenv
 import os
+import re
+from typing import Annotated, TypedDict
 
-import os as os
+from dotenv import load_dotenv
+from langgraph.graph import END, StateGraph
+from langgraph.graph.message import add_messages
 
-# ── Load escalation config ────────────────────────────────────────────────────
-def load_json(filename):
-    path = os.path.join(os.path.dirname(__file__), filename)
-    try:
-        with open(path) as f:
-            return json.load(f)
-    except FileNotFoundError:
-        print(f"Warning: {filename} not found — related features disabled")
-        return {}
-
-ESCALATION_CONFIG  = load_json("escalation_config.json")
-OFFICE_DIRECTORY   = {
-    o["id"]: o
-    for o in load_json("office_directory.json").get("offices", [])
-}
-HARD_RULES = [
-    r for r in ESCALATION_CONFIG.get("intent_escalation_rules", [])
-    if r.get("escalation_level") == "hard"
-]
+from escalation import OFFICE_DIRECTORY, check_hard_escalation
+from prompts import ADVISOR_SYSTEM_PROMPT, EMAIL_SYSTEM_PROMPT
 
 load_dotenv()
 
@@ -38,12 +18,13 @@ os.environ["LANGSMITH_ENDPOINT"] = os.getenv("LANGSMITH_ENDPOINT", "https://api.
 os.environ["LANGSMITH_API_KEY"] = os.getenv("LANGSMITH_API_KEY", "")
 os.environ["LANGSMITH_PROJECT"] = os.getenv("LANGSMITH_PROJECT", "umn-advisor")
 
-from tools import run_tool, tools as tool_schemas, openai_key, client
+from tools import client, run_tool, tools as tool_schemas  # noqa: E402 — must follow env setup
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# ── State Schema ──────────────────────────────────────────────────────────────
+
+# ── State ─────────────────────────────────────────────────────────────────────
 class AdvisorState(TypedDict):
     messages: Annotated[list, add_messages]
     answer: str
@@ -54,213 +35,14 @@ class AdvisorState(TypedDict):
     drafted_email: str
     parse_failed: bool
     tool_contexts: list
-    escalation_office: str   # office ID from hard escalation, empty string otherwise
+    escalation_office: str
 
-
-# ── System prompts ────────────────────────────────────────────────────────────
-ADVISOR_SYSTEM_PROMPT = """You are an academic advisor for the UMN Computer Science graduate program.
-
-Your job is to give accurate, grounded, student-friendly advising based only on the available tools and retrieved context. Do not guess, invent policy, or assume missing student details.
-
-Core behavior:
-
-* Use tools to look up accurate information before answering.
-* Use the most specific tool available for the student's question.
-* Do not rely on search_handbook alone when another tool is designed for the task.
-* If required context is missing, ask a concise clarifying question instead of assuming.
-* If the policy is clear, answer directly.
-* If the policy depends on approval, discretion, exceptions, or missing student-specific information, explain the rule and say what information or approval is needed.
-* If official documentation appears inconsistent or ambiguous, escalate to the Graduate Program Coordinators at [csgradmn@umn.edu](mailto:csgradmn@umn.edu).
-
-Prohibition rule:
-If the retrieved context explicitly says something is NOT allowed, NOT accepted, or PROHIBITED — state that clearly as a "No."
-Do NOT substitute "Yes, with approval" or "possibly, check with GPC" for an explicit handbook prohibition.
-Handbook explicit bans include:
-- Transfer credits from outside institutions cannot satisfy M.S. or MCS breadth requirements
-- 4xxx-level courses cannot be applied to M.S. or MCS degree requirements
-- Thesis credits (CSCI 8777) are not accepted for Plan B degrees
-- Non-listed courses do not count toward breadth unless the department has approved them for a specific area
-When any of these bans apply, answer "No" and cite the source.
-
-Clarification rule:
-Ask a clarifying question before answering when the student's question is missing information that changes the answer.
-
-Ask for clarification when the answer depends on:
-
-* program: M.S., MCS, or Ph.D.
-* M.S. plan: Plan A, Plan B, or Plan C
-* specific course code or department
-* whether the student wants a course to count as breadth, advanced CSCI, related field, supporting program, transfer credit, minor, or elective credit
-* whether the student has GPC/advisor approval
-* completed courses, total credits, CSCI credits, GPA, colloquium status, or GPAS audit status
-
-Examples that should ask for clarification:
-
-* "What do I need to graduate?"
-* "Do I need a committee?"
-* "Can this count toward my degree?"
-* "Can I take this class next semester?"
-* "What GPA do I need?"
-* "Should I choose Plan A or Plan B?"
-
-When possible, give a brief general rule first, then ask the clarifying question.
-Example: "Committee requirements depend on your plan. M.S. Plan A and Plan B require committees, while Plan C does not. Are you in Plan A, Plan B, Plan C, MCS, or Ph.D.?"
-
-Response style:
-
-* For simple factual questions such as GPA, credits, and deadlines: give the direct answer first, then one sentence of context.
-* For procedural questions such as how to submit forms, petitions, or degree steps: give a numbered step-by-step answer with timing rules and who to contact.
-* For policy questions: state the rule clearly, then note exceptions, approval requirements, or special cases.
-* For ambiguous questions: ask only the minimum clarifying question needed.
-* Do not pad responses with unnecessary caveats or filler.
-* Be precise. Students need accurate, actionable information.
-* When referencing offices or resources, include their URL or email if available in the retrieved context.
-
-Tool sequencing:
-- When calling degree_audit, always follow it with a search_handbook call using a policy query that matches the student's plan and situation (e.g. "MS Plan C requirements credits breadth colloquium", "PhD supporting program requirements"). This ensures handbook policy text is available alongside the audit result.
-
-Source citations:
-
-* Each retrieved handbook chunk is prefixed with a source label like [Handbook p.12] or [cs.umn.edu].
-* Include the source label inline whenever you use information from that chunk.
-  Example: "The minimum GPA requirement is 3.0 [Handbook p.8]."
-* Only cite labels that appear in the retrieved context. Never fabricate page numbers or URLs.
-* For multi-step answers, cite each step's source individually if they come from different pages.
-* Web source labels show the domain, such as [cs.umn.edu] or [grad.umn.edu]. That is sufficient.
-- NEVER state a policy fact unless a retrieved chunk with a source label ([Handbook p.X] or [domain.edu]) explicitly supports it. If the fact is not in the retrieved context, say you cannot confirm it.
-
-Examples of correct behavior:
-
----
-Q: Can I use CSCI 4041 toward my MS degree?
-Tool: search_handbook("4xxx course MS degree requirements")
-A: No. The handbook explicitly prohibits 4xxx-level courses from being applied to M.S. or MCS degree requirements [Handbook p.X]. CSCI 4041 cannot count toward your degree regardless of the grade received.
-State: answered=true, confidence=high, question_type=policy
----
-
----
-Q: Can my statistics course from another university count toward my breadth requirement?
-Tool: search_handbook("transfer credits breadth requirement MS")
-A: No. The handbook explicitly states that transfer credits from outside institutions cannot satisfy M.S. or MCS breadth requirements [Handbook p.X]. Transfer credits may count toward your total credit requirement, but they cannot fulfill the breadth requirement specifically. Contact csgradmn@umn.edu if you have questions about how transfer credits apply to your total credits.
-State: answered=true, confidence=high, question_type=policy
----
-
----
-Q: CSCI 5521 is in the Applications breadth area. Can it also count toward my 16 required CSCI credits?
-Tool: search_handbook("double counting breadth advanced CSCI credits")
-A: No. Each course may satisfy at most one requirement category [Handbook p.X]. CSCI 5521 can count as your Applications breadth credit or toward your 16 CSCI credit requirement — but not both simultaneously. You must choose one.
-State: answered=true, confidence=high, question_type=policy
----
-
----
-Q: I'm Plan B and I registered for CSCI 8777 thesis credits. Can those count toward my 31 total credits?
-Tool: search_handbook("Plan B thesis credits CSCI 8777")
-A: No. CSCI 8777 thesis credits are explicitly not accepted for Plan B degrees [Handbook p.X]. Plan B requires a final project, not a thesis. Credits registered under CSCI 8777 will not count toward your Plan B total. Contact csgradmn@umn.edu to discuss correcting your registration.
-State: answered=true, confidence=high, question_type=policy
----
-
----
-Q: I've completed CSCI 5511, CSCI 5521, CSCI 5801, and CSCI 8970. What do I still need for Plan C?
-Tools: degree_audit(completed_courses=["CSCI5511","CSCI5521","CSCI5801","CSCI8970"], program="ms")
-       then search_handbook("MS Plan C requirements credits breadth colloquium advanced CSCI")
-A: [Synthesize the degree_audit result with retrieved handbook policy text. Cite each requirement with its handbook source label. State what is satisfied and what remains.]
-State: answered=true, confidence=medium, question_type=degree_audit
----
-
----
-Q: Can CSCI 5980 count for breadth?
-Tool: search_handbook("CSCI 5980 special topics breadth requirement")
-A: It depends on the course topic and whether the CS department has specifically approved it for a breadth area [Handbook p.X]. Special topics courses (5980, 8980) are not automatically assigned to a breadth area — approval must come from the GPC. Which topic was your CSCI 5980 section, and do you have written GPC approval for breadth credit?
-State: answered=false, confidence=low, question_type=policy
----
-
-
-State block:
-After your answer, include this EXACT block:
-
----STATE---
-{
-"answered": true,
-"confidence": "high",
-"question_type": "policy",
-"reason": "one sentence explaining confidence"
-}
----END STATE---
-
-State rules:
-Set answered=true when you gave a useful answer to the student's question, even if the answer includes conditions, limitations, or a referral.
-
-Set answered=false only when you could not answer without additional student information or official review.
-
-Set confidence="high" only if ALL of these are true:
-
-* The answer is directly supported by retrieved handbook/course/resource context
-* The answer does not require guessing missing student details
-* The answer does not depend on an exception, petition, waiver, appeal, or undocumented approval
-* A human advisor would not need to interpret unclear policy to state the answer
-
-Set confidence="medium" if:
-
-* The general policy is clear, but the student's personal outcome depends on additional details or approval
-* You can answer with conditions, but cannot guarantee the final decision
-* The answer combines multiple retrieved rules and requires careful synthesis
-
-Set confidence="low" if:
-
-* Required student context is missing
-* The retrieved context is insufficient or conflicting
-* The student asks what they personally should do and the decision depends on advising judgment
-* The question involves petitions, exceptions, appeals, waivers, substitutions, or extensions
-* The student reports an official documentation conflict or possible handbook error
-
-question_type options:
-
-* "policy"
-* "personal"
-* "degree_audit"
-* "deadline"
-* "procedure"
-* "course_prerequisite"
-* "unknown"
-
-Use question_type="personal" when the question uses "my" or asks about the student's individual situation.
-Use question_type="degree_audit" when the student asks whether completed courses/credits satisfy degree requirements.
-Use question_type="unknown" when the question is too ambiguous to classify.
-"""
-
-
-EMAIL_SYSTEM_PROMPT = """You are helping a UMN CS graduate student draft a professional email
-to the graduate program coordinators at csgradmn@umn.edu.
-
-Based on the conversation context and question type, draft an appropriate email:
-- policy question: formal tone, reference what was already searched, explain the ambiguity
-- personal situation: empathetic but professional, include relevant student context, flag if urgent
-- deadline question: lead with the deadline, mark as time-sensitive in subject
-- unknown: neutral tone, clearly state the question needs human clarification
-
-The email should:
-- Have a clear subject line specific to the situation
-- Open directly with the situation — no "I hope this message finds you well" or similar filler
-- Be professional and concise — 3-4 sentences maximum
-- State specifically what the student already tried to find out
-- State specifically what they need the coordinator to clarify or decide
-- NOT include placeholder text like [your name] — use "A CS Graduate Student" if name unknown
-- Sound like it was written by a real student, not a template
-
-Return the email wrapped like this:
----EMAIL---
-Subject: [subject line]
-
-[email body]
----END EMAIL---
-"""
 
 # ── Parsers ───────────────────────────────────────────────────────────────────
 def parse_state_block(response_text: str) -> tuple[dict, bool]:
     match = re.search(r'---STATE---\s*(.*?)\s*---END STATE---', response_text, re.DOTALL)
     if not match:
         logger.warning("No STATE block found in response")
-        # Don't penalize student — treat as medium confidence answer
         return {"answered": True, "confidence": "medium",
                 "question_type": "unknown", "reason": "State block missing — defaulting to medium"}, True
     try:
@@ -270,57 +52,47 @@ def parse_state_block(response_text: str) -> tuple[dict, bool]:
         return {"answered": True, "confidence": "medium",
                 "question_type": "unknown", "reason": "JSON parse error — defaulting to medium"}, True
 
+
 def clean_response(response_text: str) -> str:
-    """Remove the ---STATE--- block from the student-facing response."""
     return re.sub(r'\s*---STATE---.*?---END STATE---', '', response_text, flags=re.DOTALL).strip()
+
 
 def parse_email_block(response_text: str) -> str:
     match = re.search(r'---EMAIL---\s*(.*?)\s*---END EMAIL---', response_text, re.DOTALL)
     return match.group(1).strip() if match else response_text.strip()
 
-# ── Role mapping ──────────────────────────────────────────────────────────────
+
+# ── Message helpers ───────────────────────────────────────────────────────────
 ROLE_MAP = {"human": "user", "ai": "assistant", "system": "system"}
+
 
 def normalize_role(msg) -> str:
     if hasattr(msg, 'type'):
         return ROLE_MAP.get(msg.type, msg.type)
     return msg.get("role", "user")
 
+
 def normalize_content(msg) -> str:
     if hasattr(msg, 'content'):
         return msg.content or ""
     return msg.get("content", "")
 
-def check_hard_escalation(question: str) -> dict | None:
-    """
-    Check if the question matches a hard escalation intent pattern.
-    Runs BEFORE the LLM — matched questions never reach the advisor loop.
-    Returns the matching rule dict or None.
-    """
-    q_lower = question.lower()
-    for rule in HARD_RULES:
-        if any(pattern in q_lower for pattern in rule.get("intent_pattern", [])):
-            logger.info(f"Hard escalation: {rule.get('intent_pattern', [])[:2]}")
-            return rule
-    return None
 
-# ── Advisor Node ──────────────────────────────────────────────────────────────
+# ── Advisor node ──────────────────────────────────────────────────────────────
 def advisor_node(state: AdvisorState) -> AdvisorState:
     messages = state["messages"]
 
-    # ── Hard escalation pre-check ─────────────────────────────────────────────────
-# Evaluate BEFORE any LLM call. Matched intents short-circuit the advisor loop.
+    # Hard escalation pre-check — runs before any LLM call
     user_message = next(
         (normalize_content(m) for m in reversed(messages) if normalize_role(m) == "user"),
         ""
     )
     escalation = check_hard_escalation(user_message)
     if escalation:
-        msg       = escalation.get("message_template", "Please contact the appropriate office.")
-        crisis    = escalation.get("stop_advising", False)
+        msg = escalation.get("message_template", "Please contact the appropriate office.")
+        crisis = escalation.get("stop_advising", False)
         office_id = escalation.get("office", "")
 
-        # Look up office contact info and append to message if available
         office = OFFICE_DIRECTORY.get(office_id, {})
         if office and not crisis:
             contact = office.get("email") or office.get("phone") or office.get("url", "")
@@ -330,7 +102,7 @@ def advisor_node(state: AdvisorState) -> AdvisorState:
         return {
             **state,
             "answer":            msg,
-            "answered":          crisis,   # crisis → END (no email); others → email_agent
+            "answered":          crisis,
             "confidence":        "high" if crisis else "none",
             "question_type":     "crisis_escalation" if crisis else "hard_escalation",
             "tools_tried":       [],
@@ -339,23 +111,20 @@ def advisor_node(state: AdvisorState) -> AdvisorState:
             "escalation_office": office_id,
             "messages":          messages + [{"role": "assistant", "content": msg}],
         }
-# ── end pre-check ─────────────────────────────────────────────────────────────
 
     tools_tried = []
     tool_contexts = []
 
     conversation = [{"role": "system", "content": ADVISOR_SYSTEM_PROMPT}]
     for msg in messages:
-        role = normalize_role(msg)
-        content = normalize_content(msg)
-        conversation.append({"role": role, "content": content})
+        conversation.append({"role": normalize_role(msg), "content": normalize_content(msg)})
 
     for _ in range(5):
         response = client.chat.completions.create(
             model="gpt-4o-mini",
             messages=conversation,
             tools=tool_schemas,
-            tool_choice="auto"
+            tool_choice="auto",
         )
 
         message = response.choices[0].message
@@ -371,14 +140,14 @@ def advisor_node(state: AdvisorState) -> AdvisorState:
 
             return {
                 **state,
-                "answer": clean_answer,
-                "answered": state_data.get("answered", False),
-                "confidence": state_data.get("confidence", "none"),
+                "answer":        clean_answer,
+                "answered":      state_data.get("answered", False),
+                "confidence":    state_data.get("confidence", "none"),
                 "question_type": state_data.get("question_type", "unknown"),
-                "tools_tried": tools_tried,
-                "parse_failed": parse_failed,
+                "tools_tried":   tools_tried,
+                "parse_failed":  parse_failed,
                 "tool_contexts": tool_contexts,
-                "messages": messages + [{"role": "assistant", "content": clean_answer}]
+                "messages":      messages + [{"role": "assistant", "content": clean_answer}],
             }
 
         conversation.append({
@@ -388,10 +157,7 @@ def advisor_node(state: AdvisorState) -> AdvisorState:
                 {
                     "id": tc.id,
                     "type": tc.type,
-                    "function": {
-                        "name": tc.function.name,
-                        "arguments": tc.function.arguments
-                    }
+                    "function": {"name": tc.function.name, "arguments": tc.function.arguments}
                 }
                 for tc in (message.tool_calls or [])
             ] or None
@@ -403,11 +169,10 @@ def advisor_node(state: AdvisorState) -> AdvisorState:
                 tool_args = json.loads(tool_call.function.arguments)
                 tools_tried.append(tool_name)
             except json.JSONDecodeError:
-                result = "Error: could not parse tool arguments."
                 conversation.append({
                     "role": "tool",
                     "tool_call_id": tool_call.id,
-                    "content": result
+                    "content": "Error: could not parse tool arguments."
                 })
                 continue
 
@@ -415,41 +180,38 @@ def advisor_node(state: AdvisorState) -> AdvisorState:
                 result = run_tool(tool_name, tool_args)
                 tool_contexts.append(result)
             except Exception as e:
-                result = f"Error running tool: {str(e)}"
+                result = f"Error running tool: {e}"
 
-            conversation.append({
-                "role": "tool",
-                "tool_call_id": tool_call.id,
-                "content": result
-            })
+            conversation.append({"role": "tool", "tool_call_id": tool_call.id, "content": result})
 
     return {
         **state,
-        "answer": "I was unable to find a satisfactory answer.",
-        "answered": False,
-        "confidence": "none",
+        "answer":        "I was unable to find a satisfactory answer.",
+        "answered":      False,
+        "confidence":    "none",
         "question_type": "unknown",
-        "tools_tried": tools_tried,
+        "tools_tried":   tools_tried,
         "tool_contexts": [],
-        "parse_failed": False,
-        "messages": conversation
+        "parse_failed":  False,
+        "messages":      conversation,
     }
 
-# ── Email Agent Node ──────────────────────────────────────────────────────────
+
+# ── Email agent node ──────────────────────────────────────────────────────────
 def email_agent_node(state: AdvisorState) -> AdvisorState:
     messages = state["messages"]
     question_type = state.get("question_type", "unknown")
     tools_tried = state.get("tools_tried", [])
     answer = state.get("answer", "")
 
-    conversation_summary = "\n".join([
+    conversation_summary = "\n".join(
         f"{normalize_role(msg).upper()}: {normalize_content(msg)}"
         for msg in messages
-    ])
+    )
 
     prompt = f"""Question type: {question_type}
 Tools already searched: {', '.join(tools_tried) if tools_tried else 'none'}
-What the advisor found: {answer if answer else 'No relevant information found'}
+What the advisor found: {answer or 'No relevant information found'}
 
 Full conversation:
 {conversation_summary}
@@ -460,68 +222,60 @@ Draft the email now."""
         model="gpt-4o-mini",
         messages=[
             {"role": "system", "content": EMAIL_SYSTEM_PROMPT},
-            {"role": "user", "content": prompt}
+            {"role": "user", "content": prompt},
         ]
     )
 
-    drafted_email = parse_email_block(response.choices[0].message.content)
+    return {**state, "drafted_email": parse_email_block(response.choices[0].message.content)}
 
-    return {
-        **state,
-        "drafted_email": drafted_email
-    }
 
 # ── Routing ───────────────────────────────────────────────────────────────────
 def route_after_advisor(state: AdvisorState) -> str:
-    answered = state.get("answered")
     confidence = state.get("confidence", "none")
     question_type = state.get("question_type", "unknown")
-    
-    # Always escalate unknown/personal low-confidence
+    answered = state.get("answered")
+
     if confidence in ("low", "none") or not answered:
         return "email_agent"
-    # Escalate personal/unknown even at medium
     if confidence == "medium" and question_type in ("personal", "unknown"):
         return "email_agent"
     return "end"
 
 
-# ── Build Graph ───────────────────────────────────────────────────────────────
+# ── Graph assembly ────────────────────────────────────────────────────────────
 def build_graph():
     graph = StateGraph(AdvisorState)
     graph.add_node("advisor", advisor_node)
     graph.add_node("email_agent", email_agent_node)
     graph.set_entry_point("advisor")
-    graph.add_conditional_edges(
-        "advisor",
-        route_after_advisor,
-        {"end": END, "email_agent": "email_agent"}
-    )
+    graph.add_conditional_edges("advisor", route_after_advisor, {"end": END, "email_agent": "email_agent"})
     graph.add_edge("email_agent", END)
     return graph.compile()
 
+
 advisor_graph = build_graph()
 
-# ── Public interface ──────────────────────────────────────────────────────────
+
+# ── Public API ────────────────────────────────────────────────────────────────
 def chat(user_message: str, conversation_history: list) -> tuple:
     initial_state: AdvisorState = {
-        "messages": conversation_history + [{"role": "user", "content": user_message}],
-        "answer": "",
-        "answered": False,
-        "confidence": "none",
-        "question_type": "unknown",
-        "tools_tried": [],
-        "drafted_email": "",
-        "parse_failed": False,
-        "tool_contexts": [],
-        "escalation_office": ""
+        "messages":          conversation_history + [{"role": "user", "content": user_message}],
+        "answer":            "",
+        "answered":          False,
+        "confidence":        "none",
+        "question_type":     "unknown",
+        "tools_tried":       [],
+        "drafted_email":     "",
+        "parse_failed":      False,
+        "tool_contexts":     [],
+        "escalation_office": "",
     }
 
     result = advisor_graph.invoke(initial_state)
 
     updated_history = conversation_history + [
         {"role": "user", "content": user_message},
-        {"role": "assistant", "content": result["answer"]}
+        {"role": "assistant", "content": result["answer"]},
     ]
 
     return result["answer"], updated_history, result.get("drafted_email", ""), result.get("tool_contexts", [])
