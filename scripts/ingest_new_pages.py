@@ -3,10 +3,10 @@ Ingest high-value UMN web pages into the existing umn_handbook PGVector table.
 Safe to re-run — skips URLs whose doc_id already exists in the table.
 
 Usage:
-    python ingest_new_pages.py                           # dry run — shows what would be ingested
-    python ingest_new_pages.py --ingest                  # ingest new URLs, skip already-ingested ones
-    python ingest_new_pages.py --ingest --refresh        # re-scrape and replace all existing content
-    python ingest_new_pages.py --ingest --category immigration/status   # one category at a time
+    python scripts/ingest_new_pages.py                           # dry run — shows what would be ingested
+    python scripts/ingest_new_pages.py --ingest                  # ingest new URLs, skip already-ingested ones
+    python scripts/ingest_new_pages.py --ingest --refresh        # re-scrape and replace all existing content
+    python scripts/ingest_new_pages.py --ingest --category immigration/status   # one category at a time
 """
 
 import argparse
@@ -29,7 +29,7 @@ from llama_index.embeddings.openai import OpenAIEmbedding
 load_dotenv()
 
 # ── Config ────────────────────────────────────────────────────────────────────
-CSV_PATH = "umn_advisor_links.csv"
+CSV_PATH = os.path.join(os.path.dirname(__file__), "..", "umn_advisor_links.csv")
 CHUNK_SIZE = 512       # tokens per chunk
 CHUNK_OVERLAP = 64
 REQUEST_DELAY = 1.0    # seconds between requests — be polite

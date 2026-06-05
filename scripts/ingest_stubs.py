@@ -50,7 +50,8 @@ def main():
     parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args()
 
-    with open("reference_stubs.json") as f:
+    stubs_path = os.path.join(os.path.dirname(__file__), "reference_stubs.json")
+    with open(stubs_path) as f:
         stubs = json.load(f)
 
     print(f"\n{'DRY RUN — ' if args.dry_run else ''}Ingesting {len(stubs)} reference stubs\n")
