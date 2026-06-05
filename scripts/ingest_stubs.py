@@ -14,6 +14,7 @@ import os
 import hashlib
 from urllib.parse import urlparse
 
+import psycopg2
 from dotenv import load_dotenv
 
 from llama_index.core import Document, VectorStoreIndex, StorageContext, Settings
@@ -45,6 +46,19 @@ vector_store = PGVectorStore.from_params(
 storage_context = StorageContext.from_defaults(vector_store=vector_store)
 
 
+def already_ingested(url: str) -> bool:
+    conn = psycopg2.connect(db_url)
+    try:
+        with conn.cursor() as cur:
+            cur.execute(
+                "SELECT 1 FROM data_umn_handbook WHERE metadata_->>'url' = %s LIMIT 1",
+                (url,)
+            )
+            return cur.fetchone() is not None
+    finally:
+        conn.close()
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--dry-run", action="store_true")
@@ -54,14 +68,25 @@ def main():
     with open(stubs_path) as f:
         stubs = json.load(f)
 
-    print(f"\n{'DRY RUN — ' if args.dry_run else ''}Ingesting {len(stubs)} reference stubs\n")
+    print(f"\n{'DRY RUN — ' if args.dry_run else ''}Processing {len(stubs)} reference stubs\n")
+
+    ingested, skipped = 0, 0
 
     for stub in stubs:
         url = stub["url"]
         domain = urlparse(url).netloc.replace("www.", "")
         doc_id = hashlib.md5(url.encode()).hexdigest()[:8]
+        category = stub.get("category", stub.get("source_type", "reference_stub"))
 
-        print(f"  [{stub['category']}] {stub['title']}")
+        exists = already_ingested(url)
+
+        if not args.dry_run and exists:
+            print(f"  ✓ skip  [{category}] {stub['title']}")
+            skipped += 1
+            continue
+
+        status = "✓ in DB" if exists else "→ would ingest"
+        print(f"  {status if args.dry_run else '→ ingesting'}  [{category}] {stub['title']}")
         print(f"    {url}")
 
         if args.dry_run:
@@ -72,8 +97,8 @@ def main():
             metadata={
                 "url":         url,
                 "source":      domain,
-                "category":    stub["category"],
-                "source_type": "reference_stub",
+                "category":    category,
+                "source_type": stub.get("source_type", "reference_stub"),
                 "title":       stub["title"],
                 "doc_id":      doc_id,
             },
@@ -87,11 +112,12 @@ def main():
             show_progress=False,
         )
         print(f"    ✅ ingested")
+        ingested += 1
 
     if not args.dry_run:
-        print(f"\nDone — {len(stubs)} stubs ingested into umn_handbook table")
+        print(f"\nDone — {ingested} ingested, {skipped} skipped (already in DB)")
     else:
-        print(f"\nDry run complete. Remove --dry-run to ingest.")
+        print(f"\nDry run complete. Run without --dry-run to ingest new stubs.")
 
 
 if __name__ == "__main__":

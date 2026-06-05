@@ -16,3 +16,6 @@ eval_dataset.json
 
 # Link checker output
 link_check_results.txt
+
+# Scraped page snapshots — data lives in PGVector
+data/scraped_pages.json
