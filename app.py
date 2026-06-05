@@ -14,7 +14,10 @@ st.caption("Ask me anything about the CS graduate program at University of Minne
 # ── Sidebar: Transcript → Degree Audit ───────────────────────────────────────
 with st.sidebar:
     st.header("📄 Degree Audit")
-    st.caption("Upload your UMN unofficial transcript to skip typing your courses. ℹ️ Only course codes and GPA are extracted — the PDF is not stored.")
+    st.caption(
+    "The PDF is not stored. Only course codes are extracted and included "
+    "in your conversation history, which is kept for 7 days."
+    )
 
     uploaded = st.file_uploader(
         "Transcript PDF", type=["pdf"], label_visibility="collapsed"
@@ -58,12 +61,11 @@ with st.sidebar:
 
                 if st.button("Run degree audit →", use_container_width=True, type="primary"):
                     selected = selected_csci + selected_other
-                    gpa_note = f" My cumulative GPA is {result['gpa']}." if result["gpa"] else ""
                     audit_q = (
                         f"I'm in the CSCI {program} program. "
-                        f"I have completed: {', '.join(selected)}.{gpa_note} "
+                        f"I have completed: {', '.join(selected)}. "
                         f"What requirements do I still need to fulfill to graduate?"
-                    )
+        )
                     st.session_state.pending_question = audit_q
                     st.rerun()
 

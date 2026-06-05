@@ -20,6 +20,9 @@ for mod in [
     "llama_index.core.indices",
     "llama_index.core.storage",
     "llama_index.core.storage.storage_context",
+    "langgraph",
+    "langgraph.graph",
+    "langgraph.graph.message",
 ]:
     sys.modules.setdefault(mod, MagicMock())
 
