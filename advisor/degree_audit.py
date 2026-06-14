@@ -1,8 +1,9 @@
 import json
+import os
 
 # Load course data
 try:
-    with open("data/courses.json") as f:
+    with open(os.path.join(os.path.dirname(__file__), "..", "data", "courses.json")) as f:
         all_courses = json.load(f)
 except FileNotFoundError:
     all_courses = {}
@@ -10,7 +11,7 @@ except FileNotFoundError:
 
 # Load degree requirements from config
 try:
-    with open("requirements.json") as f:
+    with open(os.path.join(os.path.dirname(__file__), "..", "data", "requirements.json")) as f:
         REQUIREMENTS = json.load(f)
 except FileNotFoundError:
     REQUIREMENTS = {}

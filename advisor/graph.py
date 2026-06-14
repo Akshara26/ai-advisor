@@ -8,8 +8,8 @@ from dotenv import load_dotenv
 from langgraph.graph import END, StateGraph
 from langgraph.graph.message import add_messages
 
-from escalation import OFFICE_DIRECTORY, check_hard_escalation
-from prompts import ADVISOR_SYSTEM_PROMPT, EMAIL_SYSTEM_PROMPT
+from advisor.escalation import OFFICE_DIRECTORY, check_hard_escalation
+from advisor.prompts import ADVISOR_SYSTEM_PROMPT, EMAIL_SYSTEM_PROMPT
 
 load_dotenv()
 
@@ -18,7 +18,27 @@ os.environ["LANGSMITH_ENDPOINT"] = os.getenv("LANGSMITH_ENDPOINT", "https://api.
 os.environ["LANGSMITH_API_KEY"] = os.getenv("LANGSMITH_API_KEY", "")
 os.environ["LANGSMITH_PROJECT"] = os.getenv("LANGSMITH_PROJECT", "umn-advisor")
 
-from tools import client, run_tool, tools as tool_schemas  # noqa: E402 — must follow env setup
+from advisor.tools import client, run_tool, tools as tool_schemas  # noqa: E402 — must follow env setup
+from pydantic import BaseModel
+from typing import Literal
+
+class AdvisorMeta(BaseModel):
+    answered: bool
+    confidence: Literal["high", "medium", "low", "none"]
+    question_type: Literal["policy", "personal", "degree_audit", "deadline",
+                           "procedure", "course_prerequisite", "unknown"]
+
+META_CLASSIFIER_PROMPT = """Classify an academic advisor's response.
+
+answered: true if the response gives useful information, even with conditions, limitations, or referrals. false only if the response cannot answer without more information from the student.
+
+confidence:
+- "high": answer directly supported by retrieved sources, no guessing, no exceptions needed
+- "medium": general policy clear but student outcome depends on approval or missing details
+- "low": student context missing, conflicting sources, or involves petitions/exceptions/appeals
+- "none": could not find relevant information to answer
+
+question_type: policy, personal, degree_audit, deadline, procedure, course_prerequisite, or unknown"""
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -33,28 +53,27 @@ class AdvisorState(TypedDict):
     question_type: str
     tools_tried: list
     drafted_email: str
-    parse_failed: bool
     tool_contexts: list
     escalation_office: str
 
 
 # ── Parsers ───────────────────────────────────────────────────────────────────
-def parse_state_block(response_text: str) -> tuple[dict, bool]:
-    match = re.search(r'---STATE---\s*(.*?)\s*---END STATE---', response_text, re.DOTALL)
-    if not match:
-        logger.warning("No STATE block found in response")
-        return {"answered": False, "confidence": "none",
-                "question_type": "unknown", "reason": "State block missing"}, True
-    try:
-        return json.loads(match.group(1).strip()), False
-    except json.JSONDecodeError as e:
-        logger.warning(f"Failed to parse state block JSON: {e}")
-        return {"answered": False, "confidence": "none",
-                "question_type": "unknown", "reason": "State block JSON malformed"}, True
+# def parse_state_block(response_text: str) -> tuple[dict, bool]:
+#     match = re.search(r'---STATE---\s*(.*?)\s*---END STATE---', response_text, re.DOTALL)
+#     if not match:
+#         logger.warning("No STATE block found in response")
+#         return {"answered": False, "confidence": "none",
+#                 "question_type": "unknown", "reason": "State block missing"}, True
+#     try:
+#         return json.loads(match.group(1).strip()), False
+#     except json.JSONDecodeError as e:
+#         logger.warning(f"Failed to parse state block JSON: {e}")
+#         return {"answered": False, "confidence": "none",
+#                 "question_type": "unknown", "reason": "State block JSON malformed"}, True
 
 
-def clean_response(response_text: str) -> str:
-    return re.sub(r'\s*---STATE---.*?---END STATE---', '', response_text, flags=re.DOTALL).strip()
+# def clean_response(response_text: str) -> str:
+#     return re.sub(r'\s*---STATE---.*?---END STATE---', '', response_text, flags=re.DOTALL).strip()
 
 
 def parse_email_block(response_text: str) -> str:
@@ -106,7 +125,6 @@ def advisor_node(state: AdvisorState) -> AdvisorState:
             "confidence":        "high" if crisis else "none",
             "question_type":     "crisis_escalation" if crisis else "hard_escalation",
             "tools_tried":       [],
-            "parse_failed":      False,
             "tool_contexts":     [],
             "escalation_office": office_id,
             "messages":          messages + [{"role": "assistant", "content": msg}],
@@ -130,24 +148,36 @@ def advisor_node(state: AdvisorState) -> AdvisorState:
         message = response.choices[0].message
 
         if not message.tool_calls:
-            raw_answer = message.content or ""
-            state_data, parse_failed = parse_state_block(raw_answer)
-            clean_answer = clean_response(raw_answer)
+            answer_text = message.content or ""
 
-            logger.info(f"State data: {state_data}")
-            logger.info(f"Parse failed: {parse_failed}")
-            logger.info(f"Routing to: {'end' if state_data.get('answered') and state_data.get('confidence') == 'high' else 'email_agent'}")
+            try:
+                meta_response = client.beta.chat.completions.parse(
+                    model="gpt-4o-mini",
+                    messages=[
+                        {"role": "system", "content": META_CLASSIFIER_PROMPT},
+                        {"role": "user", "content": f"Question: {user_message}\n\nAnswer: {answer_text}"},
+                    ],
+                    response_format=AdvisorMeta,
+                )
+                meta          = meta_response.choices[0].message.parsed
+                answered      = meta.answered
+                confidence    = meta.confidence
+                question_type = meta.question_type
+            except Exception as e:
+                logger.warning(f"Structured output classification failed: {e}")
+                answered, confidence, question_type = False, "none", "unknown"
+
+            logger.info(f"answered={answered}, confidence={confidence}, question_type={question_type}")
 
             return {
                 **state,
-                "answer":        clean_answer,
-                "answered":      state_data.get("answered", False),
-                "confidence":    state_data.get("confidence", "none"),
-                "question_type": state_data.get("question_type", "unknown"),
+                "answer":        answer_text,
+                "answered":      answered,
+                "confidence":    confidence,
+                "question_type": question_type,
                 "tools_tried":   tools_tried,
-                "parse_failed":  parse_failed,
                 "tool_contexts": tool_contexts,
-                "messages":      messages + [{"role": "assistant", "content": clean_answer}],
+                "messages":      messages + [{"role": "assistant", "content": answer_text}],
             }
 
         conversation.append({
@@ -195,7 +225,6 @@ def advisor_node(state: AdvisorState) -> AdvisorState:
         "question_type": "unknown",
         "tools_tried":   tools_tried,
         "tool_contexts": [],
-        "parse_failed":  False,
         "messages":      conversation,
     }
 
@@ -234,10 +263,6 @@ Draft the email now."""
 
 # ── Routing ───────────────────────────────────────────────────────────────────
 def route_after_advisor(state: AdvisorState) -> str:
-    # Explicit guard: if STATE block couldn't be parsed, always escalate.
-    # Don't rely on fallback confidence values for routing decisions.
-    if state.get("parse_failed"):
-        return "email_agent"
 
     confidence = state.get("confidence", "none")
     question_type = state.get("question_type", "unknown")
@@ -274,7 +299,6 @@ def chat(user_message: str, conversation_history: list) -> tuple:
         "question_type":     "unknown",
         "tools_tried":       [],
         "drafted_email":     "",
-        "parse_failed":      False,
         "tool_contexts":     [],
         "escalation_office": "",
     }

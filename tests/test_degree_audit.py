@@ -44,12 +44,12 @@ MOCK_CODE_TO_COURSE = {
 @pytest.fixture(autouse=True)
 def patch_data():
     """Patch module-level data so tests never depend on real JSON files."""
-    with patch("degree_audit.REQUIREMENTS", MOCK_REQUIREMENTS), \
-         patch("degree_audit.code_to_course", MOCK_CODE_TO_COURSE):
+    with patch("advisor.degree_audit.REQUIREMENTS", MOCK_REQUIREMENTS), \
+         patch("advisor.degree_audit.code_to_course", MOCK_CODE_TO_COURSE):
         yield
 
 
-from degree_audit import degree_audit
+from advisor.degree_audit import degree_audit
 
 
 # ── M.S. breadth and colloquium ───────────────────────────────────────────────

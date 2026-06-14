@@ -1,11 +1,11 @@
 import streamlit as st
 import uuid
-from graph import chat
-from memory import load_history, save_history
+from advisor.graph import chat
+from advisor.memory import load_history, save_history
 import io
 import re
 from pypdf import PdfReader
-from transcript_utils import parse_transcript
+from advisor.transcript_utils import parse_transcript
 
 
 st.title("UMN CS Graduate Advisor")

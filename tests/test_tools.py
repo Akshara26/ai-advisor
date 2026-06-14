@@ -59,13 +59,13 @@ MOCK_OFFICES = {
 
 @pytest.fixture(autouse=True)
 def patch_tool_data():
-    with patch("tools.DEADLINES_DATA", MOCK_DEADLINES), \
-         patch("tools.ROUTING_DATA", MOCK_ROUTING), \
-         patch("tools.OFFICES_DATA", MOCK_OFFICES):
+    with patch("advisor.tools.DEADLINES_DATA", MOCK_DEADLINES), \
+         patch("advisor.tools.ROUTING_DATA", MOCK_ROUTING), \
+         patch("advisor.tools.OFFICES_DATA", MOCK_OFFICES):
         yield
 
 
-from tools import get_deadline, route_contact
+from advisor.tools import get_deadline, route_contact
 
 
 class TestGetDeadline:

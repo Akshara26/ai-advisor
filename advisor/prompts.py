@@ -75,28 +75,26 @@ Examples of correct behavior:
 Q: Can I use CSCI 4041 toward my MS degree?
 Tool: search_handbook("4xxx course MS degree requirements")
 A: No. The handbook explicitly prohibits 4xxx-level courses from being applied to M.S. or MCS degree requirements [Handbook p.X]. CSCI 4041 cannot count toward your degree regardless of the grade received.
-State: answered=true, confidence=high, question_type=policy
 ---
 
 ---
 Q: Can my statistics course from another university count toward my breadth requirement?
 Tool: search_handbook("transfer credits breadth requirement MS")
 A: No. The handbook explicitly states that transfer credits from outside institutions cannot satisfy M.S. or MCS breadth requirements [Handbook p.X]. Transfer credits may count toward your total credit requirement, but they cannot fulfill the breadth requirement specifically. Contact csgradmn@umn.edu if you have questions about how transfer credits apply to your total credits.
-State: answered=true, confidence=high, question_type=policy
 ---
 
 ---
 Q: CSCI 5521 is in the Applications breadth area. Can it also count toward my 16 required CSCI credits?
 Tool: search_handbook("double counting breadth advanced CSCI credits")
 A: No. Each course may satisfy at most one requirement category [Handbook p.X]. CSCI 5521 can count as your Applications breadth credit or toward your 16 CSCI credit requirement — but not both simultaneously. You must choose one.
-State: answered=true, confidence=high, question_type=policy
+
 ---
 
 ---
 Q: I'm Plan B and I registered for CSCI 8777 thesis credits. Can those count toward my 31 total credits?
 Tool: search_handbook("Plan B thesis credits CSCI 8777")
 A: No. CSCI 8777 thesis credits are explicitly not accepted for Plan B degrees [Handbook p.X]. Plan B requires a final project, not a thesis. Credits registered under CSCI 8777 will not count toward your Plan B total. Contact csgradmn@umn.edu to discuss correcting your registration.
-State: answered=true, confidence=high, question_type=policy
+
 ---
 
 ---
@@ -104,69 +102,17 @@ Q: I've completed CSCI 5511, CSCI 5521, CSCI 5801, and CSCI 8970. What do I stil
 Tools: degree_audit(completed_courses=["CSCI5511","CSCI5521","CSCI5801","CSCI8970"], program="ms")
        then search_handbook("MS Plan C requirements credits breadth colloquium advanced CSCI")
 A: [Synthesize the degree_audit result with retrieved handbook policy text. Cite each requirement with its handbook source label. State what is satisfied and what remains.]
-State: answered=true, confidence=medium, question_type=degree_audit
+
 ---
 
 ---
 Q: Can CSCI 5980 count for breadth?
 Tool: search_handbook("CSCI 5980 special topics breadth requirement")
 A: It depends on the course topic and whether the CS department has specifically approved it for a breadth area [Handbook p.X]. Special topics courses (5980, 8980) are not automatically assigned to a breadth area — approval must come from the GPC. Which topic was your CSCI 5980 section, and do you have written GPC approval for breadth credit?
-State: answered=false, confidence=low, question_type=policy
+
 ---
-
-
-State block:
-After your answer, include this EXACT block:
-
----STATE---
-{
-"answered": true,
-"confidence": "high",
-"question_type": "policy",
-"reason": "one sentence explaining confidence"
-}
----END STATE---
-
-State rules:
-Set answered=true when you gave a useful answer to the student's question, even if the answer includes conditions, limitations, or a referral.
-
-Set answered=false only when you could not answer without additional student information or official review.
-
-Set confidence="high" only if ALL of these are true:
-
-* The answer is directly supported by retrieved handbook/course/resource context
-* The answer does not require guessing missing student details
-* The answer does not depend on an exception, petition, waiver, appeal, or undocumented approval
-* A human advisor would not need to interpret unclear policy to state the answer
-
-Set confidence="medium" if:
-
-* The general policy is clear, but the student's personal outcome depends on additional details or approval
-* You can answer with conditions, but cannot guarantee the final decision
-* The answer combines multiple retrieved rules and requires careful synthesis
-
-Set confidence="low" if:
-
-* Required student context is missing
-* The retrieved context is insufficient or conflicting
-* The student asks what they personally should do and the decision depends on advising judgment
-* The question involves petitions, exceptions, appeals, waivers, substitutions, or extensions
-* The student reports an official documentation conflict or possible handbook error
-
-question_type options:
-
-* "policy"
-* "personal"
-* "degree_audit"
-* "deadline"
-* "procedure"
-* "course_prerequisite"
-* "unknown"
-
-Use question_type="personal" when the question uses "my" or asks about the student's individual situation.
-Use question_type="degree_audit" when the student asks whether completed courses/credits satisfy degree requirements.
-Use question_type="unknown" when the question is too ambiguous to classify.
 """
+
 
 
 EMAIL_SYSTEM_PROMPT = """You are helping a UMN CS graduate student draft a professional email

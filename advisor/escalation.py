@@ -6,7 +6,7 @@ logger = logging.getLogger(__name__)
 
 
 def load_json(filename: str) -> dict:
-    path = os.path.join(os.path.dirname(__file__), filename)
+    path = os.path.join(os.path.dirname(__file__), "..", "data", filename)
     try:
         with open(path) as f:
             return json.load(f)

@@ -3,6 +3,8 @@ import sys
 import types
 import re
 from unittest.mock import MagicMock
+import sys, os
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 def ensure_module(name):
     if name not in sys.modules:
@@ -24,7 +26,6 @@ sys.modules['langchain_community.llms'] = MagicMock()
 
 import json
 import math
-import os
 import pandas as pd
 from datetime import datetime, timezone
 from dotenv import load_dotenv
@@ -42,7 +43,7 @@ load_dotenv()
 openai_key = os.getenv("OPENAI_API_KEY")
 
 # ── Import the actual deployed agent ─────────────────────────────────────────
-from graph import chat as graph_chat
+from advisor.graph import chat as graph_chat
 
 # ── RAGAS setup ───────────────────────────────────────────────────────────────
 judge_llm = LangchainLLMWrapper(ChatOpenAI(model="gpt-4o-mini", api_key=openai_key))
@@ -71,7 +72,7 @@ def run_agent(question: str) -> tuple[str, list[str], str]:
     return clean, tool_contexts if tool_contexts else ["no context retrieved"], drafted_email
 
 # ── Load dataset ──────────────────────────────────────────────────────────────
-DATASET_PATH = "eval_dataset.json"
+DATASET_PATH = os.path.join(os.path.dirname(__file__), "eval_dataset.json")
 if not os.path.exists(DATASET_PATH):
     raise FileNotFoundError(f"'{DATASET_PATH}' not found.")
 
@@ -270,8 +271,8 @@ summary = {
     "ragas_overall":        safe_round(ragas_overall),
     "behavioral_pass_rate": safe_round(behavioral_pass_rate),
 }
-
-with open("eval_results.json", "w") as f:
+EVAL_DIR = os.path.dirname(__file__)
+with open(os.path.join(EVAL_DIR, "eval_results.json"), "w") as f:
     json.dump(summary, f, indent=2)
 print("\nAggregate results saved to eval_results.json")
 
@@ -293,11 +294,11 @@ else:
     ragas_detail["answer_relevancy"] = float("nan")
     ragas_detail["context_recall"]   = float("nan")
 
-ragas_detail.to_csv("eval_results_ragas.csv", index=False)
+ragas_detail.to_csv(os.path.join(EVAL_DIR, "eval_results_ragas.csv"), index=False)
 
 # Behavioral detail CSV
 behavioral_detail = pd.DataFrame(behavioral_rows)
-behavioral_detail.to_csv("eval_results_behavioral.csv", index=False)
+behavioral_detail.to_csv(os.path.join(EVAL_DIR, "eval_results_behavioral.csv"), index=False)
 
 print("RAGAS breakdown saved to eval_results_ragas.csv")
 print("Behavioral breakdown saved to eval_results_behavioral.csv")

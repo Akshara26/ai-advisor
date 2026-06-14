@@ -6,15 +6,15 @@ from openai import OpenAI
 import os
 import json
 from dotenv import load_dotenv
-from course_data import check_prerequisites
-from grade_data import get_grade_distribution
-from degree_audit import degree_audit
+from advisor.course_data import check_prerequisites
+from advisor.grade_data import get_grade_distribution
+from advisor.degree_audit import degree_audit
 
 load_dotenv()
 
 # ── Load structured data files ────────────────────────────────────────────────
 def load_json(filename):
-    path = os.path.join(os.path.dirname(__file__), filename)
+    path = os.path.join(os.path.dirname(__file__), "..", "data", filename)
     try:
         with open(path) as f:
             return json.load(f)

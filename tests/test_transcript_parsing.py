@@ -5,7 +5,7 @@ Run with: pytest tests/test_transcript_parsing.py -v
 """
 import pytest
 from unittest.mock import MagicMock, patch
-from transcript_utils import parse_transcript
+from advisor.transcript_utils import parse_transcript
 
 
 def _make_pdf(text: str) -> bytes:
@@ -22,7 +22,7 @@ def _patch_reader(text: str):
     mock_page.extract_text.return_value = text
     mock_reader = MagicMock()
     mock_reader.pages = [mock_page]
-    return patch("transcript_utils.PdfReader", return_value=mock_reader)
+    return patch("advisor.transcript_utils.PdfReader", return_value=mock_reader)
 
 
 # ── Typical transcript format ─────────────────────────────────────────────────
