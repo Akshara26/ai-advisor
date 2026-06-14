@@ -42,8 +42,8 @@ load_dotenv()
 
 openai_key = os.getenv("OPENAI_API_KEY")
 
-# ── Import the actual deployed agent ─────────────────────────────────────────
 from advisor.graph import chat as graph_chat
+from ragas import RunConfig   # add to imports
 
 # ── RAGAS setup ───────────────────────────────────────────────────────────────
 judge_llm = LangchainLLMWrapper(ChatOpenAI(model="gpt-4o-mini", api_key=openai_key))
@@ -127,6 +127,7 @@ ragas_results = evaluate(
     ragas_dataset,
     metrics=[faithfulness, answer_relevancy, context_recall],
     raise_exceptions=False,
+    run_config=RunConfig(timeout=180, max_workers=4),
 )
 ragas_df = ragas_results.to_pandas()
 

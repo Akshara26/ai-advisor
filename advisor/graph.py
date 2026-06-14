@@ -263,17 +263,17 @@ Draft the email now."""
 
 # ── Routing ───────────────────────────────────────────────────────────────────
 def route_after_advisor(state: AdvisorState) -> str:
-
-    confidence = state.get("confidence", "none")
+    confidence    = state.get("confidence", "none")
     question_type = state.get("question_type", "unknown")
-    answered = state.get("answered")
+    answered      = state.get("answered")
 
     if confidence in ("low", "none") or not answered:
         return "email_agent"
-    if confidence == "medium" and question_type in ("personal", "unknown"):
+    if question_type in ("personal", "unknown"):
+        return "email_agent"   # personal decisions always need human judgment
+    if confidence == "medium":
         return "email_agent"
     return "end"
-
 
 # ── Graph assembly ────────────────────────────────────────────────────────────
 def build_graph():
