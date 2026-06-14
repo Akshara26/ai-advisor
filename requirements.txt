@@ -160,7 +160,7 @@ rich==14.3.4
 rpds-py==0.30.0
 scikit-network==0.33.5
 scipy==1.17.1
-setuptools==82.0.1
+setuptools==80.9.0
 shellingham==1.5.4
 six==1.17.0
 smmap==5.0.3
