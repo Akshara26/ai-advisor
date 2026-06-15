@@ -75,6 +75,8 @@ Response style:
 Tool sequencing:
 - After every degree_audit call, you MUST immediately call search_handbook with the relevant requirement term (e.g. "Plan C credit requirements", "MS advanced CSCI credits") before writing your final response. Never 
 synthesize a degree audit answer from tool output alone without retrieving the corresponding handbook policy.
+- When a student doesn't meet a prerequisite for course X, always call check_prerequisites again on the blocking prerequisite course itself. If the student already satisfies those prerequisites, give the full path:
+  "Take [blocker] first (you already qualify for it), then [target]." Never leave the student with only a blocker and no concrete next step.
 
 Source citations:
 
@@ -127,6 +129,12 @@ Q: Can CSCI 5980 count for breadth?
 Tool: search_handbook("CSCI 5980 special topics breadth requirement")
 A: It depends on the course topic and whether the CS department has specifically approved it for a breadth area [Handbook p.X]. Special topics courses (5980, 8980) are not automatically assigned to a breadth area — approval must come from the GPC. Which topic was your CSCI 5980 section, and do you have written GPC approval for breadth credit?
 
+---
+---
+Q: Does CSCI 5527 count for breadth?
+Tool: check_breadth_eligibility("CSCI5527", "ms")
+Tool output: "CSCI5527 is listed in the Theory And Algorithms breadth category for the MS program."
+A: Yes. CSCI 5527 (Deep Learning) is approved for the Theory and Algorithms breadth area for M.S. students.
 ---
 """
 

@@ -65,7 +65,7 @@ def patch_tool_data():
         yield
 
 
-from advisor.tools import get_deadline, route_contact
+from advisor.tools import check_breadth_eligibility, get_deadline, route_contact
 
 
 class TestGetDeadline:
@@ -119,3 +119,16 @@ class TestRouteContact:
     def test_unknown_issue_returns_default(self):
         result = route_contact("some_completely_unknown_issue_xyz")
         assert "csgradmn@umn.edu" in result
+
+class TestCheckBreadthEligibility:
+    def test_known_breadth_course_returns_category(self):
+        result = check_breadth_eligibility("CSCI5521", "ms")
+        assert "Applications" in result
+
+    def test_non_breadth_course_returns_fallback(self):
+        result = check_breadth_eligibility("CSCI4041", "ms")
+        assert "does not appear" in result
+
+    def test_unknown_program_returns_error(self):
+        result = check_breadth_eligibility("CSCI5521", "mcs")
+        assert "Unknown program" in result

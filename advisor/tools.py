@@ -9,6 +9,7 @@ from dotenv import load_dotenv
 from advisor.course_data import check_prerequisites, get_courses_requiring
 from advisor.grade_data import get_grade_distribution
 from advisor.degree_audit import degree_audit
+from advisor.degree_audit import REQUIREMENTS
 
 load_dotenv()
 
@@ -171,6 +172,23 @@ def route_contact(issue_type: str) -> str:
         lines.append(f"Guidance: {route['bot_answer_note']}")
     return "\n".join(lines)
 
+def check_breadth_eligibility(course_code: str, program: str = "ms") -> str:
+    """Check whether a course appears in any breadth category for the given program."""
+    code = course_code.upper().replace(" ", "")
+    req = REQUIREMENTS.get(program)
+    if not req:
+        return f"Unknown program: {program}"
+    for category, courses in req["breadth_categories"].items():
+        if code in courses:
+            return (
+                f"{code} is listed in the {category.replace('_', ' ').title()} "
+                f"breadth category for the {program.upper()} program."
+            )
+    return (
+        f"{code} does not appear in any approved breadth category for the "
+        f"{program.upper()} program. Contact csgradmn@umn.edu to confirm eligibility."
+    )
+
 # ── Tool schemas for GPT ───────────────────────────────────────────────────────
 tools = [
     {
@@ -279,6 +297,21 @@ tools = [
                 "required": ["course_code"]
             }
         }
+    },
+    {
+    "type": "function",
+    "function": {
+        "name": "check_breadth_eligibility",
+        "description": "Check whether a specific course appears in any breadth category for a given program.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "course_code": {"type": "string", "description": "Course code e.g. CSCI5521"},
+                "program": {"type": "string", "enum": ["ms", "phd"], "default": "ms"}
+            },
+            "required": ["course_code"]
+            }
+        }
     }
 
 ]
@@ -299,4 +332,6 @@ def run_tool(tool_name: str, tool_args: dict) -> str:
         return get_deadline(**tool_args)
     elif tool_name == "route_contact":
         return route_contact(**tool_args)
+    elif tool_name == "check_breadth_eligibility":
+        return check_breadth_eligibility(**tool_args)
     return "Tool not found"

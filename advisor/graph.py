@@ -35,6 +35,9 @@ META_CLASSIFIER_PROMPT = """Classify an academic advisor's response.
 
 answered: true if the response gives useful information, even with conditions, limitations, or referrals. false only if the response cannot answer without more information from the student.
 
+Example: A response that gives grade distribution data and an average GPA for a course difficulty question → answered: true, confidence: high, 
+question_type: course_difficulty. Do NOT mark this as unanswered just because it lacks handbook citations — grade data is self-contained.
+
 confidence:
 - "high": answer directly supported by retrieved sources, no guessing, no exceptions needed
 - "medium": general policy clear but student outcome depends on approval or missing details
@@ -157,6 +160,18 @@ def advisor_node(state: AdvisorState) -> AdvisorState:
         message = response.choices[0].message
 
         if not message.tool_calls:
+            # ── Hard enforcement: degree_audit must be followed by search_handbook ──
+            if "degree_audit" in tools_tried and "search_handbook" not in tools_tried:
+                conversation.append({
+                    "role": "user",
+                    "content": (
+                        "[System: You called degree_audit but did not call search_handbook. "
+                        "You MUST call search_handbook now with a query matching the student's "
+                        "program and situation before writing your response.]"
+                    )
+                })
+                continue  # re-enter the for loop, LLM will see the injected message
+
             answer_text = message.content or ""
             non_system = [m for m in messages if normalize_role(m) != "system"]
             recent_context = ""
