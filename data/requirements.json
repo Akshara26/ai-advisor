@@ -2,6 +2,7 @@
   "ms": {
     "total_credits": 31,
     "csci_credits": 16,
+    "required_breadth_courses": 3,
     "colloquium": "CSCI8970",
     "breadth_categories": {
       "applications": [
@@ -25,6 +26,7 @@
   "phd": {
     "total_credits": 52,
     "csci_credits": 16,
+    "required_breadth_courses": 4,
     "colloquium": "CSCI8970",
     "intro_research": "CSCI8001",
     "breadth_categories": {
