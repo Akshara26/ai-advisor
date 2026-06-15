@@ -32,7 +32,43 @@ def check_prerequisites(course_code: str) -> str:
         return f"Course {course_code} not found. Make sure to use the format CSCI5521."
     course = csci_courses[code]
     prereq_str = resolve_prereqs(course["prereq"])
+    
+    # Check free-text info field for grad standing waiver
+    info = course.get("info", "").lower()
+    if "grad standing" in info:
+        prereq_str += "\nNote: Graduate standing also satisfies this prerequisite."
     return f"{code} - {course['name']}\nPrerequisites: {prereq_str}"
+
+def get_courses_requiring(course_code: str) -> str:
+    """Find all CSCI courses that list course_code as a prerequisite."""
+    code = course_code.upper().replace(" ", "")
+    course = csci_courses.get(code)
+    if not course:
+        return f"Course {course_code} not found."
+
+    uid = course.get("uid")
+    if not uid:
+        return f"No UID found for {code}."
+
+    def prereq_contains_uid(prereq, target_uid):
+        if not prereq:
+            return False
+        if isinstance(prereq, str):
+            return prereq == target_uid
+        if isinstance(prereq, dict):
+            return any(prereq_contains_uid(p, target_uid)
+                      for p in prereq.get("and", []) + prereq.get("or", []))
+        return False
+
+    matches = [
+        f"{c['code']} - {c['name']}"
+        for c in csci_courses.values()
+        if prereq_contains_uid(c.get("prereq"), uid)
+    ]
+
+    if not matches:
+        return f"No CSCI courses in the catalog explicitly require {code} as a prerequisite."
+    return f"Courses that require {code} as a prerequisite:\n" + "\n".join(f"  - {m}" for m in sorted(matches))
 
 if __name__ == "__main__":
     # Test it

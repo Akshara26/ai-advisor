@@ -67,7 +67,8 @@ def degree_audit(completed_courses: list, program: str = "ms") -> str:
     for code in completed:
         course = code_to_course.get(code)
         if course and code.startswith("CSCI"):
-            csci_credits += course.get("cred_min") or 3
+            cred = course.get("cred_min")
+            csci_credits += cred if cred is not None else 3
 
     results.append("CREDIT PROGRESS:")
     results.append(f"  CSCI credits completed: {csci_credits}/{req['csci_credits']} required")

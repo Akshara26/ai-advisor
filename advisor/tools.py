@@ -6,7 +6,7 @@ from openai import OpenAI
 import os
 import json
 from dotenv import load_dotenv
-from advisor.course_data import check_prerequisites
+from advisor.course_data import check_prerequisites, get_courses_requiring
 from advisor.grade_data import get_grade_distribution
 from advisor.degree_audit import degree_audit
 
@@ -265,7 +265,22 @@ tools = [
                 "required": ["issue_type"]
             }
         }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "get_courses_requiring",
+            "description": "Find all CSCI courses that list a given course as a prerequisite — use when a student asks 'what can I take after X' or 'what courses require X'.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "course_code": {"type": "string", "description": "Course code e.g. CSCI5521"}
+                },
+                "required": ["course_code"]
+            }
+        }
     }
+
 ]
 
 
@@ -274,6 +289,8 @@ def run_tool(tool_name: str, tool_args: dict) -> str:
         return search_handbook(**tool_args)
     elif tool_name == "check_prerequisites":
         return check_prerequisites(**tool_args)
+    elif tool_name == "get_courses_requiring":
+        return get_courses_requiring(**tool_args)
     elif tool_name == "get_grade_distribution":
         return get_grade_distribution(**tool_args)
     elif tool_name == "degree_audit":
