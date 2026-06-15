@@ -40,7 +40,11 @@ def degree_audit(completed_courses: list, program: str = "ms") -> str:
             breadth_met[category] = fulfilled[0]
             results.append(f"  ✅ {category.replace('_', ' ').title()}: {fulfilled[0]}")
         else:
-            results.append(f"  ❌ {category.replace('_', ' ').title()}: not fulfilled")
+            eligible = breadth_categories[category][:4]
+            results.append(
+                f"  ❌ {category.replace('_', ' ').title()}: not fulfilled\n"
+                f"     Eligible courses include: {', '.join(eligible)}"
+            )
     results.append("")
 
     # Required courses

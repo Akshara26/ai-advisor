@@ -180,7 +180,7 @@
     {
       "issue_id": "gpas_audit",
       "label": "GPAS (Graduate Planning and Audit System) questions",
-      "office_ids": ["onestop", "cs_grad"],
+      "office_ids": ["onestop", "cs_grad", "grad_school"],
       "escalation_level": "soft",
       "bot_can_answer": true,
       "bot_answer_note": "Explain GPAS is accessible via MyU > Academics > GPAS. For interpretation of GPAS output, route to cs_grad.",

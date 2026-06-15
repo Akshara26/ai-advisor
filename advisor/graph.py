@@ -25,8 +25,11 @@ from typing import Literal
 class AdvisorMeta(BaseModel):
     answered: bool
     confidence: Literal["high", "medium", "low", "none"]
-    question_type: Literal["policy", "personal", "degree_audit", "deadline",
-                           "procedure", "course_prerequisite", "unknown"]
+    question_type: Literal[
+    "policy", "personal", "degree_audit", "deadline",
+    "procedure", "course_prerequisite", "course_difficulty",
+    "course_recommendation",   # ← ADD THIS
+    "unknown"]
 
 META_CLASSIFIER_PROMPT = """Classify an academic advisor's response.
 
@@ -38,7 +41,13 @@ confidence:
 - "low": student context missing, conflicting sources, or involves petitions/exceptions/appeals
 - "none": could not find relevant information to answer
 
-question_type: policy, personal, degree_audit, deadline, procedure, course_prerequisite, or unknown"""
+question_type: policy, personal, degree_audit, deadline, procedure, course_prerequisite, or unknown
+Use "course_difficulty" when the student asks how hard a course is in general,
+what grade distributions look like, or whether a course is manageable workload-wise.
+Do NOT use "course_difficulty" for questions about specific professors, instructor
+ratings, or which section to take — those are "personal" or "unknown".
+Use "course_recommendation" when the student asks which course to take next,
+what to prioritize, or which electives to choose given their completed courses."""
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -149,13 +158,27 @@ def advisor_node(state: AdvisorState) -> AdvisorState:
 
         if not message.tool_calls:
             answer_text = message.content or ""
+            non_system = [m for m in messages if normalize_role(m) != "system"]
+            recent_context = ""
+            if len(non_system) > 1:
+                prev = non_system[:-1][-4:]  # up to last 2 exchanges before current
+                recent_context = "\n".join(
+                    f"{normalize_role(m).upper()}: {normalize_content(m)}"
+                    for m in prev
+                )
 
             try:
                 meta_response = client.beta.chat.completions.parse(
                     model="gpt-4o-mini",
                     messages=[
                         {"role": "system", "content": META_CLASSIFIER_PROMPT},
-                        {"role": "user", "content": f"Question: {user_message}\n\nAnswer: {answer_text}"},
+                        {                                        
+                            "role": "user",
+                            "content": (
+                                f"Recent context:\n{recent_context}\n\n"
+                                if recent_context else ""
+                            ) + f"Question: {user_message}\n\nAnswer: {answer_text}",
+                        },
                     ],
                     response_format=AdvisorMeta,
                 )
@@ -260,6 +283,7 @@ Draft the email now."""
 
     return {**state, "drafted_email": parse_email_block(response.choices[0].message.content)}
 
+SELF_CONTAINED_TYPES = {"course_difficulty", "course_recommendation"}
 
 # ── Routing ───────────────────────────────────────────────────────────────────
 def route_after_advisor(state: AdvisorState) -> str:
@@ -267,6 +291,9 @@ def route_after_advisor(state: AdvisorState) -> str:
     question_type = state.get("question_type", "unknown")
     answered      = state.get("answered")
 
+    # These types are inherently advisory — don't email if answered
+    if question_type in SELF_CONTAINED_TYPES and answered:
+        return "end"
     if confidence in ("low", "none") or not answered:
         return "email_agent"
     if question_type in ("personal", "unknown"):
