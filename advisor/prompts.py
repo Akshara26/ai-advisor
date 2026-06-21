@@ -136,12 +136,48 @@ Tool: check_breadth_eligibility("CSCI5527", "ms")
 Tool output: "CSCI5527 is listed in the Theory And Algorithms breadth category for the MS program."
 A: Yes. CSCI 5527 (Deep Learning) is approved for the Theory and Algorithms breadth area for M.S. students.
 ---
+---
+Q: When do I need to apply for graduation?
+Tool: search_handbook("graduation application deadline")
+A: Graduation application deadlines vary by term. Check the exact deadline for your term at 
+onestop.umn.edu/calendar or onestop.umn.edu/academics/graduation-steps. [Do NOT state a month or timeframe unless a retrieved chunk explicitly says so.]
+---
+---
+Q: When is the last day to drop a class?
+Tool: search_handbook("drop deadline last day withdraw")
+A: Drop deadlines vary by term and by refund level (full refund, partial refund, no refund, and academic record). I can't confirm the exact date from the handbook 
+— check your specific dates at onestop.umn.edu/calendar or in MyU under your class registration.
+[Do NOT say "typically the first week" or any hedged timeframe unless a retrieved chunk explicitly supports it.]
+---
+---
+Q: How far in advance do I need to apply for CPT?
+Tool: search_handbook("CPT authorization process steps timeline")
+A: Apply as soon as you receive your offer letter. The handbook does not specify 
+a fixed number of weeks in advance, but CPT requires department approval, CSCI 5996 
+registration, and ISSS processing before you can begin work — do not wait until 
+close to your start date.
+
+Steps [cite source label for each]:
+1. Complete the ISSS CPT online workshop
+2. Complete the student sections of the CPT paperwork
+3. Submit paperwork and offer letter to the CS Graduate Program Coordinators
+4. Wait for GPC approval and a permission number
+5. Register for CSCI 5996 using the permission number
+6. Submit the final paperwork to ISSS
+
+Contact ISSS at isss@umn.edu or 612-626-7100 with timeline questions.
+[Do NOT state a specific number of weeks unless a retrieved chunk explicitly confirms it.]
+---
 """
 
 
 
 EMAIL_SYSTEM_PROMPT = """You are helping a UMN CS graduate student draft a professional email
-to the graduate program coordinators at csgradmn@umn.edu.
+to the appropriate university office.
+
+You will be told which office handles this issue. Draft the email TO THAT OFFICE,
+not to anyone else. The first line of the email body must be "To: [office name] ([contact])"
+where [contact] is the email if available, otherwise the phone or URL.
 
 Based on the conversation context and question type, draft an appropriate email:
 - policy question: formal tone, reference what was already searched, explain the ambiguity
@@ -151,16 +187,19 @@ Based on the conversation context and question type, draft an appropriate email:
 
 The email should:
 - Have a clear subject line specific to the situation
-- Open directly with the situation — no "I hope this message finds you well" or similar filler
-- Be professional and concise — 3-4 sentences maximum
+- Open with the "To: ..." line as described above
+- Then have a direct opening — no "I hope this message finds you well" or similar filler
+- Be professional and concise — 3-4 sentences in the body (in addition to the To: line)
 - State specifically what the student already tried to find out
-- State specifically what they need the coordinator to clarify or decide
+- State specifically what they need the office to clarify or decide
 - NOT include placeholder text like [your name] — use "A CS Graduate Student" if name unknown
 - Sound like it was written by a real student, not a template
 
 Return the email wrapped like this:
 ---EMAIL---
 Subject: [subject line]
+
+To: [office name] ([contact])
 
 [email body]
 ---END EMAIL---

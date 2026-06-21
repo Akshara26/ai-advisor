@@ -273,6 +273,22 @@ def email_agent_node(state: AdvisorState) -> AdvisorState:
     question_type = state.get("question_type", "unknown")
     tools_tried = state.get("tools_tried", [])
     answer = state.get("answer", "")
+    escalation_office = state.get("escalation_office", "")
+
+    # Resolve the office to address the email to.
+    # If a hard escalation set escalation_office, use that. Otherwise default to CS Grad.
+    office = OFFICE_DIRECTORY.get(escalation_office) if escalation_office else None
+    if office:
+        office_name = office.get("name", "CS Graduate Program Office")
+        office_contact = (
+            office.get("email")
+            or office.get("phone")
+            or office.get("url")
+            or "csgradmn@umn.edu"
+        )
+    else:
+        office_name = "CS Graduate Program Office"
+        office_contact = "csgradmn@umn.edu"
 
     conversation_summary = "\n".join(
         f"{normalize_role(msg).upper()}: {normalize_content(msg)}"
@@ -282,6 +298,9 @@ def email_agent_node(state: AdvisorState) -> AdvisorState:
     prompt = f"""Question type: {question_type}
 Tools already searched: {', '.join(tools_tried) if tools_tried else 'none'}
 What the advisor found: {answer or 'No relevant information found'}
+
+The office responsible for this issue is: {office_name} ({office_contact})
+Address the email TO THIS OFFICE in the To: line. Do not address it to anyone else.
 
 Full conversation:
 {conversation_summary}

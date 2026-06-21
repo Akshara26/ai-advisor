@@ -116,9 +116,7 @@ def search_handbook(query: str) -> str:
             "For your question, please refer directly to the CS Graduate Handbook at "
             "https://cse.umn.edu/cs/graduate or contact csgradmn@umn.edu."
         )
-    # rest of function unchanged
-    nodes = retriever.retrieve(query)
-
+    
     nodes = retriever.retrieve(query)
     if not nodes:
         return "No relevant information found in the handbook."
