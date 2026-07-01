@@ -53,7 +53,8 @@
       "offer_email_draft": true
     },
     {
-      "intent_pattern": ["transfer credit", "transfer course", "count from previous", "credit from other institution", "count my master"],
+      "intent_pattern": ["transfer credit", "transfer course","count from previous", "credit from other institution","count my master",
+  "transfer them", "transfer those","credits from another", "credits from a different","coursework from another", "from stanford", "from mit"],
       "escalation_level": "hard",
       "office": "cs_grad",
       "message_template": "Transfer credit applicability must be formally reviewed by the CS Graduate Office. The general CS policy does not allow transfer credits toward the degree, but exceptions require coordinator and DGS approval. Would you like help drafting an inquiry email?",

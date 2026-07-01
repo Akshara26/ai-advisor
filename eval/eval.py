@@ -43,6 +43,7 @@ load_dotenv()
 openai_key = os.getenv("OPENAI_API_KEY")
 
 from advisor.graph import chat as graph_chat
+from advisor.escalation import OFFICE_DIRECTORY
 from ragas import RunConfig   # add to imports
 
 # ── RAGAS setup ───────────────────────────────────────────────────────────────
@@ -63,6 +64,21 @@ BEHAVIORAL_PREFIXES = {'C.', 'G.'}
 
 # ── Agent call ────────────────────────────────────────────────────────────────
 CITATION_RE = re.compile(r'\[Handbook p\.\d+\]|\[[^\]]+\.[a-z]{2,}\]')
+
+def _office_match_terms(office_id: str) -> list[str]:
+    """Given an office_id from data/office_directory.json, return all the
+    identifier strings (name, short_name, email) that, if present in a drafted
+    email, indicate the email is addressed to that office. If office_id isn't
+    in the directory, the string is treated as a literal match term."""
+    if office_id not in OFFICE_DIRECTORY:
+        return [office_id]
+    office = OFFICE_DIRECTORY[office_id]
+    terms = []
+    for key in ("name", "short_name", "email"):
+        val = office.get(key)
+        if val:
+            terms.append(val)
+    return terms
 
 def run_agent(question: str) -> tuple[str, list[str], str]:
     """Returns (clean_response, tool_contexts, drafted_email)."""
@@ -183,8 +199,30 @@ for i, q in enumerate(behavioral_qs):
     resp_lower = response.lower()
 
     if should_fallback:
-        passed = bool(drafted_email)
-        reason = "escalated to email" if passed else "no email drafted"
+        has_email = bool(drafted_email)
+        expected_office = q.get("expected_office")  # e.g. "isss", "cs_grad"
+
+        if not has_email:
+            passed = False
+            reason = "no email drafted"
+        elif expected_office:
+            match_terms = _office_match_terms(expected_office)
+            email_lower = drafted_email.lower()
+            matched = any(term.lower() in email_lower for term in match_terms)
+            if matched:
+                passed = True
+                reason = f"escalated correctly to {expected_office}"
+            else:
+                passed = False
+                reason = (
+                    f"escalated to WRONG office "
+                    f"(expected {expected_office}, "
+                    f"email starts: {drafted_email[:100]!r})"
+                )
+        else:
+            # Backward compat: no expected_office set, fall back to old loose check
+            passed = True
+            reason = "escalated to email (no expected_office set)"
 
     elif "ask_clarifying_question" in expected_behavior:
         has_question = "?" in response
@@ -209,6 +247,7 @@ for i, q in enumerate(behavioral_qs):
         "passed":         passed,
         "reason":         reason,
         "drafted_email":  bool(drafted_email),
+        "expected_office": q.get("expected_office", ""),
         "response_snip":  response[:120],
     })
 

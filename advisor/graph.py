@@ -50,7 +50,10 @@ what grade distributions look like, or whether a course is manageable workload-w
 Do NOT use "course_difficulty" for questions about specific professors, instructor
 ratings, or which section to take — those are "personal" or "unknown".
 Use "course_recommendation" when the student asks which course to take next,
-what to prioritize, or which electives to choose given their completed courses."""
+what to prioritize, or which electives to choose given their completed courses.
+Do NOT use "course_recommendation" for choices between degree plans (Plan A vs
+Plan B vs Plan C), programs (M.S. vs Ph.D. vs MCS), or research paths — those
+are "personal" or "policy"."""
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -324,6 +327,30 @@ def route_after_advisor(state: AdvisorState) -> str:
     confidence    = state.get("confidence", "none")
     question_type = state.get("question_type", "unknown")
     answered      = state.get("answered")
+    messages      = state.get("messages", [])
+
+    # Extract the latest user question to check for professor-specific asks.
+    # A course_difficulty question about a specific professor should NOT be
+    # treated as self-contained — professor difficulty is subjective, personal,
+    # and not something the handbook or grade data can answer authoritatively.
+    # NOTE: use normalize_role/normalize_content — LangGraph's add_messages
+    # reducer converts state messages to BaseMessage objects which have `.type`,
+    # not `.role`. Raw attribute access silently returns None here.
+    latest_user_msg = ""
+    for msg in reversed(messages):
+        if normalize_role(msg) == "user":
+            latest_user_msg = normalize_content(msg).lower()
+            break
+
+    is_about_professor = any(
+        term in latest_user_msg
+        for term in ("professor", "instructor", "which prof", "who teaches", "who's teaching", "which teacher")
+    )
+
+    # Professor-specific questions always escalate, regardless of the
+    # meta-classifier's question_type label.
+    if is_about_professor:
+        return "email_agent"
 
     # These types are inherently advisory — don't email if answered
     if question_type in SELF_CONTAINED_TYPES and answered:

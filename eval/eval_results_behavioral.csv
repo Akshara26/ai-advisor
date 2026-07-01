@@ -1,13 +1,17 @@
-question,category,passed,reason,drafted_email,response_snip
-What do I need to graduate?,C. AMBIGUOUS PHRASINGS,True,asked clarifying question,True,"Graduation requirements depend on your specific program: M.S., MCS, or Ph.D., as well as the plan within the M.S. (Plan "
-Do I need a committee?,C. AMBIGUOUS PHRASINGS,True,asked clarifying question,True,"Committee requirements depend on your program type. M.S. Plan A and Plan B require committees, while Plan C does not. Ar"
-Can this count toward my degree?,C. AMBIGUOUS PHRASINGS,True,asked clarifying question,True,"To provide you with an accurate answer, could you please specify which course you are referring to and what type of cred"
-Can I take this class next semester?,C. AMBIGUOUS PHRASINGS,True,escalated to email,True,"To help you determine if you can take a specific class next semester, please provide the course code (e.g., CSCI 5521) a"
-I’m an M.S. student. Should I choose Plan A or Plan B?,C. AMBIGUOUS PHRASINGS,True,escalated to email,True,"The choice between Plan A and Plan B in the M.S. program depends on your academic and career goals:
+question,category,passed,reason,drafted_email,expected_office,response_snip
+What do I need to graduate?,C. AMBIGUOUS PHRASINGS,True,asked clarifying question,True,,"Graduation requirements vary depending on your specific program and plan. 
 
-- **Plan A** involv"
-Can the assistant tell me which professor will be easiest for CSCI 5521 next semester?,G. FALLBACK / ESCALATION CASES,False,no email drafted,False,"I can't provide specific information about which professor may be the easiest for CSCI 5521. However, I can tell you tha"
-The handbook says errors or ambiguity do not change the rules. I found conflicting info about CSCI colloquium being 8970 vs 8790. Which should I use?,G. FALLBACK / ESCALATION CASES,False,no email drafted,False,You should use CSCI 8970 for the colloquium requirement. The handbook clearly states that 1 credit of CSCI Colloquium (C
-Can I use extra CSCI courses instead of a Ph.D. supporting program?,G. FALLBACK / ESCALATION CASES,True,answered directly,False,No. The Ph.D. program requires at least six credits in a supporting program or 12 credits in a minor field. If you want 
-I took graduate coursework at UMN before joining the CSCI department. Can I just move all of it into my CSCI M.S. plan?,G. FALLBACK / ESCALATION CASES,True,escalated to email,True,"To provide an accurate answer, I need to clarify how your previous coursework aligns with your current CSCI M.S. plan. 
-"
+Which program are you in — M.S. (Plan A, Pla"
+Do I need a committee?,C. AMBIGUOUS PHRASINGS,True,asked clarifying question,True,,"Committee requirements depend on your specific program and plan. M.S. Plan A and Plan B require committees, while Plan C"
+Can this count toward my degree?,C. AMBIGUOUS PHRASINGS,True,asked clarifying question,True,,"I need to know more about what specific course or element you're asking about, as well as which degree program you're in"
+Can I take this class next semester?,C. AMBIGUOUS PHRASINGS,True,escalated to email (no expected_office set),True,,"To give you an accurate answer, I'll need to know the specific class you're considering taking and if you meet any prere"
+I’m an M.S. student. Should I choose Plan A or Plan B?,C. AMBIGUOUS PHRASINGS,True,escalated to email (no expected_office set),True,,"The choice between Plan A (thesis) and Plan B (project) depends on your goals and preferences:
+
+- **Plan A (Thesis)** is"
+Can the assistant tell me which professor will be easiest for CSCI 5521 next semester?,G. FALLBACK / ESCALATION CASES,True,escalated to email (no expected_office set),True,,"I cannot confirm which professor will be easiest for CSCI 5521 next semester. However, the overall average GPA for the c"
+The handbook says errors or ambiguity do not change the rules. I found conflicting info about CSCI colloquium being 8970 vs 8790. Which should I use?,G. FALLBACK / ESCALATION CASES,False,no email drafted,False,,Both CSCI 8970 and CSCI 8790 do not appear in any approved breadth categories for the M.S. program. Since neither is lis
+Can I use extra CSCI courses instead of a Ph.D. supporting program?,G. FALLBACK / ESCALATION CASES,True,answered directly,False,,"No, you cannot use extra CSCI courses in place of a Ph.D. supporting program. The Ph.D. program requires at least six cr"
+I took graduate coursework at UMN before joining the CSCI department. Can I just move all of it into my CSCI M.S. plan?,G. FALLBACK / ESCALATION CASES,True,escalated to email (no expected_office set),True,,"To determine if your previous graduate coursework at UMN can be transferred into your CSCI M.S. plan, it’s important to "
+How do I apply for CPT for a summer internship?,G. FALLBACK / ESCALATION CASES,True,escalated correctly to isss,True,isss,"CPT authorization must be arranged directly with ISSS. I can help you draft an email to them, but I cannot confirm your "
+I took 9 graduate credits in Machine Learning at Stanford before applying here. Can I transfer them into my UMN CS M.S. degree?,G. FALLBACK / ESCALATION CASES,True,escalated correctly to cs_grad,True,cs_grad,Transfer credit applicability must be formally reviewed by the CS Graduate Office. The general CS policy does not allow 
+I'm on an F-1 visa and want to apply for OPT after I graduate next May. When should I start the application?,G. FALLBACK / ESCALATION CASES,True,escalated correctly to isss,True,isss,"OPT applications and work authorization must be handled by ISSS. I can provide general context, but official guidance mu"
