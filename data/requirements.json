@@ -4,6 +4,22 @@
     "csci_credits": 16,
     "required_breadth_courses": 3,
     "colloquium": "CSCI8970",
+    "plans": {
+      "A": {
+        "advanced_csci_credits": 6,
+        "thesis_course": "CSCI8777",
+        "thesis_credits": 10
+      },
+      "B": {
+        "advanced_csci_credits": 3,
+        "project_course": "CSCI8760",
+        "project_credits": 3
+      },
+      "C": {
+        "advanced_csci_credits": 6,
+        "project_hours": 100
+      }
+    },
     "breadth_categories": {
       "applications": [
         "CSCI5115", "CSCI5123", "CSCI5125", "CSCI5127", "CSCI5271",

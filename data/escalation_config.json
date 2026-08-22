@@ -53,12 +53,24 @@
       "offer_email_draft": true
     },
     {
-      "intent_pattern": ["transfer credit", "transfer course","count from previous", "credit from other institution","count my master",
-  "transfer them", "transfer those","credits from another", "credits from a different","coursework from another", "from stanford", "from mit"],
-      "escalation_level": "hard",
+      "intent_pattern": [
+        "transfer credit",
+        "transfer course",
+        "count from previous",
+        "credit from other institution",
+        "count my master",
+        "transfer them",
+        "transfer those",
+        "credits from another",
+        "credits from a different",
+        "coursework from another",
+        "from stanford",
+        "from mit"
+      ],
+      "escalation_level": "soft",
       "office": "cs_grad",
-      "message_template": "Transfer credit applicability must be formally reviewed by the CS Graduate Office. The general CS policy does not allow transfer credits toward the degree, but exceptions require coordinator and DGS approval. Would you like help drafting an inquiry email?",
-      "offer_email_draft": true
+      "message_template": "Transfer coursework may potentially be applied toward a Computer Science graduate degree after formal review. Outside-institution transfer coursework cannot satisfy M.S. breadth requirements. The specific courses and number of credits that can be applied must be reviewed by the CS Graduate Program Office.",
+      "offer_email_draft": false
     },
     {
       "intent_pattern": ["petition", "exception to policy", "request exception", "waive requirement"],
@@ -91,12 +103,12 @@
     },
     {
       "ambiguous_intent": "what do i still need",
-      "missing_slots": ["program", "plan", "completed_courses"],
-      "clarification_prompt": "To give you an accurate picture of remaining requirements, I need a few details: (1) Are you in the M.S. or Ph.D. program? (2) Which plan are you on — Plan A (thesis), Plan B (coursework), or Plan C (MCS)? (3) Can you share which CSCI courses you've already completed?"
+      "missing_slots": ["program", "ms_plan", "completed_courses"],
+      "clarification_prompt": "To give you an accurate picture of your remaining requirements, I need a few details: (1) Are you in the M.S. or Ph.D. program? (2) If you are an M.S. student, are you in Plan A (thesis), Plan B (project), or Plan C (coursework only)? (3) Can you share which CSCI courses you have already completed?"
     },
     {
       "ambiguous_intent": "can i graduate next semester",
-      "missing_slots": ["program", "plan", "completed_courses", "credits_completed", "gpa", "colloquium_done", "thesis_status"],
+      "missing_slots": ["program", "ms_plan", "completed_courses", "credits_completed", "gpa", "colloquium_done", "thesis_status"],
       "clarification_prompt": "I can walk through the CS graduation checklist with you. To do that, I'll need: (1) Your program and plan (M.S. Plan A/B/C or Ph.D.), (2) Total credits completed so far, (3) Which breadth areas you've covered, (4) Whether you've completed the colloquium requirement, (5) GPA (optional but helpful). Want to go through it together?"
     },
     {

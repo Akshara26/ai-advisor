@@ -26,13 +26,22 @@ KNOWN_CREDITS = {
 }
 
 
-def degree_audit(completed_courses: list, program: str = "ms") -> str:
+def degree_audit(completed_courses: list, program: str = "ms", plan: str | None = None) -> str:
+    if program == "ms" and plan not in ("A", "B", "C"):
+        return "M.S. degree audits require a plan: A, B, or C."
+    if program == "phd":
+        plan = None
+
     completed = [c.upper().replace(" ", "") for c in completed_courses]
 
     if program not in REQUIREMENTS:
         return f"Unknown program: {program}. Valid options: ms, phd"
 
     req = REQUIREMENTS[program]
+    plan_req = None
+
+    if program == "ms":
+        plan_req = req["plans"][plan]
     breadth_categories = req["breadth_categories"]
     required_breadth_courses = req.get("required_breadth_courses", len(breadth_categories))
     colloquium = req["colloquium"]
@@ -89,10 +98,24 @@ def degree_audit(completed_courses: list, program: str = "ms") -> str:
 
     # ── Required courses ──────────────────────────────────────────────────────
     results.append("REQUIRED COURSES:")
+    colloquium = "CSCI8970"
     if colloquium in completed:
         results.append(f"  ✅ Colloquium ({colloquium}): complete")
     else:
         results.append(f"  ❌ Colloquium ({colloquium}): not completed")
+
+    plan_b_project_complete = True
+
+    if program == "ms" and plan == "B":
+        project_course = plan_req.get("project_course")
+        plan_b_project_complete = project_course in completed
+
+        if plan_b_project_complete:
+            results.append(f"  ✅ Plan B project course ({project_course}): complete")
+        else:
+            results.append(f"  ❌ Plan B project course ({project_course}): not completed")
+
+    results.append("")
 
     if program == "phd":
         intro = req.get("intro_research")
@@ -104,10 +127,20 @@ def degree_audit(completed_courses: list, program: str = "ms") -> str:
 
     # ── Credit count ──────────────────────────────────────────────────────────
     csci_credits = 0
+    excluded_courses = []
     for code in completed:
         if not code.startswith("CSCI"):
             continue
+        course_number = code[4:]
+
+        if course_number.isdigit() and int(course_number) < 5000:
+            excluded_courses.append(
+                f"{code} (4xxx-level course)"
+            )
+            continue
+
         course = code_to_course.get(code)
+
         if course:
             cred = course.get("cred_min")
             if cred is not None:
@@ -116,14 +149,26 @@ def degree_audit(completed_courses: list, program: str = "ms") -> str:
                 # Use known credit values before falling back to 3
                 csci_credits += KNOWN_CREDITS.get(code, 3)
 
-    results.append("CREDIT PROGRESS:")
+    results.append("CSCI CREDIT REQUIREMENT:")
     results.append(f"  CSCI credits completed: {csci_credits}/{req['csci_credits']} required")
+    if excluded_courses:
+        results.append(
+            f"  ⚠️ Excluded from degree credit count: {', '.join(excluded_courses)}"
+        )
     results.append(f"  Note: add non-CSCI courses manually for total credit count")
     results.append("")
 
     # ── Summary ───────────────────────────────────────────────────────────────
     results.append("SUMMARY:")
-    if breadth_complete and colloquium in completed:
+
+    csci_credit_complete = csci_credits >= req["csci_credits"]
+
+    if (
+        breadth_complete
+        and colloquium in completed
+        and csci_credit_complete
+        and plan_b_project_complete
+    ):
         results.append(
             "  ✅ Core CSCI requirements appear satisfied based on the courses you provided. "
             "This is a preliminary checklist only — verify your official status via GPAS in "
@@ -138,6 +183,12 @@ def degree_audit(completed_courses: list, program: str = "ms") -> str:
             missing.append(f"{extra_needed} additional breadth course(s) from any area")
         if colloquium not in completed:
             missing.append(f"{colloquium} colloquium")
+        if not plan_b_project_complete:
+            missing.append("CSCI8760 Plan B project course")
+        if not csci_credit_complete:
+            missing.append(
+                f"{req['csci_credits'] - csci_credits} more CSCI credit(s)"
+            )
         results.append(f"  Still needed: {'; '.join(missing)}")
 
     return "\n".join(results)

@@ -248,6 +248,11 @@ tools = [
                         "type": "string",
                         "description": "Degree program: ms or phd",
                         "enum": ["ms", "phd"]
+                    },
+                    "plan": {
+                        "type": "string",
+                        "description": "M.S. plan: A, B, or C. Required when program is ms.",
+                        "enum": ["A", "B", "C"]
                     }
                 },
                 "required": ["completed_courses", "program"]

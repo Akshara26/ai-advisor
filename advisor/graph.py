@@ -24,6 +24,7 @@ from typing import Literal
 
 class AdvisorMeta(BaseModel):
     answered: bool
+    needs_clarification: bool
     confidence: Literal["high", "medium", "low", "none"]
     question_type: Literal[
     "policy", "personal", "degree_audit", "deadline",
@@ -33,10 +34,41 @@ class AdvisorMeta(BaseModel):
 
 META_CLASSIFIER_PROMPT = """Classify an academic advisor's response.
 
-answered: true if the response gives useful information, even with conditions, limitations, or referrals. false only if the response cannot answer without more information from the student.
+answered:
+- true when the response gives a substantive answer to the student's current question.
+- false when the response does not yet give a substantive answer.
+- A response may have answered=false and needs_clarification=true when the correct next step is to ask the student for missing information.
 
-Example: A response that gives grade distribution data and an average GPA for a course difficulty question → answered: true, confidence: high, 
-question_type: course_difficulty. Do NOT mark this as unanswered just because it lacks handbook citations — grade data is self-contained.
+Example: A response that gives grade distribution data and an average GPA for a course difficulty question
+→ answered: true
+→ needs_clarification: false
+→ confidence: high
+→ question_type: course_difficulty
+
+Do NOT mark this as unanswered just because it lacks handbook citations — grade data is self-contained.
+
+needs_clarification:
+- true when the assistant's response is primarily asking the student for missing information that is necessary to answer correctly.
+- false when the assistant has enough information to give the substantive answer, even if it also mentions limitations or recommends contacting an office.
+
+Examples:
+Question: "Can this count toward my degree?"
+Answer: "Which course are you asking about, and which requirement do you want it to satisfy?"
+→ answered: false
+→ needs_clarification: true
+→ confidence: high
+
+Question: "Can CSCI 4041 count toward my M.S. degree?"
+Answer: "No. 4xxx courses cannot count toward the M.S. degree."
+→ answered: true
+→ needs_clarification: false
+→ confidence: high
+
+Question: "Can my special topics course satisfy breadth?"
+Answer: "It depends on whether that specific offering has been approved. What course number/topic did you take?"
+→ answered: false
+→ needs_clarification: true
+→ confidence: high
 
 confidence:
 - "high": answer directly supported by retrieved sources, no guessing, no exceptions needed
@@ -52,7 +84,7 @@ ratings, or which section to take — those are "personal" or "unknown".
 Use "course_recommendation" when the student asks which course to take next,
 what to prioritize, or which electives to choose given their completed courses.
 Do NOT use "course_recommendation" for choices between degree plans (Plan A vs
-Plan B vs Plan C), programs (M.S. vs Ph.D. vs MCS), or research paths — those
+Plan B vs Plan C), programs (M.S. vs Ph.D.), or research paths — those
 are "personal" or "policy"."""
 
 logging.basicConfig(level=logging.INFO)
@@ -64,6 +96,7 @@ class AdvisorState(TypedDict):
     messages: Annotated[list, add_messages]
     answer: str
     answered: bool
+    needs_clarification: bool
     confidence: str
     question_type: str
     tools_tried: list
@@ -202,18 +235,29 @@ def advisor_node(state: AdvisorState) -> AdvisorState:
                 )
                 meta          = meta_response.choices[0].message.parsed
                 answered      = meta.answered
+                needs_clarification = meta.needs_clarification
                 confidence    = meta.confidence
                 question_type = meta.question_type
             except Exception as e:
                 logger.warning(f"Structured output classification failed: {e}")
-                answered, confidence, question_type = False, "none", "unknown"
+                answered = False
+                needs_clarification = False
+                confidence = "none"
+                question_type = "unknown"
 
-            logger.info(f"answered={answered}, confidence={confidence}, question_type={question_type}")
+            logger.info(
+                f"answered={answered}, "
+                f"needs_clarification={needs_clarification}, "
+                f"confidence={confidence}, "
+                f"question_type={question_type}, "
+                f"tools_tried={tools_tried} "
+        )
 
             return {
                 **state,
                 "answer":        answer_text,
                 "answered":      answered,
+                "needs_clarification": needs_clarification,
                 "confidence":    confidence,
                 "question_type": question_type,
                 "tools_tried":   tools_tried,
@@ -262,6 +306,7 @@ def advisor_node(state: AdvisorState) -> AdvisorState:
                     "I've drafted an email to the CS graduate coordinators who can help directly."
                 ),
         "answered":      False,
+        "needs_clarification": False,
         "confidence":    "none",
         "question_type": "unknown",
         "tools_tried":   tools_tried,
@@ -327,15 +372,18 @@ def route_after_advisor(state: AdvisorState) -> str:
     confidence    = state.get("confidence", "none")
     question_type = state.get("question_type", "unknown")
     answered      = state.get("answered")
+    needs_clarification = state.get("needs_clarification", False)
     messages      = state.get("messages", [])
 
     # Extract the latest user question to check for professor-specific asks.
-    # A course_difficulty question about a specific professor should NOT be
-    # treated as self-contained — professor difficulty is subjective, personal,
+    # A course_difficulty question about a specific professor should NOT be treated as self-contained — professor difficulty is subjective, personal,
     # and not something the handbook or grade data can answer authoritatively.
-    # NOTE: use normalize_role/normalize_content — LangGraph's add_messages
-    # reducer converts state messages to BaseMessage objects which have `.type`,
+    # NOTE: use normalize_role/normalize_content — LangGraph's add_messages reducer converts state messages to BaseMessage objects which have `.type`,
     # not `.role`. Raw attribute access silently returns None here.
+
+    if needs_clarification:
+        return "end"
+
     latest_user_msg = ""
     for msg in reversed(messages):
         if normalize_role(msg) == "user":
@@ -347,20 +395,19 @@ def route_after_advisor(state: AdvisorState) -> str:
         for term in ("professor", "instructor", "which prof", "who teaches", "who's teaching", "which teacher")
     )
 
-    # Professor-specific questions always escalate, regardless of the
-    # meta-classifier's question_type label.
-    if is_about_professor:
-        return "email_agent"
+    # # Professor-specific questions always escalate, regardless of the meta-classifier's question_type label.
+    # if is_about_professor:
+    #     return "email_agent"
 
-    # These types are inherently advisory — don't email if answered
-    if question_type in SELF_CONTAINED_TYPES and answered:
-        return "end"
-    if confidence in ("low", "none") or not answered:
-        return "email_agent"
-    if question_type in ("personal", "unknown"):
-        return "email_agent"   # personal decisions always need human judgment
-    if confidence == "medium":
-        return "email_agent"
+    # # These types are inherently advisory — don't email if answered
+    # if question_type in SELF_CONTAINED_TYPES and answered:
+    #     return "end"
+    # if confidence in ("low", "none") or not answered:
+    #     return "email_agent"
+    # if question_type in ("personal", "unknown"):
+    #     return "email_agent"   # personal decisions always need human judgment
+    # if confidence == "medium":
+    #     return "email_agent"
     return "end"
 
 # ── Graph assembly ────────────────────────────────────────────────────────────
@@ -383,6 +430,7 @@ def chat(user_message: str, conversation_history: list) -> tuple:
         "messages":          conversation_history + [{"role": "user", "content": user_message}],
         "answer":            "",
         "answered":          False,
+        "needs_clarification": False,
         "confidence":        "none",
         "question_type":     "unknown",
         "tools_tried":       [],
