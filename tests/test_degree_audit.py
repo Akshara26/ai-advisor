@@ -14,11 +14,40 @@ MOCK_REQUIREMENTS = {
         "total_credits": 31,
         "csci_credits": 16,
         "colloquium": "CSCI8970",
+        "advanced_csci": {
+            "approved_5xxx": [
+                "CSCI5105",
+                "CSCI5125",
+                "CSCI5127W",
+                "CSCI5161",
+                "CSCI5204",
+                "CSCI5521",
+                "CSCI5525",
+                "CSCI5527",
+                "CSCI5552",
+                "CSCI5561",
+                "CSCI5608",
+                "CSCI5708",
+                "CSCI5715",
+                "CSCI5802",
+            ],
+            "allow_any_8xxx": True,
+            "excluded_8xxx": [
+                "CSCI8001",
+                "CSCI8002",
+                "CSCI8970",
+            ],
+            "limited_8xxx": {
+                "courses": ["CSCI8991", "CSCI8994"],
+                "max_combined_credits": 6,
+            },
+        },
         "plans": {
             "A": {
                 "advanced_csci_credits": 6,
                 "thesis_course": "CSCI8777",
                 "thesis_credits": 10,
+                "extra_advanced_exclusions": ["CSCI8777"],
             },
             "B": {
                 "advanced_csci_credits": 3,
@@ -193,6 +222,58 @@ class TestCreditCounting:
         courses = ["CSCI5521", "STAT5302", "CSCI8970"]
         result = degree_audit(courses, "ms", plan="B")
         assert "4/16" in result  # CSCI5521 (3) + CSCI8970 (1) = 4
+
+    def test_plan_c_reports_missing_advanced_credits(self):
+        courses = [
+            "CSCI5511",
+            "CSCI5421",
+            "CSCI5801",
+            "CSCI5103",
+            "CSCI8970",
+        ]
+
+        result = degree_audit(courses, "ms", plan="C")
+
+        assert "Confirmed advanced CSCI credits: 0/6 required" in result
+        assert "6 more advanced CSCI credit(s)" in result
+
+    def test_plan_b_project_course_counts_as_advanced(self):
+        courses = [
+            "CSCI5521",
+            "CSCI5421",
+            "CSCI5801",
+            "CSCI5511",
+            "CSCI8970",
+            "CSCI8760",
+        ]
+
+        result = degree_audit(courses, "ms", plan="B")
+
+        assert "Confirmed advanced CSCI credits: 6/3 required" in result
+
+    def test_variable_credit_course_not_assumed_as_three_credits(self):
+        courses = [
+            "CSCI5511",
+            "CSCI5421",
+            "CSCI5801",
+            "CSCI5103",
+            "CSCI8970",
+            "CSCI8991",
+        ]
+
+        result = degree_audit(courses, "ms", plan="C")
+
+        assert "CSCI credits completed: 13/16 required" in result
+        assert "Credit value must be verified for: CSCI8991" in result
+        assert "3 more confirmed CSCI credit(s)" in result
+
+    def test_plan_a_thesis_does_not_count_as_advanced(self):
+        courses = [
+            "CSCI8777",
+            "CSCI5521",
+        ]
+        result = degree_audit(courses, "ms", plan="A")
+        assert "Confirmed advanced CSCI credits: 3/6 required" in result
 
 
 # # ── Error handling ────────────────────────────────────────────────────────────

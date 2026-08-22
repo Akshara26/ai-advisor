@@ -7,18 +7,20 @@ the entire routing decision depends on parse_state_block being correct.
 
 Run with: pytest tests/test_graph.py -v
 """
+from curses import meta
+
 import pytest
 from advisor.graph import parse_email_block, AdvisorMeta
 
 class TestAdvisorMeta:
 
     def test_valid_high_confidence(self):
-        meta = AdvisorMeta(answered=True, confidence="high", question_type="policy")
+        meta = AdvisorMeta(answered=True, confidence="high", question_type="policy", needs_clarification=False,)
         assert meta.answered is True
         assert meta.confidence == "high"
 
     def test_valid_low_confidence(self):
-        meta = AdvisorMeta(answered=False, confidence="low", question_type="unknown")
+        meta = AdvisorMeta(answered=False, confidence="low", question_type="unknown", needs_clarification=False,)
         assert meta.answered is False
 
     def test_invalid_confidence_rejected(self):
@@ -30,6 +32,16 @@ class TestAdvisorMeta:
         from pydantic import ValidationError
         with pytest.raises(ValidationError):
             AdvisorMeta(answered=True, confidence="high", question_type="immigration")
+
+    def test_needs_clarification(self):
+        meta = AdvisorMeta(
+            answered=False,
+            confidence="low",
+            question_type="unknown",
+            needs_clarification=True,
+        )
+
+        assert meta.needs_clarification is True
 
 
 # ── parse_state_block: valid input ────────────────────────────────────────────
