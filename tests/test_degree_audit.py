@@ -3,40 +3,43 @@ Unit tests for degree_audit.py
 
 Run with: pytest tests/test_degree_audit.py -v
 """
+from unittest import result
+
 import pytest
 from unittest.mock import patch
 
 # Minimal mock data — independent of the real data/courses.json
 MOCK_REQUIREMENTS = {
     "ms": {
-    "total_credits": 31,
-    "csci_credits": 16,
-    "colloquium": "CSCI8970",
-    "plans": {
-        "A": {
-            "advanced_csci_credits": 6,
-            "thesis_course": "CSCI8777",
-            "thesis_credits": 10,
+        "total_credits": 31,
+        "csci_credits": 16,
+        "colloquium": "CSCI8970",
+        "plans": {
+            "A": {
+                "advanced_csci_credits": 6,
+                "thesis_course": "CSCI8777",
+                "thesis_credits": 10,
+            },
+            "B": {
+                "advanced_csci_credits": 3,
+                "project_course": "CSCI8760",
+                "project_credits": 3,
+            },
+            "C": {
+                "advanced_csci_credits": 6,
+                "project_hours": 100,
+            },
         },
-        "B": {
-            "advanced_csci_credits": 3,
-            "project_course": "CSCI8760",
-            "project_credits": 3,
+        "breadth_categories": {
+                "applications":                ["CSCI5521", "CSCI5523"],
+                "theory_and_algorithms":       ["CSCI5421", "CSCI5525"],
+                "architecture_systems_software": ["CSCI5103", "CSCI5801"],
+            },
         },
-        "C": {
-            "advanced_csci_credits": 6,
-            "project_hours": 100,
-        },
-    },
-    "breadth_categories": {
-            "applications":                ["CSCI5521", "CSCI5523"],
-            "theory_and_algorithms":       ["CSCI5421", "CSCI5525"],
-            "architecture_systems_software": ["CSCI5103", "CSCI5801"],
-        },
-    },
     "phd": {
         "total_credits": 52,
         "csci_credits": 16,
+        "required_breadth_courses": 4,
         "colloquium": "CSCI8970",
         "intro_research": "CSCI8001",
         "breadth_categories": {
@@ -149,7 +152,7 @@ class TestPhD:
         result = degree_audit(courses, "phd")
         assert "❌ Intro to Research" in result
 
-    def test_phd_with_all_requirements(self):
+    def test_phd_intro_research_complete(self):
         courses = ["CSCI5521", "CSCI5421", "CSCI5801", "CSCI8970", "CSCI8001"]
         result = degree_audit(courses, "phd")
         assert "✅ Intro to Research" in result
@@ -159,6 +162,20 @@ class TestPhD:
         courses = ["CSCI5521", "CSCI5421", "CSCI5801", "CSCI8001"]
         result = degree_audit(courses, "phd")
         assert "❌ Colloquium" in result
+
+    def test_phd_requires_four_breadth_courses(self):
+        courses = [
+            "CSCI5521",  # Applications
+            "CSCI5421",  # Theory
+            "CSCI5801",  # Architecture
+            "CSCI8970",
+            "CSCI8001",
+        ]
+
+        result = degree_audit(courses, "phd")
+
+        assert "Breadth courses completed: 3 of 4 required" in result
+        assert "1 additional breadth course(s) from any area" in result
 
 
 # ── Credit counting ───────────────────────────────────────────────────────────

@@ -117,9 +117,13 @@ def degree_audit(completed_courses: list, program: str = "ms", plan: str | None 
 
     results.append("")
 
+    intro_complete = True
+
     if program == "phd":
         intro = req.get("intro_research")
-        if intro in completed:
+        intro_complete = intro in completed
+
+        if intro_complete:
             results.append(f"  ✅ Intro to Research ({intro}): complete")
         else:
             results.append(f"  ❌ Intro to Research ({intro}): not completed")
@@ -168,6 +172,7 @@ def degree_audit(completed_courses: list, program: str = "ms", plan: str | None 
         and colloquium in completed
         and csci_credit_complete
         and plan_b_project_complete
+        and intro_complete
     ):
         results.append(
             "  ✅ Core CSCI requirements appear satisfied based on the courses you provided. "
@@ -185,6 +190,8 @@ def degree_audit(completed_courses: list, program: str = "ms", plan: str | None 
             missing.append(f"{colloquium} colloquium")
         if not plan_b_project_complete:
             missing.append("CSCI8760 Plan B project course")
+        if not intro_complete:
+            missing.append(f"{intro} Intro to Research")
         if not csci_credit_complete:
             missing.append(
                 f"{req['csci_credits'] - csci_credits} more CSCI credit(s)"
