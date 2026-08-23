@@ -469,6 +469,62 @@ class TestCreditCounting:
         assert "Confirmed thesis credits: 24/24 required" in result
         assert "Confirmed total credits: 35/52 required" in result
 
+    def test_phd_fully_satisfied_audit_reaches_success(self):
+        courses = [
+    # Required Ph.D. courses
+    {"code": "CSCI8001", "credits": 1},
+    {"code": "CSCI8970", "credits": 1},
+
+    # 4 breadth courses across all 3 mock breadth areas
+    {"code": "CSCI5521", "credits": 3},  # applications
+    {"code": "CSCI5421", "credits": 3},  # theory
+    {"code": "CSCI5103", "credits": 3},  # architecture
+    {"code": "CSCI5801", "credits": 3},  # architecture
+
+    # Additional CSCI coursework
+    {"code": "CSCI5511", "credits": 3},
+
+    # Supporting-program pathway: 6 credits
+    {
+        "code": "STAT5302",
+        "credits": 3,
+        "degree_approved": True,
+        "phd_credit_type": "supporting",
+    },
+    {
+        "code": "STAT5303",
+        "credits": 3,
+        "degree_approved": True,
+        "phd_credit_type": "supporting",
+    },
+
+    # Additional approved non-CSCI credits
+    {
+        "code": "MATH5651",
+        "credits": 3,
+        "degree_approved": True,
+    },
+    {
+        "code": "MGMT6001",
+        "credits": 2,
+        "degree_approved": True,
+    },
+
+    # Thesis
+    {"code": "CSCI8888", "credits": 24},
+]
+
+        result = degree_audit(courses, "phd")
+
+        assert "CSCI credits completed: 17/16 required" in result
+        assert "Confirmed course credits: 28/28 required" in result
+        assert "Supporting-program credits: 6/6 required" in result
+        assert "Confirmed thesis credits: 24/24 required" in result
+        assert "Confirmed total credits: 52/52 required" in result
+
+        assert "✅ Core CSCI requirements appear satisfied" in result
+        assert "Still needed:" not in result
+
 # class TestErrorHandling:
 
 #     def test_unknown_program_returns_error_message(self):
