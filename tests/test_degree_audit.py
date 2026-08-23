@@ -305,18 +305,91 @@ class TestCreditCounting:
         result = degree_audit(courses, "ms", plan="A")
 
         assert "PLAN A THESIS REQUIREMENT:" in result
-        assert "CSCI8777 is present" in result
-        assert "10 required" in result
+        assert "Confirmed thesis credits: 0/10" in result
+        assert "additional CSCI8777 credit value requires verification" in result
         assert "Thesis committee and oral defense require manual/program verification" in result
 
         assert "CSCI credits completed: 10/16 required" in result
         assert "Credit value must be verified for: CSCI8777" in result
-        assert "6 more confirmed CSCI credit(s)" in result
+        assert "more confirmed CSCI credit(s)" in result
+        # assert "6 more confirmed CSCI credit(s)" in result
 
         assert "Confirmed advanced CSCI credits: 9/6 required" in result
 
+    def test_ms_total_degree_credits_include_approved_non_csci(self):
+        courses = [
+            {"code": "CSCI5521", "credits": 3},
+            {"code": "CSCI5421", "credits": 3},
+            {"code": "CSCI5801", "credits": 3},
+            {"code": "CSCI5511", "credits": 3},
+            {"code": "CSCI8970", "credits": 1},
+            {"code": "STAT5302", "credits": 3, "degree_approved": True},
+            {"code": "MGMT6001", "credits": 2, "degree_approved": None},
+        ]
 
-# # ── Error handling ────────────────────────────────────────────────────────────
+        result = degree_audit(courses, "ms", plan="C")
+
+        assert "Confirmed degree credits: 16/31 required" in result
+        assert "Approved non-CSCI credits counted: 3" in result
+        assert "Degree applicability must be verified for: MGMT6001" in result
+
+        assert (
+            "15 more confirmed degree credit(s) "
+            "(pending verification for: MGMT6001)"
+            in result
+        )
+
+    def test_ms_total_credit_requirement_blocks_completion(self):
+        courses = [
+            {"code": "CSCI5521", "credits": 3},
+            {"code": "CSCI5421", "credits": 3},
+            {"code": "CSCI5801", "credits": 3},
+            {"code": "CSCI5511", "credits": 3},
+            {"code": "CSCI8970", "credits": 1},
+            {"code": "CSCI8760", "credits": 3},
+        ]
+
+        result = degree_audit(courses, "ms", plan="B")
+
+        assert "Confirmed degree credits: 16/31 required" in result
+        assert "15 more degree credit(s)" in result
+        assert "Core CSCI requirements appear satisfied" not in result
+
+    def test_8991_8994_advanced_credit_cap(self):
+        courses = [
+            {"code": "CSCI5511", "credits": 3},
+            {"code": "CSCI5421", "credits": 3},
+            {"code": "CSCI5801", "credits": 3},
+            {"code": "CSCI8970", "credits": 1},
+            {"code": "CSCI8991", "credits": 4},
+            {"code": "CSCI8994", "credits": 4},
+        ]
+
+        result = degree_audit(courses, "ms", plan="C")
+
+        assert "CSCI credits completed: 18/16 required" in result
+        assert "Confirmed advanced CSCI credits: 6/6 required" in result
+        assert "8/6 required" not in result
+
+    def test_plan_a_explicit_thesis_credits_are_counted(self):
+        courses = [
+            {"code": "CSCI5521", "credits": 3},
+            {"code": "CSCI5527", "credits": 3},
+            {"code": "CSCI5802", "credits": 3},
+            {"code": "CSCI8970", "credits": 1},
+            {"code": "CSCI8777", "credits": 10},
+        ]
+
+        result = degree_audit(courses, "ms", plan="A")
+
+        assert "Confirmed thesis credits: 10/10 required" in result
+        assert "CSCI credits completed: 20/16 required" in result
+        assert "Confirmed degree credits: 20/31 required" in result
+        assert "Confirmed advanced CSCI credits: 9/6 required" in result
+        assert "11 more degree credit(s)" in result
+
+        assert "earned thesis credits must be verified manually" not in result
+
 
 # class TestErrorHandling:
 

@@ -25,11 +25,8 @@ KNOWN_CREDITS = {
     "CSCI8002": 1,
 }
 
-def _is_advanced_csci_course(
-    code: str,
-    advanced_config: dict,
-    plan_config: dict,
-) -> bool:
+def _is_advanced_csci_course(code: str, advanced_config: dict,
+    plan_config: dict,) -> bool:
     """Return True if a course is eligible for the M.S. advanced CSCI requirement."""
 
     code = code.upper().replace(" ", "")
@@ -62,11 +59,8 @@ def _is_advanced_csci_course(
 
     return False
 
-def _calculate_advanced_csci_credits(
-    completed_courses: list,
-    advanced_config: dict,
-    plan_config: dict,
-) -> tuple[float, list[str]]:
+def _calculate_advanced_csci_credits(completed_courses: list, advanced_config: dict,
+    plan_config: dict,) -> tuple[float, list[str]]:
     """
     Calculate confirmed advanced CSCI credits.
 
@@ -83,8 +77,15 @@ def _calculate_advanced_csci_credits(
         .get("courses", [])
     )
 
-    for raw_code in completed_courses:
-        code = raw_code.upper().replace(" ", "")
+    limited_confirmed_credits = 0
+
+    for item in completed_courses:
+        if isinstance(item, dict):
+            code = item["code"].upper().replace(" ", "")
+            provided_credits = item.get("credits")
+        else:
+            code = item.upper().replace(" ", "")
+            provided_credits = None
 
         if not _is_advanced_csci_course(
             code,
@@ -96,7 +97,24 @@ def _calculate_advanced_csci_credits(
         # We know these courses can count, but not how many credits
         # the student actually completed from the course code alone.
         if code in limited_courses:
-            needs_credit_verification.append(code)
+            if provided_credits is None:
+                needs_credit_verification.append(code)
+                continue
+
+            max_limited_credits = (
+                advanced_config
+                .get("limited_8xxx", {})
+                .get("max_combined_credits", 6)
+            )
+
+            remaining_allowed = max_limited_credits - limited_confirmed_credits
+
+            if remaining_allowed > 0:
+                credits_to_count = min(provided_credits, remaining_allowed)
+
+                confirmed_credits += credits_to_count
+                limited_confirmed_credits += credits_to_count
+
             continue
 
         course = code_to_course.get(code)
@@ -113,13 +131,101 @@ def _calculate_advanced_csci_credits(
 
     return confirmed_credits, needs_credit_verification
 
+def _normalize_completed_courses(completed_courses: list) -> tuple[list[str], list[dict]]:
+    """
+    Normalize degree-audit input.
+
+    Supports both legacy course-code strings:
+        "CSCI5521"
+
+    and richer course records:
+        {
+            "code": "STAT5302",
+            "credits": 3,
+            "degree_approved": True,
+        }
+
+    Returns:
+        completed_codes: normalized course codes
+        course_records: normalized records with code/credits/approval metadata
+    """
+
+    completed_codes = []
+    course_records = []
+
+    for item in completed_courses:
+        if isinstance(item, str):
+            code = item.upper().replace(" ", "")
+
+            completed_codes.append(code)
+            course_records.append({
+                "code": code,
+                "credits": None,
+                "degree_approved": None,
+            })
+
+        elif isinstance(item, dict):
+            raw_code = item.get("code")
+
+            if not raw_code:
+                continue
+
+            code = raw_code.upper().replace(" ", "")
+
+            completed_codes.append(code)
+            course_records.append({
+                "code": code,
+                "credits": item.get("credits"),
+                "degree_approved": item.get("degree_approved"),
+            })
+
+    return completed_codes, course_records
+
+def _calculate_non_csci_degree_credits(course_records: list[dict],) -> tuple[float, list[str], list[str]]:
+    """
+    Count confirmed approved non-CSCI degree credits.
+
+    Returns:
+        confirmed_credits
+        pending_approval
+        pending_credit_verification
+    """
+
+    confirmed_credits = 0
+    pending_approval = []
+    pending_credit_verification = []
+
+    for record in course_records:
+        code = record["code"]
+
+        if code.startswith("CSCI"):
+            continue
+
+        credits = record.get("credits")
+        approved = record.get("degree_approved")
+
+        if approved is True:
+            if credits is None:
+                pending_credit_verification.append(code)
+            else:
+                confirmed_credits += credits
+
+        elif approved is None:
+            pending_approval.append(code)
+
+    return (
+        confirmed_credits,
+        pending_approval,
+        pending_credit_verification,
+    )
+
 def degree_audit(completed_courses: list, program: str = "ms", plan: str | None = None) -> str:
     if program == "ms" and plan not in ("A", "B", "C"):
         return "M.S. degree audits require a plan: A, B, or C."
     if program == "phd":
         plan = None
 
-    completed = [c.upper().replace(" ", "") for c in completed_courses]
+    completed, course_records = _normalize_completed_courses(completed_courses)
 
     if program not in REQUIREMENTS:
         return f"Unknown program: {program}. Valid options: ms, phd"
@@ -207,17 +313,51 @@ def degree_audit(completed_courses: list, program: str = "ms", plan: str | None 
         thesis_course = plan_req.get("thesis_course")
         thesis_credits_required = plan_req.get("thesis_credits", 10)
 
+        thesis_records = [
+            record
+            for record in course_records
+            if record["code"] == thesis_course
+        ]
+
+        confirmed_thesis_credits = sum(
+            record["credits"]
+            for record in thesis_records
+            if record.get("credits") is not None
+        )
+
+        has_unknown_thesis_credits = any(
+            record.get("credits") is None
+            for record in thesis_records
+        )
+
         results.append("PLAN A THESIS REQUIREMENT:")
 
-        if thesis_course in completed:
-            results.append(
-                f"  ⚠️ {thesis_course} is present, but earned thesis credits "
-                f"must be verified manually ({thesis_credits_required} required)"
-            )
-        else:
+        if not thesis_records:
             results.append(
                 f"  ❌ {thesis_course} not found in provided courses "
                 f"({thesis_credits_required} thesis credits required)"
+            )
+
+        elif confirmed_thesis_credits >= thesis_credits_required:
+            results.append(
+                f"  ✅ Confirmed thesis credits: "
+                f"{confirmed_thesis_credits}/{thesis_credits_required} required"
+            )
+
+        elif has_unknown_thesis_credits:
+            results.append(
+                f"  ⚠️ Confirmed thesis credits: "
+                f"{confirmed_thesis_credits}/{thesis_credits_required}; "
+                f"additional {thesis_course} credit value requires verification"
+            )
+
+        else:
+            thesis_needed = thesis_credits_required - confirmed_thesis_credits
+
+            results.append(
+                f"  ❌ Confirmed thesis credits: "
+                f"{confirmed_thesis_credits}/{thesis_credits_required}; "
+                f"{thesis_needed} more thesis credit(s) required"
             )
 
     results.append(
@@ -257,8 +397,7 @@ def degree_audit(completed_courses: list, program: str = "ms", plan: str | None 
     # ── Credit count ──────────────────────────────────────────────────────────
     csci_credits = 0
     excluded_courses = []
-    csci_credits = 0
-    excluded_courses = []
+
     needs_csci_credit_verification = []
 
     variable_credit_courses = {"CSCI8991", "CSCI8994"}
@@ -269,7 +408,9 @@ def degree_audit(completed_courses: list, program: str = "ms", plan: str | None 
         if thesis_course:
             variable_credit_courses.add(thesis_course)
 
-    for code in completed:
+    for record in course_records:
+        code = record["code"]
+        provided_credits = record.get("credits")
         if not code.startswith("CSCI"):
             continue
         course_number = code[4:]
@@ -281,7 +422,11 @@ def degree_audit(completed_courses: list, program: str = "ms", plan: str | None 
             continue
 
         if code in variable_credit_courses:
-            needs_csci_credit_verification.append(code)
+            if provided_credits is not None:
+                csci_credits += provided_credits
+            else:
+                needs_csci_credit_verification.append(code)
+
             continue
 
         course = code_to_course.get(code)
@@ -305,8 +450,66 @@ def degree_audit(completed_courses: list, program: str = "ms", plan: str | None 
         results.append(
             f"  ⚠️ Excluded from degree credit count: {', '.join(excluded_courses)}"
         )
-    results.append(f"  Note: add non-CSCI courses manually for total credit count")
+    if program == "ms":
+        results.append(
+            "  Note: approved non-CSCI coursework is counted separately below"
+        )
+    else:
+        results.append(
+            "  Note: non-CSCI coursework is not included in this CSCI subtotal"
+        )
+
     results.append("")
+
+    total_degree_complete = True
+    confirmed_degree_credits = 0
+    pending_non_csci_approval = []
+    pending_non_csci_credit = []
+
+    if program == "ms":
+        (
+            approved_non_csci_credits,
+            pending_non_csci_approval,
+            pending_non_csci_credit,
+        ) = _calculate_non_csci_degree_credits(course_records)
+
+        confirmed_degree_credits = csci_credits + approved_non_csci_credits
+        required_total_credits = req["total_credits"]
+
+        total_degree_complete = (
+            confirmed_degree_credits >= required_total_credits)
+
+        results.append("TOTAL DEGREE CREDIT REQUIREMENT:")
+        results.append(
+            f"  Confirmed degree credits: "
+            f"{confirmed_degree_credits}/{required_total_credits} required"
+        )
+
+        if approved_non_csci_credits:
+            results.append(
+                f"  Approved non-CSCI credits counted: "
+                f"{approved_non_csci_credits}"
+            )
+
+        if pending_non_csci_approval:
+            results.append(
+                "  ⚠️ Degree applicability must be verified for: "
+                + ", ".join(pending_non_csci_approval)
+            )
+
+        if pending_non_csci_credit:
+            results.append(
+                "  ⚠️ Credit value must be verified for: "
+                + ", ".join(pending_non_csci_credit)
+            )
+
+        if needs_csci_credit_verification:
+            results.append(
+                "  ⚠️ Total may increase after verifying CSCI credits for: "
+                + ", ".join(needs_csci_credit_verification)
+            )
+
+        results.append("")
 
     advanced_complete = True
     advanced_credits = 0
@@ -316,7 +519,7 @@ def degree_audit(completed_courses: list, program: str = "ms", plan: str | None 
         advanced_config = req["advanced_csci"]
 
         advanced_credits, advanced_verify = _calculate_advanced_csci_credits(
-            completed,
+            course_records,
             advanced_config,
             plan_req,
         )
@@ -351,6 +554,7 @@ def degree_audit(completed_courses: list, program: str = "ms", plan: str | None 
         and plan_b_project_complete
         and intro_complete
         and advanced_complete
+        and total_degree_complete
     ):
         results.append(
             "  ✅ Core CSCI requirements appear satisfied based on the courses you provided. "
@@ -393,6 +597,26 @@ def degree_audit(completed_courses: list, program: str = "ms", plan: str | None 
             else:
                 missing.append(
                     f"{csci_needed:g} more CSCI credit(s)"
+                )
+
+        if program == "ms" and not total_degree_complete:
+            total_needed = required_total_credits - confirmed_degree_credits
+
+            pending_total_verification = (
+                pending_non_csci_approval
+                + pending_non_csci_credit
+                + needs_csci_credit_verification
+            )
+
+            if pending_total_verification:
+                missing.append(
+                    f"{total_needed:g} more confirmed degree credit(s) "
+                    f"(pending verification for: "
+                    f"{', '.join(pending_total_verification)})"
+                )
+            else:
+                missing.append(
+                    f"{total_needed:g} more degree credit(s)"
                 )
         results.append(f"  Still needed: {'; '.join(missing)}")
 
