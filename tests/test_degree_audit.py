@@ -514,7 +514,16 @@ class TestCreditCounting:
     {"code": "CSCI8888", "credits": 24},
 ]
 
-        result = degree_audit(courses, "phd")
+        result = degree_audit(
+            courses,
+            "phd",
+            milestones={
+                "wpe": True,
+                "ope": True,
+                "thesis_proposal": True,
+                "final_defense": True,
+            },
+        )
 
         assert "CSCI credits completed: 17/16 required" in result
         assert "Confirmed course credits: 28/28 required" in result
@@ -524,6 +533,166 @@ class TestCreditCounting:
 
         assert "✅ Core CSCI requirements appear satisfied" in result
         assert "Still needed:" not in result
+
+    def test_phd_all_milestones_complete_reaches_green_summary(self):
+        courses = [
+        {"code": "CSCI8001", "credits": 1},
+        {"code": "CSCI8970", "credits": 1},
+        {"code": "CSCI5521", "credits": 3},
+        {"code": "CSCI5421", "credits": 3},
+        {"code": "CSCI5103", "credits": 3},
+        {"code": "CSCI5801", "credits": 3},
+        {"code": "CSCI5511", "credits": 3},
+        {
+            "code": "STAT5302",
+            "credits": 3,
+            "degree_approved": True,
+            "phd_credit_type": "supporting",
+        },
+        {
+            "code": "STAT5303",
+            "credits": 3,
+            "degree_approved": True,
+            "phd_credit_type": "supporting",
+        },
+        {
+            "code": "MATH5651",
+            "credits": 3,
+            "degree_approved": True,
+        },
+        {
+            "code": "MGMT6001",
+            "credits": 2,
+            "degree_approved": True,
+        },
+        {"code": "CSCI8888", "credits": 24},
+    ]
+
+        result = degree_audit(
+        courses,
+        "phd",
+        milestones={
+            "wpe": True,
+            "ope": True,
+            "thesis_proposal": True,
+            "final_defense": True,
+        },
+    )
+
+        assert "✅ Written Preliminary Examination (WPE): complete" in result
+        assert "✅ Oral Preliminary Examination (OPE): complete" in result
+        assert "✅ Thesis Proposal Examination: complete" in result
+        assert "✅ Final dissertation committee/reviewer approval" in result
+        assert "✅ Core CSCI requirements appear satisfied" in result
+
+    def test_phd_incomplete_milestone_blocks_green_summary(self):
+        courses = [
+        {"code": "CSCI8001", "credits": 1},
+        {"code": "CSCI8970", "credits": 1},
+        {"code": "CSCI5521", "credits": 3},
+        {"code": "CSCI5421", "credits": 3},
+        {"code": "CSCI5103", "credits": 3},
+        {"code": "CSCI5801", "credits": 3},
+        {"code": "CSCI5511", "credits": 3},
+        {
+            "code": "STAT5302",
+            "credits": 3,
+            "degree_approved": True,
+            "phd_credit_type": "supporting",
+        },
+        {
+            "code": "STAT5303",
+            "credits": 3,
+            "degree_approved": True,
+            "phd_credit_type": "supporting",
+        },
+        {
+            "code": "MATH5651",
+            "credits": 3,
+            "degree_approved": True,
+        },
+        {
+            "code": "MGMT6001",
+            "credits": 2,
+            "degree_approved": True,
+        },
+        {"code": "CSCI8888", "credits": 24},
+    ]
+
+        result = degree_audit(
+        courses,
+        "phd",
+        milestones={
+            "wpe": True,
+            "ope": False,
+            "thesis_proposal": True,
+            "final_defense": True,
+        },
+    )
+
+        assert "❌ Oral Preliminary Examination (OPE): not complete" in result
+        assert (
+        "❌ Core academic requirements appear satisfied, "
+        "but these Ph.D. milestones are not complete: OPE"
+        in result
+    )
+        assert "✅ Core CSCI requirements appear satisfied" not in result
+
+    def test_phd_unknown_milestone_reports_pending_verification(self):
+        courses = [
+        {"code": "CSCI8001", "credits": 1},
+        {"code": "CSCI8970", "credits": 1},
+        {"code": "CSCI5521", "credits": 3},
+        {"code": "CSCI5421", "credits": 3},
+        {"code": "CSCI5103", "credits": 3},
+        {"code": "CSCI5801", "credits": 3},
+        {"code": "CSCI5511", "credits": 3},
+        {
+            "code": "STAT5302",
+            "credits": 3,
+            "degree_approved": True,
+            "phd_credit_type": "supporting",
+        },
+        {
+            "code": "STAT5303",
+            "credits": 3,
+            "degree_approved": True,
+            "phd_credit_type": "supporting",
+        },
+        {
+            "code": "MATH5651",
+            "credits": 3,
+            "degree_approved": True,
+        },
+        {
+            "code": "MGMT6001",
+            "credits": 2,
+            "degree_approved": True,
+        },
+        {"code": "CSCI8888", "credits": 24},
+    ]
+
+        result = degree_audit(
+        courses,
+        "phd",
+        milestones={
+            "wpe": True,
+            "ope": None,
+            "thesis_proposal": True,
+            "final_defense": True,
+        },
+    )
+
+        assert (
+        "⚠️ Oral Preliminary Examination (OPE) completion "
+        "requires manual/program verification"
+        in result
+    )
+        assert (
+        "⚠️ Core academic requirements appear satisfied, "
+        "but milestone verification is still pending for: OPE"
+        in result
+    )
 
 # class TestErrorHandling:
 

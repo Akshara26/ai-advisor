@@ -272,7 +272,11 @@ def _calculate_phd_supporting_minor_credits(
         pending_minor,
     )
 
-def degree_audit(completed_courses: list, program: str = "ms", plan: str | None = None) -> str:
+def degree_audit(completed_courses: list, program: str = "ms", plan: str | None = None,
+    milestones: dict | None = None,) -> str:
+
+    milestones = milestones or {}
+
     if program == "ms" and plan not in ("A", "B", "C"):
         return "M.S. degree audits require a plan: A, B, or C."
     if program == "phd":
@@ -708,6 +712,7 @@ def degree_audit(completed_courses: list, program: str = "ms", plan: str | None 
 
         results.append("")
 
+    # Ph.D. 52 total credits
     phd_total_credits_complete = True
     confirmed_phd_total_credits = 0
 
@@ -750,6 +755,88 @@ def degree_audit(completed_courses: list, program: str = "ms", plan: str | None 
                 "CSCI8888 thesis credits"
             )
 
+        results.append("")
+
+    # phd — non-course milestones
+    phd_incomplete_milestones = []
+    phd_pending_milestones = []
+
+    if program == "phd":
+        results.append("PH.D. MILESTONES REQUIRING MANUAL VERIFICATION:")
+
+        wpe_status = milestones.get("wpe")
+
+        if wpe_status is True:
+            results.append(
+                "  ✅ Written Preliminary Examination (WPE): complete"
+            )
+        elif wpe_status is False:
+            results.append(
+                "  ❌ Written Preliminary Examination (WPE): not complete"
+            )
+            phd_incomplete_milestones.append("WPE")
+        else:
+            results.append(
+                "  ⚠️ Written Preliminary Examination (WPE) completion "
+                "requires manual/program verification"
+            )
+            phd_pending_milestones.append("WPE")
+
+        ope_status = milestones.get("ope")
+
+        if ope_status is True:
+            results.append(
+                "  ✅ Oral Preliminary Examination (OPE): complete"
+            )
+        elif ope_status is False:
+            results.append(
+                "  ❌ Oral Preliminary Examination (OPE): not complete"
+            )
+            phd_incomplete_milestones.append("OPE")
+        else:
+            results.append(
+                "  ⚠️ Oral Preliminary Examination (OPE) completion "
+                "requires manual/program verification"
+            )
+            phd_pending_milestones.append("OPE")
+
+        thesis_proposal_status = milestones.get("thesis_proposal")
+
+        if thesis_proposal_status is True:
+            results.append(
+                "  ✅ Thesis Proposal Examination: complete"
+            )
+        elif thesis_proposal_status is False:
+            results.append(
+                "  ❌ Thesis Proposal Examination: not complete"
+            )
+            phd_incomplete_milestones.append("Thesis Proposal Examination")
+        else:
+            results.append(
+                "  ⚠️ Thesis Proposal Examination completion "
+                "requires manual/program verification"
+            )
+            phd_pending_milestones.append("Thesis Proposal Examination")
+
+        final_defense_status = milestones.get("final_defense")
+
+        if final_defense_status is True:
+            results.append(
+                "  ✅ Final dissertation committee/reviewer approval "
+                "and oral defense: complete"
+            )
+        elif final_defense_status is False:
+            results.append(
+                "  ❌ Final dissertation committee/reviewer approval "
+                "and oral defense: not complete"
+            )
+            phd_incomplete_milestones.append("Final defense")
+        else:
+            results.append(
+                "  ⚠️ Final dissertation committee/reviewer approval and "
+                "oral defense require manual/program verification"
+            )
+            phd_pending_milestones.append("Final defense")
         results.append("")
 
     # M.S. total-degree-credit requirement
@@ -837,7 +924,7 @@ def degree_audit(completed_courses: list, program: str = "ms", plan: str | None 
 
     csci_credit_complete = csci_credits >= req["csci_credits"]
 
-    if (
+    core_requirements_complete = (
         breadth_complete
         and colloquium in completed
         and csci_credit_complete
@@ -849,12 +936,28 @@ def degree_audit(completed_courses: list, program: str = "ms", plan: str | None 
         and phd_thesis_complete
         and phd_support_minor_complete
         and phd_total_credits_complete
-    ):
-        results.append(
-            "  ✅ Core CSCI requirements appear satisfied based on the courses you provided. "
-            "This is a preliminary checklist only — verify your official status via GPAS in "
-            "MyU and confirm with csgradmn@umn.edu before making graduation decisions."
-        )
+    )
+    if core_requirements_complete:
+        if program == "phd" and phd_incomplete_milestones:
+            results.append(
+                "  ❌ Core academic requirements appear satisfied, "
+                "but these Ph.D. milestones are not complete: "
+                + ", ".join(phd_incomplete_milestones)
+            )
+
+        elif program == "phd" and phd_pending_milestones:
+            results.append(
+                "  ⚠️ Core academic requirements appear satisfied, "
+                "but milestone verification is still pending for: "
+                + ", ".join(phd_pending_milestones)
+            )
+
+        else:
+            results.append(
+                "  ✅ Core CSCI requirements appear satisfied based on the courses you provided. "
+                "This is a preliminary checklist only — verify your official status via GPAS in "
+                "MyU and confirm with csgradmn@umn.edu before making graduation decisions."
+            )
     else:
         missing = []
         if categories_missing:
