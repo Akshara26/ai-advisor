@@ -186,6 +186,7 @@ def degree_audit(completed_courses: list, program: str = "ms", plan: str | None 
     # ── Required courses ──────────────────────────────────────────────────────
     results.append("REQUIRED COURSES:")
     colloquium = "CSCI8970"
+
     if colloquium in completed:
         results.append(f"  ✅ Colloquium ({colloquium}): complete")
     else:
@@ -202,6 +203,42 @@ def degree_audit(completed_courses: list, program: str = "ms", plan: str | None 
         else:
             results.append(f"  ❌ Plan B project course ({project_course}): not completed")
 
+    if program == "ms" and plan == "A":
+        thesis_course = plan_req.get("thesis_course")
+        thesis_credits_required = plan_req.get("thesis_credits", 10)
+
+        results.append("PLAN A THESIS REQUIREMENT:")
+
+        if thesis_course in completed:
+            results.append(
+                f"  ⚠️ {thesis_course} is present, but earned thesis credits "
+                f"must be verified manually ({thesis_credits_required} required)"
+            )
+        else:
+            results.append(
+                f"  ❌ {thesis_course} not found in provided courses "
+                f"({thesis_credits_required} thesis credits required)"
+            )
+
+    results.append(
+        "  ⚠️ Thesis committee and oral defense require manual/program verification"
+    )
+
+    if program == "ms" and plan == "C":
+        project_hours = plan_req.get("project_hours", 100)
+
+        results.append("PLAN C PROJECT REQUIREMENT:")
+        results.append(
+            f"  ⚠️ Not assessed from course codes: "
+            f"{project_hours}-hour significant project"
+        )
+        results.append(
+            "  ⚠️ Written project report requires manual/program verification"
+        )
+        results.append(
+            "  ⚠️ Oral project presentation requires manual/program verification"
+        )
+
     results.append("")
 
     intro_complete = True
@@ -214,6 +251,7 @@ def degree_audit(completed_courses: list, program: str = "ms", plan: str | None 
             results.append(f"  ✅ Intro to Research ({intro}): complete")
         else:
             results.append(f"  ❌ Intro to Research ({intro}): not completed")
+
     results.append("")
 
     # ── Credit count ──────────────────────────────────────────────────────────
@@ -224,6 +262,13 @@ def degree_audit(completed_courses: list, program: str = "ms", plan: str | None 
     needs_csci_credit_verification = []
 
     variable_credit_courses = {"CSCI8991", "CSCI8994"}
+
+    if program == "ms" and plan == "A":
+        thesis_course = plan_req.get("thesis_course")
+
+        if thesis_course:
+            variable_credit_courses.add(thesis_course)
+
     for code in completed:
         if not code.startswith("CSCI"):
             continue

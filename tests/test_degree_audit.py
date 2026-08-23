@@ -61,8 +61,8 @@ MOCK_REQUIREMENTS = {
         },
         "breadth_categories": {
                 "applications":                ["CSCI5521", "CSCI5523"],
-                "theory_and_algorithms":       ["CSCI5421", "CSCI5525"],
-                "architecture_systems_software": ["CSCI5103", "CSCI5801"],
+                "theory_and_algorithms":       ["CSCI5421", "CSCI5525", "CSCI5527"],
+                "architecture_systems_software": ["CSCI5103", "CSCI5801", "CSCI5802"],
             },
         },
     "phd": {
@@ -88,6 +88,8 @@ MOCK_CODE_TO_COURSE = {
     "CSCI8001": {"code": "CSCI8001", "cred_min": 1},
     "CSCI8760": {"code": "CSCI8760", "cred_min": 3},
     "CSCI5511": {"code": "CSCI5511", "cred_min": 3},
+    "CSCI5527": {"code": "CSCI5527", "cred_min": 3},
+    "CSCI5802": {"code": "CSCI5802", "cred_min": 3},
 }
 
 
@@ -274,6 +276,44 @@ class TestCreditCounting:
         ]
         result = degree_audit(courses, "ms", plan="A")
         assert "Confirmed advanced CSCI credits: 3/6 required" in result
+
+    def test_plan_c_project_requirements_require_manual_verification(self):
+        courses = [
+            "CSCI5521",
+            "CSCI5527",
+            "CSCI5802",
+            "CSCI5105",
+            "CSCI8970",
+        ]
+
+        result = degree_audit(courses, "ms", plan="C")
+
+        assert "PLAN C PROJECT REQUIREMENT:" in result
+        assert "100-hour significant project" in result
+        assert "Written project report requires manual/program verification" in result
+        assert "Oral project presentation requires manual/program verification" in result
+
+    def test_plan_a_thesis_credits_require_verification(self):
+        courses = [
+            "CSCI8777",
+            "CSCI5521",
+            "CSCI5527",
+            "CSCI5802",
+            "CSCI8970",
+        ]
+
+        result = degree_audit(courses, "ms", plan="A")
+
+        assert "PLAN A THESIS REQUIREMENT:" in result
+        assert "CSCI8777 is present" in result
+        assert "10 required" in result
+        assert "Thesis committee and oral defense require manual/program verification" in result
+
+        assert "CSCI credits completed: 10/16 required" in result
+        assert "Credit value must be verified for: CSCI8777" in result
+        assert "6 more confirmed CSCI credit(s)" in result
+
+        assert "Confirmed advanced CSCI credits: 9/6 required" in result
 
 
 # # ── Error handling ────────────────────────────────────────────────────────────
