@@ -77,6 +77,11 @@
     "required_breadth_courses": 4,
     "colloquium": "CSCI8970",
     "intro_research": "CSCI8001",
+    "course_credits": 28,
+    "supporting_program_credits": 6,
+    "minor_credits": 12,
+    "thesis_course": "CSCI8888",
+    "thesis_credits": 24,
     "breadth_categories": {
       "applications": [
         "CSCI5115", "CSCI5123", "CSCI5125", "CSCI5127", "CSCI5271",

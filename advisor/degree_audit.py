@@ -162,6 +162,7 @@ def _normalize_completed_courses(completed_courses: list) -> tuple[list[str], li
                 "code": code,
                 "credits": None,
                 "degree_approved": None,
+                "phd_credit_type": None,
             })
 
         elif isinstance(item, dict):
@@ -177,6 +178,7 @@ def _normalize_completed_courses(completed_courses: list) -> tuple[list[str], li
                 "code": code,
                 "credits": item.get("credits"),
                 "degree_approved": item.get("degree_approved"),
+                "phd_credit_type": item.get("phd_credit_type"),
             })
 
     return completed_codes, course_records
@@ -217,6 +219,57 @@ def _calculate_non_csci_degree_credits(course_records: list[dict],) -> tuple[flo
         confirmed_credits,
         pending_approval,
         pending_credit_verification,
+    )
+
+def _calculate_phd_supporting_minor_credits(
+    course_records: list[dict],
+) -> tuple[float, float, list[str], list[str]]:
+    """
+    Calculate confirmed Ph.D. supporting-program and minor credits.
+
+    Only courses explicitly marked degree_approved=True count.
+
+    Returns:
+        supporting_credits
+        minor_credits
+        pending_supporting
+        pending_minor
+    """
+
+    supporting_credits = 0
+    minor_credits = 0
+
+    pending_supporting = []
+    pending_minor = []
+
+    for record in course_records:
+        credit_type = record.get("phd_credit_type")
+
+        if credit_type not in ("supporting", "minor"):
+            continue
+
+        code = record["code"]
+        credits = record.get("credits")
+        approved = record.get("degree_approved")
+
+        if approved is not True or credits is None:
+            if credit_type == "supporting":
+                pending_supporting.append(code)
+            else:
+                pending_minor.append(code)
+
+            continue
+
+        if credit_type == "supporting":
+            supporting_credits += credits
+        else:
+            minor_credits += credits
+
+    return (
+        supporting_credits,
+        minor_credits,
+        pending_supporting,
+        pending_minor,
     )
 
 def degree_audit(completed_courses: list, program: str = "ms", plan: str | None = None) -> str:
@@ -360,9 +413,9 @@ def degree_audit(completed_courses: list, program: str = "ms", plan: str | None 
                 f"{thesis_needed} more thesis credit(s) required"
             )
 
-    results.append(
-        "  ⚠️ Thesis committee and oral defense require manual/program verification"
-    )
+        results.append(
+            "  ⚠️ Thesis committee and oral defense require manual/program verification"
+        )
 
     if program == "ms" and plan == "C":
         project_hours = plan_req.get("project_hours", 100)
@@ -381,9 +434,15 @@ def degree_audit(completed_courses: list, program: str = "ms", plan: str | None 
 
     results.append("")
 
+    phd_thesis_complete = True
+    confirmed_phd_thesis_credits = 0
+    phd_thesis_credits_required = 0
+    has_unknown_phd_thesis_credits = False
+
     intro_complete = True
 
     if program == "phd":
+    # ── Intro to Research ────────────────────────────────────────────────
         intro = req.get("intro_research")
         intro_complete = intro in completed
 
@@ -391,6 +450,65 @@ def degree_audit(completed_courses: list, program: str = "ms", plan: str | None 
             results.append(f"  ✅ Intro to Research ({intro}): complete")
         else:
             results.append(f"  ❌ Intro to Research ({intro}): not completed")
+
+    # ── Ph.D. thesis credits ─────────────────────────────────────────────
+        phd_thesis_course = req["thesis_course"]
+        phd_thesis_credits_required = req["thesis_credits"]
+
+        thesis_records = [
+            record
+            for record in course_records
+            if record["code"] == phd_thesis_course
+        ]
+
+        confirmed_phd_thesis_credits = sum(
+            record["credits"]
+            for record in thesis_records
+            if record.get("credits") is not None
+        )
+
+        phd_thesis_complete = (
+            confirmed_phd_thesis_credits
+            >= phd_thesis_credits_required
+        )
+
+        has_unknown_phd_thesis_credits = any(
+            record.get("credits") is None
+            for record in thesis_records
+        )
+
+        results.append("PH.D. THESIS REQUIREMENT:")
+
+        if not thesis_records:
+            results.append(
+                f"  ❌ {phd_thesis_course} not found in provided courses "
+                f"({phd_thesis_credits_required} thesis credits required)"
+            )
+
+        elif confirmed_phd_thesis_credits >= phd_thesis_credits_required:
+            results.append(
+                f"  ✅ Confirmed thesis credits: "
+                f"{confirmed_phd_thesis_credits}/{phd_thesis_credits_required} required"
+            )
+
+        elif has_unknown_phd_thesis_credits:
+            results.append(
+                f"  ⚠️ Confirmed thesis credits: "
+                f"{confirmed_phd_thesis_credits}/{phd_thesis_credits_required}; "
+                f"additional {phd_thesis_course} credit value requires verification"
+            )
+
+        else:
+            thesis_needed = (
+                phd_thesis_credits_required
+                - confirmed_phd_thesis_credits
+            )
+
+            results.append(
+                f"  ❌ Confirmed thesis credits: "
+                f"{confirmed_phd_thesis_credits}/{phd_thesis_credits_required}; "
+                f"{thesis_needed} more thesis credit(s) required"
+            )
 
     results.append("")
 
@@ -408,11 +526,23 @@ def degree_audit(completed_courses: list, program: str = "ms", plan: str | None 
         if thesis_course:
             variable_credit_courses.add(thesis_course)
 
+    phd_thesis_course = None
+
+    if program == "phd":
+        phd_thesis_course = req.get("thesis_course")
+
     for record in course_records:
         code = record["code"]
         provided_credits = record.get("credits")
+
         if not code.startswith("CSCI"):
             continue
+
+        if program == "phd" and code == phd_thesis_course:
+        # Thesis credits are tracked separately from
+        # the Ph.D. CSCI coursework requirement.
+            continue
+
         course_number = code[4:]
 
         if course_number.isdigit() and int(course_number) < 5000:
@@ -461,10 +591,170 @@ def degree_audit(completed_courses: list, program: str = "ms", plan: str | None 
 
     results.append("")
 
+    # Ph.D. 28 course-credit requirement
+    phd_course_credits_complete = True
+    confirmed_phd_course_credits = 0
+
+    if program == "phd":
+        (
+            approved_non_csci_credits,
+            pending_non_csci_approval,
+            pending_non_csci_credit,
+        ) = _calculate_non_csci_degree_credits(course_records)
+
+        confirmed_phd_course_credits = (
+            csci_credits + approved_non_csci_credits
+        )
+
+        required_phd_course_credits = req["course_credits"]
+
+        phd_course_credits_complete = (
+            confirmed_phd_course_credits
+            >= required_phd_course_credits
+        )
+
+        results.append("PH.D. COURSE CREDIT REQUIREMENT:")
+        results.append(
+            f"  Confirmed course credits: "
+            f"{confirmed_phd_course_credits}/"
+            f"{required_phd_course_credits} required"
+        )
+
+        if approved_non_csci_credits:
+            results.append(
+                f"  Approved non-CSCI course credits counted: "
+                f"{approved_non_csci_credits}"
+            )
+
+        if pending_non_csci_approval:
+            results.append(
+                "  ⚠️ Degree applicability must be verified for: "
+                + ", ".join(pending_non_csci_approval)
+            )
+
+        if pending_non_csci_credit:
+            results.append(
+                "  ⚠️ Credit value must be verified for: "
+                + ", ".join(pending_non_csci_credit)
+            )
+
+    results.append("")
+
+    # Ph.D. supporting/minor requirement
+    phd_support_minor_complete = True
+    confirmed_supporting_credits = 0
+    confirmed_minor_credits = 0
+
+    pending_supporting = []
+    pending_minor = []
+
+    if program == "phd":
+        (
+            confirmed_supporting_credits,
+            confirmed_minor_credits,
+            pending_supporting,
+            pending_minor,
+        ) = _calculate_phd_supporting_minor_credits(course_records)
+
+        required_supporting = req["supporting_program_credits"]
+        required_minor = req["minor_credits"]
+
+        supporting_complete = (
+            confirmed_supporting_credits >= required_supporting
+        )
+
+        minor_complete = (
+            confirmed_minor_credits >= required_minor
+        )
+
+        phd_support_minor_complete = (
+            supporting_complete or minor_complete
+        )
+
+        results.append("PH.D. SUPPORTING / MINOR REQUIREMENT:")
+        results.append(
+            f"  Supporting-program credits: "
+            f"{confirmed_supporting_credits}/{required_supporting} required"
+        )
+        results.append(
+            f"  Minor credits: "
+            f"{confirmed_minor_credits}/{required_minor} required"
+        )
+
+        if supporting_complete:
+            results.append(
+                "  ✅ Supporting-program pathway satisfied"
+            )
+        elif minor_complete:
+            results.append(
+                "  ✅ Minor pathway satisfied"
+            )
+        else:
+            results.append(
+                "  ❌ Neither pathway is confirmed complete"
+            )
+
+        if pending_supporting:
+            results.append(
+                "  ⚠️ Supporting credits pending verification for: "
+                + ", ".join(pending_supporting)
+            )
+
+        if pending_minor:
+            results.append(
+                "  ⚠️ Minor credits pending verification for: "
+                + ", ".join(pending_minor)
+            )
+
+        results.append("")
+
+    phd_total_credits_complete = True
+    confirmed_phd_total_credits = 0
+
+    if program == "phd":
+        confirmed_phd_total_credits = (
+            confirmed_phd_course_credits
+            + confirmed_phd_thesis_credits
+        )
+
+        required_phd_total_credits = req["total_credits"]
+
+        phd_total_credits_complete = (
+            confirmed_phd_total_credits
+            >= required_phd_total_credits
+        )
+
+        results.append("PH.D. TOTAL CREDIT REQUIREMENT:")
+        results.append(
+            f"  Confirmed total credits: "
+            f"{confirmed_phd_total_credits}/{required_phd_total_credits} required"
+        )
+
+        if pending_non_csci_approval:
+            results.append(
+                "  ⚠️ Total may increase after degree applicability "
+                "is verified for: "
+                + ", ".join(pending_non_csci_approval)
+            )
+
+        if pending_non_csci_credit:
+            results.append(
+                "  ⚠️ Total may increase after credit values "
+                "are verified for: "
+                + ", ".join(pending_non_csci_credit)
+            )
+
+        if has_unknown_phd_thesis_credits:
+            results.append(
+                "  ⚠️ Total may increase after verifying "
+                "CSCI8888 thesis credits"
+            )
+
+        results.append("")
+
+    # M.S. total-degree-credit requirement
     total_degree_complete = True
     confirmed_degree_credits = 0
-    pending_non_csci_approval = []
-    pending_non_csci_credit = []
 
     if program == "ms":
         (
@@ -555,6 +845,10 @@ def degree_audit(completed_courses: list, program: str = "ms", plan: str | None 
         and intro_complete
         and advanced_complete
         and total_degree_complete
+        and phd_course_credits_complete
+        and phd_thesis_complete
+        and phd_support_minor_complete
+        and phd_total_credits_complete
     ):
         results.append(
             "  ✅ Core CSCI requirements appear satisfied based on the courses you provided. "
@@ -597,6 +891,62 @@ def degree_audit(completed_courses: list, program: str = "ms", plan: str | None 
             else:
                 missing.append(
                     f"{csci_needed:g} more CSCI credit(s)"
+                )
+
+        if program == "phd" and not phd_course_credits_complete:
+            phd_course_needed = (
+                required_phd_course_credits
+                - confirmed_phd_course_credits
+            )
+
+            if pending_non_csci_approval or pending_non_csci_credit:
+                pending_phd_verification = (
+                    pending_non_csci_approval
+                    + pending_non_csci_credit
+                )
+
+                missing.append(
+                    f"{phd_course_needed:g} more confirmed Ph.D. course credit(s) "
+                    f"(pending verification for: "
+                    f"{', '.join(pending_phd_verification)})"
+                )
+            else:
+                missing.append(
+                    f"{phd_course_needed:g} more Ph.D. course credit(s)"
+                )
+
+        if program == "phd" and not phd_support_minor_complete:
+            supporting_needed = (
+                required_supporting
+                - confirmed_supporting_credits
+            )
+
+            minor_needed = (
+                required_minor
+                - confirmed_minor_credits
+            )
+
+            missing.append(
+                f"Ph.D. supporting/minor requirement: "
+                f"{supporting_needed:g} more supporting-program credit(s) "
+                f"OR {minor_needed:g} more minor credit(s)"
+            )
+
+        if program == "phd" and not phd_thesis_complete:
+            thesis_needed = (
+                phd_thesis_credits_required
+                - confirmed_phd_thesis_credits
+            )
+
+            if has_unknown_phd_thesis_credits:
+                missing.append(
+                    f"{thesis_needed:g} more confirmed CSCI8888 thesis credit(s) "
+                    f"(additional thesis credit value requires verification)"
+                )
+
+            else:
+                missing.append(
+                    f"{thesis_needed:g} more CSCI8888 thesis credit(s)"
                 )
 
         if program == "ms" and not total_degree_complete:

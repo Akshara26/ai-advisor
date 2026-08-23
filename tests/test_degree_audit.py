@@ -16,26 +16,14 @@ MOCK_REQUIREMENTS = {
         "colloquium": "CSCI8970",
         "advanced_csci": {
             "approved_5xxx": [
-                "CSCI5105",
-                "CSCI5125",
-                "CSCI5127W",
-                "CSCI5161",
-                "CSCI5204",
-                "CSCI5521",
-                "CSCI5525",
-                "CSCI5527",
-                "CSCI5552",
-                "CSCI5561",
-                "CSCI5608",
-                "CSCI5708",
-                "CSCI5715",
-                "CSCI5802",
+                "CSCI5105","CSCI5125","CSCI5127W","CSCI5161",
+                "CSCI5204","CSCI5521","CSCI5525","CSCI5527",
+                "CSCI5552","CSCI5561","CSCI5608","CSCI5708",
+                "CSCI5715","CSCI5802",
             ],
             "allow_any_8xxx": True,
             "excluded_8xxx": [
-                "CSCI8001",
-                "CSCI8002",
-                "CSCI8970",
+                "CSCI8001","CSCI8002","CSCI8970",
             ],
             "limited_8xxx": {
                 "courses": ["CSCI8991", "CSCI8994"],
@@ -71,10 +59,26 @@ MOCK_REQUIREMENTS = {
         "required_breadth_courses": 4,
         "colloquium": "CSCI8970",
         "intro_research": "CSCI8001",
+
+        "course_credits": 28,
+        "supporting_program_credits": 6,
+        "minor_credits": 12,
+        "thesis_course": "CSCI8888",
+        "thesis_credits": 24,
+
         "breadth_categories": {
-            "applications":                ["CSCI5521", "CSCI5523"],
-            "theory_and_algorithms":       ["CSCI5421", "CSCI5525"],
-            "architecture_systems_software": ["CSCI5103", "CSCI5801"],
+            "applications": [
+                "CSCI5521",
+                "CSCI5523",
+            ],
+            "theory_and_algorithms": [
+                "CSCI5421",
+                "CSCI5525",
+            ],
+            "architecture_systems_software": [
+                "CSCI5103",
+                "CSCI5801",
+            ],
         },
     },
 }
@@ -110,12 +114,8 @@ class TestMSBreadthAndColloquium:
 
     def test_all_requirements_met(self):
         courses = [
-            "CSCI5521",
-            "CSCI5421",
-            "CSCI5801",
-            "CSCI5511",
-            "CSCI8970",
-            "CSCI8760",
+            "CSCI5521","CSCI5421","CSCI5801",
+            "CSCI5511","CSCI8970","CSCI8760",
         ]
         result = degree_audit(courses, "ms", plan="B")
         assert "✅" in result
@@ -195,14 +195,7 @@ class TestPhD:
         assert "❌ Colloquium" in result
 
     def test_phd_requires_four_breadth_courses(self):
-        courses = [
-            "CSCI5521",  # Applications
-            "CSCI5421",  # Theory
-            "CSCI5801",  # Architecture
-            "CSCI8970",
-            "CSCI8001",
-        ]
-
+        courses = ["CSCI5521",  "CSCI5421",  "CSCI5801",  "CSCI8970",  "CSCI8001",]
         result = degree_audit(courses, "phd")
 
         assert "Breadth courses completed: 3 of 4 required" in result
@@ -226,43 +219,20 @@ class TestCreditCounting:
         assert "4/16" in result  # CSCI5521 (3) + CSCI8970 (1) = 4
 
     def test_plan_c_reports_missing_advanced_credits(self):
-        courses = [
-            "CSCI5511",
-            "CSCI5421",
-            "CSCI5801",
-            "CSCI5103",
-            "CSCI8970",
-        ]
-
+        courses = ["CSCI5511", "CSCI5421", "CSCI5801", "CSCI5103", "CSCI8970",]
         result = degree_audit(courses, "ms", plan="C")
 
         assert "Confirmed advanced CSCI credits: 0/6 required" in result
         assert "6 more advanced CSCI credit(s)" in result
 
     def test_plan_b_project_course_counts_as_advanced(self):
-        courses = [
-            "CSCI5521",
-            "CSCI5421",
-            "CSCI5801",
-            "CSCI5511",
-            "CSCI8970",
-            "CSCI8760",
-        ]
-
+        courses = ["CSCI5521", "CSCI5421", "CSCI5801", "CSCI5511", "CSCI8970", "CSCI8760",]
         result = degree_audit(courses, "ms", plan="B")
 
         assert "Confirmed advanced CSCI credits: 6/3 required" in result
 
     def test_variable_credit_course_not_assumed_as_three_credits(self):
-        courses = [
-            "CSCI5511",
-            "CSCI5421",
-            "CSCI5801",
-            "CSCI5103",
-            "CSCI8970",
-            "CSCI8991",
-        ]
-
+        courses = ["CSCI5511", "CSCI5421", "CSCI5801", "CSCI5103", "CSCI8970", "CSCI8991",]
         result = degree_audit(courses, "ms", plan="C")
 
         assert "CSCI credits completed: 13/16 required" in result
@@ -270,22 +240,12 @@ class TestCreditCounting:
         assert "3 more confirmed CSCI credit(s)" in result
 
     def test_plan_a_thesis_does_not_count_as_advanced(self):
-        courses = [
-            "CSCI8777",
-            "CSCI5521",
-        ]
+        courses = [ "CSCI8777", "CSCI5521",]
         result = degree_audit(courses, "ms", plan="A")
         assert "Confirmed advanced CSCI credits: 3/6 required" in result
 
     def test_plan_c_project_requirements_require_manual_verification(self):
-        courses = [
-            "CSCI5521",
-            "CSCI5527",
-            "CSCI5802",
-            "CSCI5105",
-            "CSCI8970",
-        ]
-
+        courses = [ "CSCI5521", "CSCI5527", "CSCI5802", "CSCI5105", "CSCI8970",]
         result = degree_audit(courses, "ms", plan="C")
 
         assert "PLAN C PROJECT REQUIREMENT:" in result
@@ -294,14 +254,7 @@ class TestCreditCounting:
         assert "Oral project presentation requires manual/program verification" in result
 
     def test_plan_a_thesis_credits_require_verification(self):
-        courses = [
-            "CSCI8777",
-            "CSCI5521",
-            "CSCI5527",
-            "CSCI5802",
-            "CSCI8970",
-        ]
-
+        courses = ["CSCI8777", "CSCI5521", "CSCI5527", "CSCI5802", "CSCI8970",]
         result = degree_audit(courses, "ms", plan="A")
 
         assert "PLAN A THESIS REQUIREMENT:" in result
@@ -313,7 +266,6 @@ class TestCreditCounting:
         assert "Credit value must be verified for: CSCI8777" in result
         assert "more confirmed CSCI credit(s)" in result
         # assert "6 more confirmed CSCI credit(s)" in result
-
         assert "Confirmed advanced CSCI credits: 9/6 required" in result
 
     def test_ms_total_degree_credits_include_approved_non_csci(self):
@@ -326,13 +278,11 @@ class TestCreditCounting:
             {"code": "STAT5302", "credits": 3, "degree_approved": True},
             {"code": "MGMT6001", "credits": 2, "degree_approved": None},
         ]
-
         result = degree_audit(courses, "ms", plan="C")
 
         assert "Confirmed degree credits: 16/31 required" in result
         assert "Approved non-CSCI credits counted: 3" in result
         assert "Degree applicability must be verified for: MGMT6001" in result
-
         assert (
             "15 more confirmed degree credit(s) "
             "(pending verification for: MGMT6001)"
@@ -348,7 +298,6 @@ class TestCreditCounting:
             {"code": "CSCI8970", "credits": 1},
             {"code": "CSCI8760", "credits": 3},
         ]
-
         result = degree_audit(courses, "ms", plan="B")
 
         assert "Confirmed degree credits: 16/31 required" in result
@@ -364,7 +313,6 @@ class TestCreditCounting:
             {"code": "CSCI8991", "credits": 4},
             {"code": "CSCI8994", "credits": 4},
         ]
-
         result = degree_audit(courses, "ms", plan="C")
 
         assert "CSCI credits completed: 18/16 required" in result
@@ -379,7 +327,6 @@ class TestCreditCounting:
             {"code": "CSCI8970", "credits": 1},
             {"code": "CSCI8777", "credits": 10},
         ]
-
         result = degree_audit(courses, "ms", plan="A")
 
         assert "Confirmed thesis credits: 10/10 required" in result
@@ -387,9 +334,140 @@ class TestCreditCounting:
         assert "Confirmed degree credits: 20/31 required" in result
         assert "Confirmed advanced CSCI credits: 9/6 required" in result
         assert "11 more degree credit(s)" in result
-
         assert "earned thesis credits must be verified manually" not in result
 
+    def test_phd_incomplete_thesis_credits_are_reported(self):
+        courses = [
+            {"code": "CSCI8001", "credits": 1},
+            {"code": "CSCI8970", "credits": 1},
+            {"code": "CSCI8888", "credits": 12},
+        ]
+        result = degree_audit(courses, "phd")
+
+        assert "Confirmed thesis credits: 12/24" in result
+        assert "12 more CSCI8888 thesis credit(s)" in result
+    # Thesis credits must not inflate coursework requirements.
+        assert "CSCI credits completed: 2/16 required" in result
+        assert "Confirmed course credits: 2/28 required" in result
+
+    def test_phd_supporting_program_path_satisfies_requirement(self):
+        courses = [
+            {"code": "CSCI8001", "credits": 1},
+            {"code": "CSCI8970", "credits": 1},
+            {
+                "code": "STAT5302",
+                "credits": 3,
+                "degree_approved": True,
+                "phd_credit_type": "supporting",
+            },
+            {
+                "code": "STAT5303",
+                "credits": 3,
+                "degree_approved": True,
+                "phd_credit_type": "supporting",
+            },
+        ]
+        result = degree_audit(courses, "phd")
+
+        assert "Supporting-program credits: 6/6 required" in result
+        assert "✅ Supporting-program pathway satisfied" in result
+
+    def test_phd_minor_path_satisfies_requirement(self):
+        courses = [
+            {"code": "CSCI8001", "credits": 1},
+            {"code": "CSCI8970", "credits": 1},
+            {
+                "code": "MATH5651",
+                "credits": 3,
+                "degree_approved": True,
+                "phd_credit_type": "minor",
+            },
+            {
+                "code": "MATH5652",
+                "credits": 3,
+                "degree_approved": True,
+                "phd_credit_type": "minor",
+            },
+            {
+                "code": "MATH5653",
+                "credits": 3,
+                "degree_approved": True,
+                "phd_credit_type": "minor",
+            },
+            {
+                "code": "MATH5654",
+                "credits": 3,
+                "degree_approved": True,
+                "phd_credit_type": "minor",
+            },
+        ]
+        result = degree_audit(courses, "phd")
+
+        assert "Minor credits: 12/12 required" in result
+        assert "✅ Minor pathway satisfied" in result
+
+    def test_phd_supporting_minor_incomplete_reports_or_requirement(self):
+        courses = [
+            {"code": "CSCI8001", "credits": 1},
+            {"code": "CSCI8970", "credits": 1},
+            {
+                "code": "STAT5302",
+                "credits": 3,
+                "degree_approved": True,
+                "phd_credit_type": "supporting",
+            },
+            {
+                "code": "MATH5651",
+                "credits": 3,
+                "degree_approved": True,
+                "phd_credit_type": "minor",
+            },
+            {
+                "code": "MATH5652",
+                "credits": 3,
+                "degree_approved": True,
+                "phd_credit_type": "minor",
+            },
+        ]
+        result = degree_audit(courses, "phd")
+
+        assert "❌ Neither pathway is confirmed complete" in result
+        assert (
+            "3 more supporting-program credit(s) OR "
+            "6 more minor credit(s)"
+        ) in result
+
+    def test_phd_total_credit_requirement_is_calculated(self):
+        courses = [
+            {"code": "CSCI8001", "credits": 1},
+            {"code": "CSCI8970", "credits": 1},
+            {
+                "code": "STAT5302",
+                "credits": 3,
+                "degree_approved": True,
+                "phd_credit_type": "supporting",
+            },
+            {
+                "code": "MATH5651",
+                "credits": 3,
+                "degree_approved": True,
+                "phd_credit_type": "minor",
+            },
+            {
+                "code": "MATH5652",
+                "credits": 3,
+                "degree_approved": True,
+                "phd_credit_type": "minor",
+            },
+
+            {"code": "CSCI8888", "credits": 24},
+        ]
+
+        result = degree_audit(courses, "phd")
+
+        assert "Confirmed course credits: 11/28 required" in result
+        assert "Confirmed thesis credits: 24/24 required" in result
+        assert "Confirmed total credits: 35/52 required" in result
 
 # class TestErrorHandling:
 
