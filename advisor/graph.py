@@ -165,10 +165,16 @@ def _is_prerequisite_question(user_message: str) -> bool:
 
 
 def _is_deadline_question(user_message: str) -> bool:
+    text = user_message.lower()
+
     return bool(
         re.search(
             r"\b(deadline|due date|last day)\b",
-            user_message.lower(),
+            text,
+        )
+        or re.search(
+            r"\bwhen\b.+\bapply\b.+\bgraduate\b",
+            text,
         )
     )
 
