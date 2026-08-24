@@ -9,8 +9,11 @@ Run with: pytest tests/test_graph.py -v
 """
 from curses import meta
 
+from types import SimpleNamespace
+from unittest.mock import MagicMock, patch
+
 import pytest
-from advisor.graph import parse_email_block, AdvisorMeta
+from advisor.graph import parse_email_block, AdvisorMeta, advisor_node, chat
 
 class TestAdvisorMeta:
 
@@ -42,6 +45,206 @@ class TestAdvisorMeta:
         )
 
         assert meta.needs_clarification is True
+
+class TestDegreeAuditGraphIntegration:
+
+    def test_degree_audit_is_followed_by_handbook_search(self):
+        # First model response: request degree_audit
+        degree_audit_call = SimpleNamespace(
+            id="call_degree_audit",
+            type="function",
+            function=SimpleNamespace(
+                name="degree_audit",
+                arguments=(
+                    '{"completed_courses":["CSCI5521","CSCI5421",'
+                    '"CSCI5801","CSCI8970","CSCI8760"],'
+                    '"program":"ms","plan":"B"}'
+                ),
+            ),
+        )
+
+        first_response = SimpleNamespace(
+            choices=[
+                SimpleNamespace(
+                    message=SimpleNamespace(
+                        content="",
+                        tool_calls=[degree_audit_call],
+                    )
+                )
+            ]
+        )
+
+        # Second model response tries to answer immediately.
+        # The graph should reject this and force search_handbook.
+        premature_answer = SimpleNamespace(
+            choices=[
+                SimpleNamespace(
+                    message=SimpleNamespace(
+                        content="Your degree audit is complete.",
+                        tool_calls=None,
+                    )
+                )
+            ]
+        )
+
+        # Third model response: request search_handbook
+        handbook_call = SimpleNamespace(
+            id="call_handbook",
+            type="function",
+            function=SimpleNamespace(
+                name="search_handbook",
+                arguments='{"query":"MS Plan B degree requirements"}',
+            ),
+        )
+
+        handbook_response = SimpleNamespace(
+            choices=[
+                SimpleNamespace(
+                    message=SimpleNamespace(
+                        content="",
+                        tool_calls=[handbook_call],
+                    )
+                )
+            ]
+        )
+
+        # Fourth model response: final synthesized answer
+        final_response = SimpleNamespace(
+            choices=[
+                SimpleNamespace(
+                    message=SimpleNamespace(
+                        content=(
+                            "Based on your degree audit and the handbook, "
+                            "you still need additional degree credits."
+                        ),
+                        tool_calls=None,
+                    )
+                )
+            ]
+        )
+
+        # Separate structured-output classifier response
+        meta_response = SimpleNamespace(
+            choices=[
+                SimpleNamespace(
+                    message=SimpleNamespace(
+                        parsed=AdvisorMeta(
+                            answered=True,
+                            needs_clarification=False,
+                            confidence="high",
+                            question_type="degree_audit",
+                        )
+                    )
+                )
+            ]
+        )
+
+        fake_client = MagicMock()
+
+        fake_client.chat.completions.create.side_effect = [
+            first_response,
+            premature_answer,
+            handbook_response,
+            final_response,
+        ]
+
+        fake_client.beta.chat.completions.parse.return_value = meta_response
+
+        def fake_run_tool(tool_name, tool_args):
+            if tool_name == "degree_audit":
+                return (
+                    "DEGREE AUDIT RESULT: "
+                    "Plan B requirements checked; additional credits remain."
+                )
+
+            if tool_name == "search_handbook":
+                return (
+                    "HANDBOOK RESULT: "
+                    "M.S. Plan B requires 31 total credits."
+                )
+
+            raise AssertionError(f"Unexpected tool called: {tool_name}")
+
+        with patch("advisor.graph.client", fake_client), \
+             patch("advisor.graph.run_tool", side_effect=fake_run_tool) as mock_run_tool, \
+             patch("advisor.graph.check_hard_escalation", return_value=None):
+
+            initial_state = {
+                "messages": [
+                    {
+                        "role": "user",
+                        "content": (
+                            "I'm an M.S. Plan B student. "
+                            "I completed CSCI 5521, CSCI 5421, CSCI 5801, "
+                            "CSCI 8970, and CSCI 8760. "
+                            "Can you run a degree audit?"
+                        ),
+                    }
+                ],
+                "answer": "",
+                "answered": False,
+                "needs_clarification": False,
+                "confidence": "none",
+                "question_type": "unknown",
+                "tools_tried": [],
+                "drafted_email": "",
+                "tool_contexts": [],
+                "escalation_office": "",
+            }
+
+            result = advisor_node(initial_state)
+
+        # Final answer came from the last LLM response
+        assert (
+            "Based on your degree audit and the handbook"
+            in result["answer"]
+)
+
+        # Degree audit must run first, handbook search second
+        called_tools = [
+            call.args[0]
+            for call in mock_run_tool.call_args_list
+        ]
+
+        degree_audit_args = mock_run_tool.call_args_list[0].args[1]
+
+        assert degree_audit_args["program"] == "ms"
+        assert degree_audit_args["plan"] == "B"
+
+        assert degree_audit_args["completed_courses"] == [
+            "CSCI5521",
+            "CSCI5421",
+            "CSCI5801",
+            "CSCI8970",
+            "CSCI8760",
+        ]
+
+        assert called_tools == [
+            "degree_audit",
+            "search_handbook",
+        ]
+
+        # Verify the handbook search is about Plan B
+        handbook_args = mock_run_tool.call_args_list[1].args[1]
+
+        assert "Plan B" in handbook_args["query"]
+
+        # Both tool results should be exposed by chat()
+        assert len(result["tool_contexts"]) == 2
+        assert "DEGREE AUDIT RESULT" in result["tool_contexts"][0]
+        assert "HANDBOOK RESULT" in result["tool_contexts"][1]
+
+        assert result["answered"] is True
+        assert result["confidence"] == "high"
+        assert result["question_type"] == "degree_audit"
+
+        # # No email drafting should occur
+        # assert result["drafted_email"] == ""
+
+        # # Conversation history should contain user + assistant
+        # assert len(result["messages"]) == 2
+        # assert result["messages"][0]["role"] == "user"
+        # assert result["messages"][1]["role"] == "assistant"
 
 
 # ── parse_state_block: valid input ────────────────────────────────────────────
@@ -240,3 +443,172 @@ class TestParseEmailBlock:
 
     def test_empty_string_returns_empty(self):
         assert parse_email_block("") == ""
+
+
+class TestChatWrapper:
+
+    def test_chat_builds_state_and_returns_graph_result(self):
+        existing_history = [
+            {
+                "role": "user",
+                "content": "What are the M.S. breadth requirements?",
+            },
+            {
+                "role": "assistant",
+                "content": "There are three breadth areas.",
+            },
+        ]
+
+        fake_graph_result = {
+            "answer": "Here is your degree audit.",
+            "drafted_email": "",
+            "tool_contexts": [
+                "DEGREE AUDIT RESULT",
+                "HANDBOOK RESULT",
+            ],
+        }
+
+        with patch(
+            "advisor.graph.advisor_graph.invoke",
+            return_value=fake_graph_result,
+        ) as mock_invoke:
+
+            answer, updated_history, drafted_email, tool_contexts = chat(
+                "Can you audit my completed courses?",
+                existing_history,
+            )
+
+        # ── Return values ────────────────────────────────
+        assert answer == "Here is your degree audit."
+        assert drafted_email == ""
+
+        assert tool_contexts == [
+            "DEGREE AUDIT RESULT",
+            "HANDBOOK RESULT",
+        ]
+
+        # ── Conversation history ─────────────────────────
+        assert len(updated_history) == 4
+
+        assert updated_history[-2] == {
+            "role": "user",
+            "content": "Can you audit my completed courses?",
+        }
+
+        assert updated_history[-1] == {
+            "role": "assistant",
+            "content": "Here is your degree audit.",
+        }
+
+        # ── State passed into LangGraph ──────────────────
+        mock_invoke.assert_called_once()
+
+        initial_state = mock_invoke.call_args.args[0]
+
+        assert initial_state["messages"] == [
+            *existing_history,
+            {
+                "role": "user",
+                "content": "Can you audit my completed courses?",
+            },
+        ]
+
+        assert initial_state["answer"] == ""
+        assert initial_state["answered"] is False
+        assert initial_state["needs_clarification"] is False
+        assert initial_state["confidence"] == "none"
+        assert initial_state["question_type"] == "unknown"
+        assert initial_state["tools_tried"] == []
+        assert initial_state["drafted_email"] == ""
+        assert initial_state["tool_contexts"] == []
+        assert initial_state["escalation_office"] == ""
+
+
+class TestMSDegreeAuditClarification:
+
+    def test_ms_degree_audit_without_plan_asks_for_clarification(self):
+        clarification_response = SimpleNamespace(
+            choices=[
+                SimpleNamespace(
+                    message=SimpleNamespace(
+                        content=(
+                            "Before I run the degree audit, are you in "
+                            "M.S. Plan A, Plan B, or Plan C?"
+                        ),
+                        tool_calls=None,
+                    )
+                )
+            ]
+        )
+
+        meta_response = SimpleNamespace(
+            choices=[
+                SimpleNamespace(
+                    message=SimpleNamespace(
+                        parsed=AdvisorMeta(
+                            answered=False,
+                            needs_clarification=True,
+                            confidence="high",
+                            question_type="degree_audit",
+                        )
+                    )
+                )
+            ]
+        )
+
+        fake_client = MagicMock()
+
+        fake_client.chat.completions.create.return_value = (
+            clarification_response
+        )
+
+        fake_client.beta.chat.completions.parse.return_value = (
+            meta_response
+        )
+
+        initial_state = {
+            "messages": [
+                {
+                    "role": "user",
+                    "content": (
+                        "I'm an M.S. student. I completed CSCI 5521, "
+                        "CSCI 5421, CSCI 5801, and CSCI 8970. "
+                        "Can you run a degree audit?"
+                    ),
+                }
+            ],
+            "answer": "",
+            "answered": False,
+            "needs_clarification": False,
+            "confidence": "none",
+            "question_type": "unknown",
+            "tools_tried": [],
+            "drafted_email": "",
+            "tool_contexts": [],
+            "escalation_office": "",
+        }
+
+        with patch("advisor.graph.client", fake_client), \
+             patch("advisor.graph.run_tool") as mock_run_tool, \
+             patch(
+                 "advisor.graph.check_hard_escalation",
+                 return_value=None,
+             ):
+
+            result = advisor_node(initial_state)
+
+        assert (
+            "Plan A, Plan B, or Plan C"
+            in result["answer"]
+        )
+
+        assert result["answered"] is False
+        assert result["needs_clarification"] is True
+        assert result["confidence"] == "high"
+        assert result["question_type"] == "degree_audit"
+
+        # Most important: do not guess a plan.
+        mock_run_tool.assert_not_called()
+
+        assert result["tools_tried"] == []
+        assert result["tool_contexts"] == []
