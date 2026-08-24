@@ -183,6 +183,13 @@ def advisor_node(state: AdvisorState) -> AdvisorState:
         )
     )
 
+    is_courses_requiring_question = bool(
+        re.search(
+            r"\b(which|what)\s+courses?\s+(require|requires|requiring)\b",
+            user_message.lower(),
+        )
+    )
+
     escalation = check_hard_escalation(user_message)
     if escalation:
         msg = escalation.get("message_template", "Please contact the appropriate office.")
@@ -240,8 +247,9 @@ def advisor_node(state: AdvisorState) -> AdvisorState:
             # ── Hard enforcement: prerequisite questions must use check_prerequisites ──
             if (
                 is_prerequisite_question
+                and not is_courses_requiring_question
                 and "check_prerequisites" not in tools_tried
-            ):
+        ):
                 conversation.append({
                     "role": "user",
                     "content": (
@@ -297,6 +305,23 @@ def advisor_node(state: AdvisorState) -> AdvisorState:
                         "toward a breadth requirement. "
                         "You MUST call check_breadth_eligibility for the relevant "
                         "course and program before writing your response. "
+                        "Do not rely on search_handbook alone.]"
+                    )
+                })
+                continue
+
+            # ── Hard enforcement: reverse prerequisite questions must use lookup tool ──
+            if (
+                is_courses_requiring_question
+                and "get_courses_requiring" not in tools_tried
+            ):
+                conversation.append({
+                    "role": "user",
+                    "content": (
+                        "[System: The student is asking which courses require "
+                        "a particular course. "
+                        "You MUST call get_courses_requiring for that course "
+                        "before writing your response. "
                         "Do not rely on search_handbook alone.]"
                     )
                 })
