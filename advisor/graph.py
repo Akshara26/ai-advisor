@@ -313,7 +313,7 @@ def advisor_node(state: AdvisorState) -> AdvisorState:
             # ── Hard enforcement: deadline questions must use get_deadline ──
             if (
                 is_deadline_question
-                and "get_deadline" not in tools_tried
+                and "get_deadline" not in successful_tools
             ):
                 conversation.append({
                     "role": "user",
@@ -329,7 +329,7 @@ def advisor_node(state: AdvisorState) -> AdvisorState:
             # ── Hard enforcement: course-difficulty questions must use grade data ──
             if (
                 is_course_difficulty_question
-                and "get_grade_distribution" not in tools_tried
+                and "get_grade_distribution" not in successful_tools
             ):
                 conversation.append({
                     "role": "user",
@@ -345,7 +345,7 @@ def advisor_node(state: AdvisorState) -> AdvisorState:
             # ── Hard enforcement: breadth questions must use eligibility tool ──
             if (
                 is_breadth_question
-                and "check_breadth_eligibility" not in tools_tried
+                and "check_breadth_eligibility" not in successful_tools
             ):
                 conversation.append({
                     "role": "user",
@@ -362,7 +362,7 @@ def advisor_node(state: AdvisorState) -> AdvisorState:
             # ── Hard enforcement: reverse prerequisite questions must use lookup tool ──
             if (
                 is_courses_requiring_question
-                and "get_courses_requiring" not in tools_tried
+                and "get_courses_requiring" not in successful_tools
             ):
                 conversation.append({
                     "role": "user",
@@ -418,7 +418,7 @@ def advisor_node(state: AdvisorState) -> AdvisorState:
                 f"needs_clarification={needs_clarification}, "
                 f"confidence={confidence}, "
                 f"question_type={question_type}, "
-                f"tools_tried={tools_tried} "
+                f"successful_tools={successful_tools} "
         )
 
             return {
@@ -471,14 +471,14 @@ def advisor_node(state: AdvisorState) -> AdvisorState:
     return {
         **state,
         "answer": (
-                    "I wasn't able to find a reliable answer to your question from the handbook. "
-                    "I've drafted an email to the CS graduate coordinators who can help directly."
-                ),
+            "I wasn't able to find a reliable answer to your question from the available sources. "
+            "Please contact the CS Graduate Program Office for help with this question."
+        ),
         "answered":      False,
         "needs_clarification": False,
         "confidence":    "none",
         "question_type": "unknown",
-        "tools_tried":   tools_tried,
+        "successful_tools":   successful_tools,
         "tool_contexts": [],
         "messages":      conversation,
     }

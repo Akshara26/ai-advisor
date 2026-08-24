@@ -2432,3 +2432,77 @@ class TestCoursesRequiringRoutingIntegration:
         assert result["answered"] is True
         assert result["confidence"] == "high"
         assert result["question_type"] == "course_prerequisite"
+
+
+class TestAdvisorFallbackBehavior:
+
+    def test_max_loop_fallback_does_not_claim_email_was_drafted(self):
+        repeated_tool_call = SimpleNamespace(
+            id="call_handbook",
+            type="function",
+            function=SimpleNamespace(
+                name="search_handbook",
+                arguments='{"query":"ambiguous advising question"}',
+            ),
+        )
+
+        tool_response = SimpleNamespace(
+            choices=[
+                SimpleNamespace(
+                    message=SimpleNamespace(
+                        content="",
+                        tool_calls=[repeated_tool_call],
+                    )
+                )
+            ]
+        )
+
+        fake_client = MagicMock()
+
+        # advisor_node has a max of 5 iterations
+        fake_client.chat.completions.create.side_effect = [
+            tool_response,
+            tool_response,
+            tool_response,
+            tool_response,
+            tool_response,
+        ]
+
+        def fake_run_tool(tool_name, tool_args):
+            assert tool_name == "search_handbook"
+            return "HANDBOOK RESULT: No reliable answer found."
+
+        initial_state = {
+            "messages": [
+                {
+                    "role": "user",
+                    "content": "Can you answer this ambiguous advising question?",
+                }
+            ],
+            "answer": "",
+            "answered": False,
+            "needs_clarification": False,
+            "confidence": "none",
+            "question_type": "unknown",
+            "tools_tried": [],
+            "drafted_email": "",
+            "tool_contexts": [],
+            "escalation_office": "",
+        }
+
+        with patch("advisor.graph.client", fake_client), \
+             patch(
+                 "advisor.graph.run_tool",
+                 side_effect=fake_run_tool,
+             ), \
+             patch(
+                 "advisor.graph.check_hard_escalation",
+                 return_value=None,
+             ):
+
+            result = advisor_node(initial_state)
+
+        assert result["answered"] is False
+        assert result["drafted_email"] == ""
+
+        assert "drafted an email" not in result["answer"].lower()
