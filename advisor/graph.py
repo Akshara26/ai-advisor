@@ -154,6 +154,14 @@ def advisor_node(state: AdvisorState) -> AdvisorState:
         (normalize_content(m) for m in reversed(messages) if normalize_role(m) == "user"),
         ""
     )
+
+    is_prerequisite_question = bool(
+        re.search(
+            r"\bprereq(?:uisite)?s?\b",
+            user_message.lower(),
+        )
+    )
+
     escalation = check_hard_escalation(user_message)
     if escalation:
         msg = escalation.get("message_template", "Please contact the appropriate office.")
@@ -204,6 +212,22 @@ def advisor_node(state: AdvisorState) -> AdvisorState:
                         "[System: You called degree_audit but did not call search_handbook. "
                         "You MUST call search_handbook now with a query matching the student's "
                         "program and situation before writing your response.]"
+                    )
+                })
+                continue  # re-enter the for loop, LLM will see the injected message
+
+            # ── Hard enforcement: prerequisite questions must use check_prerequisites ──
+            if (
+                is_prerequisite_question
+                and "check_prerequisites" not in tools_tried
+            ):
+                conversation.append({
+                    "role": "user",
+                    "content": (
+                        "[System: The student is asking about course prerequisites. "
+                        "You MUST call check_prerequisites for the relevant course "
+                        "before writing your response. "
+                        "Do not rely on search_handbook alone.]"
                     )
                 })
                 continue  # re-enter the for loop, LLM will see the injected message

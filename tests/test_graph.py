@@ -612,3 +612,300 @@ class TestMSDegreeAuditClarification:
 
         assert result["tools_tried"] == []
         assert result["tool_contexts"] == []
+
+class TestPrerequisiteRoutingIntegration:
+
+    def test_prerequisite_question_cannot_rely_on_handbook_alone(self):
+        # First response: model incorrectly starts with handbook search
+        handbook_call = SimpleNamespace(
+            id="call_handbook",
+            type="function",
+            function=SimpleNamespace(
+                name="search_handbook",
+                arguments='{"query":"CSCI 5521 prerequisites"}',
+            ),
+        )
+
+        first_response = SimpleNamespace(
+            choices=[
+                SimpleNamespace(
+                    message=SimpleNamespace(
+                        content="",
+                        tool_calls=[handbook_call],
+                    )
+                )
+            ]
+        )
+
+        # Second response: model tries to answer without using
+        # the dedicated prerequisite tool.
+        premature_answer = SimpleNamespace(
+            choices=[
+                SimpleNamespace(
+                    message=SimpleNamespace(
+                        content=(
+                            "According to the handbook, CSCI 5521 "
+                            "has prerequisite coursework."
+                        ),
+                        tool_calls=None,
+                    )
+                )
+            ]
+        )
+
+        # This is what the graph SHOULD force next.
+        prerequisite_call = SimpleNamespace(
+            id="call_prerequisite",
+            type="function",
+            function=SimpleNamespace(
+                name="check_prerequisites",
+                arguments='{"course_code":"CSCI5521"}',
+            ),
+        )
+
+        prerequisite_response = SimpleNamespace(
+            choices=[
+                SimpleNamespace(
+                    message=SimpleNamespace(
+                        content="",
+                        tool_calls=[prerequisite_call],
+                    )
+                )
+            ]
+        )
+
+        final_response = SimpleNamespace(
+            choices=[
+                SimpleNamespace(
+                    message=SimpleNamespace(
+                        content=(
+                            "The prerequisite tool confirms the "
+                            "requirements for CSCI 5521."
+                        ),
+                        tool_calls=None,
+                    )
+                )
+            ]
+        )
+
+        meta_response = SimpleNamespace(
+            choices=[
+                SimpleNamespace(
+                    message=SimpleNamespace(
+                        parsed=AdvisorMeta(
+                            answered=True,
+                            needs_clarification=False,
+                            confidence="high",
+                            question_type="course_prerequisite",
+                        )
+                    )
+                )
+            ]
+        )
+
+        fake_client = MagicMock()
+
+        fake_client.chat.completions.create.side_effect = [
+            first_response,
+            premature_answer,
+            prerequisite_response,
+            final_response,
+        ]
+
+        fake_client.beta.chat.completions.parse.return_value = (
+            meta_response
+        )
+
+        def fake_run_tool(tool_name, tool_args):
+            if tool_name == "search_handbook":
+                return (
+                    "HANDBOOK RESULT: General prerequisite policy."
+                )
+
+            if tool_name == "check_prerequisites":
+                return (
+                    "PREREQUISITE RESULT: CSCI5521 prerequisites checked."
+                )
+
+            raise AssertionError(
+                f"Unexpected tool called: {tool_name}"
+            )
+
+        initial_state = {
+            "messages": [
+                {
+                    "role": "user",
+                    "content": (
+                        "What are the prerequisites for CSCI 5521?"
+                    ),
+                }
+            ],
+            "answer": "",
+            "answered": False,
+            "needs_clarification": False,
+            "confidence": "none",
+            "question_type": "unknown",
+            "tools_tried": [],
+            "drafted_email": "",
+            "tool_contexts": [],
+            "escalation_office": "",
+        }
+
+        with patch("advisor.graph.client", fake_client), \
+             patch(
+                 "advisor.graph.run_tool",
+                 side_effect=fake_run_tool,
+             ) as mock_run_tool, \
+             patch(
+                 "advisor.graph.check_hard_escalation",
+                 return_value=None,
+             ):
+
+            result = advisor_node(initial_state)
+
+        called_tools = [
+            call.args[0]
+            for call in mock_run_tool.call_args_list
+        ]
+
+        assert called_tools == [
+            "search_handbook",
+            "check_prerequisites",
+        ]
+
+        prerequisite_args = (
+            mock_run_tool.call_args_list[1].args[1]
+        )
+
+        assert prerequisite_args["course_code"] == "CSCI5521"
+
+        assert "PREREQUISITE RESULT" in result["tool_contexts"][1]
+
+        assert result["question_type"] == "course_prerequisite"
+
+
+    def test_prerequisite_question_uses_prerequisite_tool_directly(self):
+        prerequisite_call = SimpleNamespace(
+            id="call_prerequisite",
+            type="function",
+            function=SimpleNamespace(
+                name="check_prerequisites",
+                arguments='{"course_code":"CSCI5521"}',
+            ),
+        )
+
+        first_response = SimpleNamespace(
+            choices=[
+                SimpleNamespace(
+                    message=SimpleNamespace(
+                        content="",
+                        tool_calls=[prerequisite_call],
+                    )
+                )
+            ]
+        )
+
+        final_response = SimpleNamespace(
+            choices=[
+                SimpleNamespace(
+                    message=SimpleNamespace(
+                        content=(
+                            "CSCI 5521 prerequisites were checked "
+                            "using the prerequisite tool."
+                        ),
+                        tool_calls=None,
+                    )
+                )
+            ]
+        )
+
+        meta_response = SimpleNamespace(
+            choices=[
+                SimpleNamespace(
+                    message=SimpleNamespace(
+                        parsed=AdvisorMeta(
+                            answered=True,
+                            needs_clarification=False,
+                            confidence="high",
+                            question_type="course_prerequisite",
+                        )
+                    )
+                )
+            ]
+        )
+
+        fake_client = MagicMock()
+
+        fake_client.chat.completions.create.side_effect = [
+            first_response,
+            final_response,
+        ]
+
+        fake_client.beta.chat.completions.parse.return_value = (
+            meta_response
+        )
+
+        def fake_run_tool(tool_name, tool_args):
+            if tool_name == "check_prerequisites":
+                return (
+                    "PREREQUISITE RESULT: "
+                    "CSCI5521 prerequisites checked."
+                )
+
+            raise AssertionError(
+                f"Unexpected tool called: {tool_name}"
+            )
+
+        initial_state = {
+            "messages": [
+                {
+                    "role": "user",
+                    "content": (
+                        "What are the prerequisites for CSCI 5521?"
+                    ),
+                }
+            ],
+            "answer": "",
+            "answered": False,
+            "needs_clarification": False,
+            "confidence": "none",
+            "question_type": "unknown",
+            "tools_tried": [],
+            "drafted_email": "",
+            "tool_contexts": [],
+            "escalation_office": "",
+        }
+
+        with patch("advisor.graph.client", fake_client), \
+            patch(
+                "advisor.graph.run_tool",
+                side_effect=fake_run_tool,
+            ) as mock_run_tool, \
+            patch(
+                "advisor.graph.check_hard_escalation",
+                return_value=None,
+            ):
+
+            result = advisor_node(initial_state)
+
+        called_tools = [
+            call.args[0]
+            for call in mock_run_tool.call_args_list
+        ]
+
+        assert called_tools == [
+            "check_prerequisites",
+        ]
+
+        prerequisite_args = (
+            mock_run_tool.call_args_list[0].args[1]
+        )
+
+        assert prerequisite_args["course_code"] == "CSCI5521"
+
+        assert len(result["tool_contexts"]) == 1
+        assert "PREREQUISITE RESULT" in result["tool_contexts"][0]
+
+        assert result["answered"] is True
+        assert result["confidence"] == "high"
+        assert result["question_type"] == "course_prerequisite"
