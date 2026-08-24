@@ -479,7 +479,7 @@ def advisor_node(state: AdvisorState) -> AdvisorState:
         "confidence":    "none",
         "question_type": "unknown",
         "successful_tools":   successful_tools,
-        "tool_contexts": [],
+        "tool_contexts": tool_contexts,
         "messages":      conversation,
     }
 
