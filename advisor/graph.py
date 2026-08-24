@@ -204,10 +204,16 @@ def _is_breadth_question(user_message: str) -> bool:
 
 
 def _is_courses_requiring_question(user_message: str) -> bool:
+    text = user_message.lower()
+
     return bool(
         re.search(
             r"\b(which|what)\s+courses?\s+(require|requires|requiring)\b",
-            user_message.lower(),
+            text,
+        )
+        or re.search(
+            r"\b(?:what|which)(?:\s+courses?)?\s+can i take after\b",
+            text,
         )
     )
 

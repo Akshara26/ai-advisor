@@ -13,7 +13,14 @@ from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
 import pytest
-from advisor.graph import parse_email_block, AdvisorMeta, advisor_node, chat, _is_prerequisite_question, _is_deadline_question, _is_course_difficulty_question
+from advisor.graph import _is_courses_requiring_question, parse_email_block, AdvisorMeta, advisor_node, chat, _is_prerequisite_question, _is_deadline_question, _is_course_difficulty_question
+
+class TestCoursesRequiringIntentDetection:
+
+    def test_detects_natural_reverse_prerequisite_wording(self):
+        assert _is_courses_requiring_question(
+            "What can I take after CSCI 5521?"
+        ) is True
 
 class TestCourseDifficultyIntentDetection:
 
