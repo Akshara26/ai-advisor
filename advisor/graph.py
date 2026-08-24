@@ -263,6 +263,7 @@ def advisor_node(state: AdvisorState) -> AdvisorState:
         }
 
     tools_tried = []
+    successful_tools = []
     tool_contexts = []
 
     conversation = [{"role": "system", "content": ADVISOR_SYSTEM_PROMPT}]
@@ -296,8 +297,8 @@ def advisor_node(state: AdvisorState) -> AdvisorState:
             if (
                 is_prerequisite_question
                 and not is_courses_requiring_question
-                and "check_prerequisites" not in tools_tried
-        ):
+                and "check_prerequisites" not in successful_tools
+            ):
                 conversation.append({
                     "role": "user",
                     "content": (
@@ -461,6 +462,7 @@ def advisor_node(state: AdvisorState) -> AdvisorState:
             try:
                 result = run_tool(tool_name, tool_args)
                 tool_contexts.append(result)
+                successful_tools.append(tool_name)
             except Exception as e:
                 result = f"Error running tool: {e}"
 

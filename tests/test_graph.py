@@ -783,7 +783,7 @@ class TestPrerequisiteRoutingIntegration:
             "needs_clarification": False,
             "confidence": "none",
             "question_type": "unknown",
-            "tools_tried": [],
+            "successful_tools": [],
             "drafted_email": "",
             "tool_contexts": [],
             "escalation_office": "",
@@ -908,7 +908,7 @@ class TestPrerequisiteRoutingIntegration:
             "needs_clarification": False,
             "confidence": "none",
             "question_type": "unknown",
-            "tools_tried": [],
+            "successful_tools": [],
             "drafted_email": "",
             "tool_contexts": [],
             "escalation_office": "",
@@ -947,6 +947,176 @@ class TestPrerequisiteRoutingIntegration:
         assert result["answered"] is True
         assert result["confidence"] == "high"
         assert result["question_type"] == "course_prerequisite"
+
+    def test_failed_prerequisite_tool_does_not_satisfy_enforcement(self):
+        prerequisite_call = SimpleNamespace(
+            id="call_prerequisite_1",
+            type="function",
+            function=SimpleNamespace(
+                name="check_prerequisites",
+                arguments='{"course_code":"CSCI5521"}',
+            ),
+        )
+
+        first_response = SimpleNamespace(
+            choices=[
+                SimpleNamespace(
+                    message=SimpleNamespace(
+                        content="",
+                        tool_calls=[prerequisite_call],
+                    )
+                )
+            ]
+        )
+
+        # The first tool call will fail.
+        # The model then incorrectly tries to answer anyway.
+        premature_answer = SimpleNamespace(
+            choices=[
+                SimpleNamespace(
+                    message=SimpleNamespace(
+                        content=(
+                            "CSCI 5521 prerequisites appear to be satisfied."
+                        ),
+                        tool_calls=None,
+                    )
+                )
+            ]
+        )
+
+        retry_prerequisite_call = SimpleNamespace(
+            id="call_prerequisite_2",
+            type="function",
+            function=SimpleNamespace(
+                name="check_prerequisites",
+                arguments='{"course_code":"CSCI5521"}',
+            ),
+        )
+
+        retry_response = SimpleNamespace(
+            choices=[
+                SimpleNamespace(
+                    message=SimpleNamespace(
+                        content="",
+                        tool_calls=[retry_prerequisite_call],
+                    )
+                )
+            ]
+        )
+
+        final_response = SimpleNamespace(
+            choices=[
+                SimpleNamespace(
+                    message=SimpleNamespace(
+                        content=(
+                            "CSCI 5521 prerequisites were successfully "
+                            "verified using the prerequisite tool."
+                        ),
+                        tool_calls=None,
+                    )
+                )
+            ]
+        )
+
+        meta_response = SimpleNamespace(
+            choices=[
+                SimpleNamespace(
+                    message=SimpleNamespace(
+                        parsed=AdvisorMeta(
+                            answered=True,
+                            needs_clarification=False,
+                            confidence="high",
+                            question_type="course_prerequisite",
+                        )
+                    )
+                )
+            ]
+        )
+
+        fake_client = MagicMock()
+
+        fake_client.chat.completions.create.side_effect = [
+            first_response,
+            premature_answer,
+            retry_response,
+            final_response,
+        ]
+
+        fake_client.beta.chat.completions.parse.return_value = (
+            meta_response
+        )
+
+        tool_attempts = 0
+
+        def fake_run_tool(tool_name, tool_args):
+            nonlocal tool_attempts
+
+            assert tool_name == "check_prerequisites"
+            assert tool_args["course_code"] == "CSCI5521"
+
+            tool_attempts += 1
+
+            if tool_attempts == 1:
+                raise RuntimeError(
+                    "Temporary prerequisite lookup failure"
+                )
+
+            return (
+                "PREREQUISITE RESULT: "
+                "CSCI5521 prerequisites successfully checked."
+            )
+
+        initial_state = {
+            "messages": [
+                {
+                    "role": "user",
+                    "content": (
+                        "What are the prerequisites for CSCI 5521?"
+                    ),
+                }
+            ],
+            "answer": "",
+            "answered": False,
+            "needs_clarification": False,
+            "confidence": "none",
+            "question_type": "unknown",
+            "tools_tried": [],
+            "drafted_email": "",
+            "tool_contexts": [],
+            "escalation_office": "",
+        }
+
+        with patch("advisor.graph.client", fake_client), \
+            patch(
+                "advisor.graph.run_tool",
+                side_effect=fake_run_tool,
+            ) as mock_run_tool, \
+            patch(
+                "advisor.graph.check_hard_escalation",
+                return_value=None,
+            ):
+
+            result = advisor_node(initial_state)
+
+        called_tools = [
+            call.args[0]
+            for call in mock_run_tool.call_args_list
+        ]
+
+        # A failed prerequisite lookup must be retried.
+        assert called_tools == [
+            "check_prerequisites",
+            "check_prerequisites",
+        ]
+
+        # Only the successful result should become trusted context.
+        assert len(result["tool_contexts"]) == 1
+        assert (
+            "successfully checked"
+            in result["tool_contexts"][0]
+        )
+
+        assert "successfully verified" in result["answer"]
 
 class TestDeadlineRoutingIntegration:
 
