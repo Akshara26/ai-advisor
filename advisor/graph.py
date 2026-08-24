@@ -145,10 +145,21 @@ def normalize_content(msg) -> str:
     return msg.get("content", "")
 
 def _is_prerequisite_question(user_message: str) -> bool:
+    text = user_message.lower()
+
     return bool(
         re.search(
             r"\bprereq(?:uisite)?s?\b",
-            user_message.lower(),
+            text,
+        )
+        or re.search(
+            r"\bneed to take before\b",
+            text,
+        )
+        or re.search(
+            r"\bcan i take\b.+\bif i\b.+\b"
+            r"(?:haven't|have not)\s+taken\b",
+            text,
         )
     )
 

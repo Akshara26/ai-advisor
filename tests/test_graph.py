@@ -13,7 +13,24 @@ from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
 import pytest
-from advisor.graph import parse_email_block, AdvisorMeta, advisor_node, chat
+from advisor.graph import parse_email_block, AdvisorMeta, advisor_node, chat, _is_prerequisite_question
+
+class TestPrerequisiteIntentDetection:
+
+    def test_detects_natural_prerequisite_wording(self):
+        assert _is_prerequisite_question(
+            "What do I need to take before CSCI 5521?"
+        ) is True
+
+    def test_detects_need_to_take_before_wording(self):
+        assert _is_prerequisite_question(
+            "What do I need to take before CSCI 5521?"
+        ) is True
+
+    def test_detects_conditional_prerequisite_wording(self):
+        assert _is_prerequisite_question(
+            "Can I take CSCI 5521 if I haven't taken CSCI 4041?"
+        ) is True
 
 class TestAdvisorMeta:
 
