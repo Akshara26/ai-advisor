@@ -1470,3 +1470,292 @@ class TestCourseDifficultyRoutingIntegration:
         assert result["answered"] is True
         assert result["confidence"] == "high"
         assert result["question_type"] == "course_difficulty"
+
+class TestBreadthEligibilityRoutingIntegration:
+
+    def test_breadth_eligibility_cannot_rely_on_handbook_alone(self):
+        handbook_call = SimpleNamespace(
+            id="call_handbook",
+            type="function",
+            function=SimpleNamespace(
+                name="search_handbook",
+                arguments='{"query":"CSCI 5527 breadth eligibility MS"}',
+            ),
+        )
+
+        first_response = SimpleNamespace(
+            choices=[
+                SimpleNamespace(
+                    message=SimpleNamespace(
+                        content="",
+                        tool_calls=[handbook_call],
+                    )
+                )
+            ]
+        )
+
+        premature_answer = SimpleNamespace(
+            choices=[
+                SimpleNamespace(
+                    message=SimpleNamespace(
+                        content=(
+                            "CSCI 5527 appears to count toward breadth."
+                        ),
+                        tool_calls=None,
+                    )
+                )
+            ]
+        )
+
+        breadth_call = SimpleNamespace(
+            id="call_breadth",
+            type="function",
+            function=SimpleNamespace(
+                name="check_breadth_eligibility",
+                arguments=(
+                    '{"course_code":"CSCI5527","program":"ms"}'
+                ),
+            ),
+        )
+
+        breadth_response = SimpleNamespace(
+            choices=[
+                SimpleNamespace(
+                    message=SimpleNamespace(
+                        content="",
+                        tool_calls=[breadth_call],
+                    )
+                )
+            ]
+        )
+
+        final_response = SimpleNamespace(
+            choices=[
+                SimpleNamespace(
+                    message=SimpleNamespace(
+                        content=(
+                            "CSCI 5527 was checked using the "
+                            "breadth eligibility tool."
+                        ),
+                        tool_calls=None,
+                    )
+                )
+            ]
+        )
+
+        meta_response = SimpleNamespace(
+            choices=[
+                SimpleNamespace(
+                    message=SimpleNamespace(
+                        parsed=AdvisorMeta(
+                            answered=True,
+                            needs_clarification=False,
+                            confidence="high",
+                            question_type="policy",
+                        )
+                    )
+                )
+            ]
+        )
+
+        fake_client = MagicMock()
+
+        fake_client.chat.completions.create.side_effect = [
+            first_response,
+            premature_answer,
+            breadth_response,
+            final_response,
+        ]
+
+        fake_client.beta.chat.completions.parse.return_value = (
+            meta_response
+        )
+
+        def fake_run_tool(tool_name, tool_args):
+            if tool_name == "search_handbook":
+                return (
+                    "HANDBOOK RESULT: General breadth information."
+                )
+
+            if tool_name == "check_breadth_eligibility":
+                return (
+                    "BREADTH RESULT: CSCI5527 is listed in an "
+                    "approved MS breadth category."
+                )
+
+            raise AssertionError(
+                f"Unexpected tool called: {tool_name}"
+            )
+
+        initial_state = {
+            "messages": [
+                {
+                    "role": "user",
+                    "content": (
+                        "Does CSCI 5527 count for breadth "
+                        "in the MS program?"
+                    ),
+                }
+            ],
+            "answer": "",
+            "answered": False,
+            "needs_clarification": False,
+            "confidence": "none",
+            "question_type": "unknown",
+            "tools_tried": [],
+            "drafted_email": "",
+            "tool_contexts": [],
+            "escalation_office": "",
+        }
+
+        with patch("advisor.graph.client", fake_client), \
+             patch(
+                 "advisor.graph.run_tool",
+                 side_effect=fake_run_tool,
+             ) as mock_run_tool, \
+             patch(
+                 "advisor.graph.check_hard_escalation",
+                 return_value=None,
+             ):
+
+            advisor_node(initial_state)
+
+        called_tools = [
+            call.args[0]
+            for call in mock_run_tool.call_args_list
+        ]
+
+        assert called_tools == [
+            "search_handbook",
+            "check_breadth_eligibility",
+        ]
+
+    def test_breadth_eligibility_uses_breadth_tool_directly(self):
+        breadth_call = SimpleNamespace(
+            id="call_breadth",
+            type="function",
+            function=SimpleNamespace(
+                name="check_breadth_eligibility",
+                arguments=(
+                    '{"course_code":"CSCI5527","program":"ms"}'
+                ),
+            ),
+        )
+
+        first_response = SimpleNamespace(
+            choices=[
+                SimpleNamespace(
+                    message=SimpleNamespace(
+                        content="",
+                        tool_calls=[breadth_call],
+                    )
+                )
+            ]
+        )
+
+        final_response = SimpleNamespace(
+            choices=[
+                SimpleNamespace(
+                    message=SimpleNamespace(
+                        content=(
+                            "CSCI 5527 was checked using the "
+                            "breadth eligibility tool."
+                        ),
+                        tool_calls=None,
+                    )
+                )
+            ]
+        )
+
+        meta_response = SimpleNamespace(
+            choices=[
+                SimpleNamespace(
+                    message=SimpleNamespace(
+                        parsed=AdvisorMeta(
+                            answered=True,
+                            needs_clarification=False,
+                            confidence="high",
+                            question_type="policy",
+                        )
+                    )
+                )
+            ]
+        )
+
+        fake_client = MagicMock()
+
+        fake_client.chat.completions.create.side_effect = [
+            first_response,
+            final_response,
+        ]
+
+        fake_client.beta.chat.completions.parse.return_value = (
+            meta_response
+        )
+
+        def fake_run_tool(tool_name, tool_args):
+            if tool_name == "check_breadth_eligibility":
+                return (
+                    "BREADTH RESULT: CSCI5527 is listed in an "
+                    "approved MS breadth category."
+                )
+
+            raise AssertionError(
+                f"Unexpected tool called: {tool_name}"
+            )
+
+        initial_state = {
+            "messages": [
+                {
+                    "role": "user",
+                    "content": (
+                        "Does CSCI 5527 count for breadth "
+                        "in the MS program?"
+                    ),
+                }
+            ],
+            "answer": "",
+            "answered": False,
+            "needs_clarification": False,
+            "confidence": "none",
+            "question_type": "unknown",
+            "tools_tried": [],
+            "drafted_email": "",
+            "tool_contexts": [],
+            "escalation_office": "",
+        }
+
+        with patch("advisor.graph.client", fake_client), \
+            patch(
+                "advisor.graph.run_tool",
+                side_effect=fake_run_tool,
+            ) as mock_run_tool, \
+            patch(
+                "advisor.graph.check_hard_escalation",
+                return_value=None,
+            ):
+
+            result = advisor_node(initial_state)
+
+        called_tools = [
+            call.args[0]
+            for call in mock_run_tool.call_args_list
+        ]
+
+        assert called_tools == [
+            "check_breadth_eligibility",
+        ]
+
+        breadth_args = (
+            mock_run_tool.call_args_list[0].args[1]
+        )
+
+        assert breadth_args["course_code"] == "CSCI5527"
+        assert breadth_args["program"] == "ms"
+
+        assert len(result["tool_contexts"]) == 1
+        assert "BREADTH RESULT" in result["tool_contexts"][0]
+
+        assert result["answered"] is True
+        assert result["confidence"] == "high"
+        assert result["question_type"] == "policy"

@@ -176,6 +176,13 @@ def advisor_node(state: AdvisorState) -> AdvisorState:
         )
     )
 
+    is_breadth_question = bool(
+        re.search(
+            r"\bbreadth\b",
+            user_message.lower(),
+        )
+    )
+
     escalation = check_hard_escalation(user_message)
     if escalation:
         msg = escalation.get("message_template", "Please contact the appropriate office.")
@@ -277,6 +284,23 @@ def advisor_node(state: AdvisorState) -> AdvisorState:
                     )
                 })
                 continue  # re-enter the for loop, LLM will see the injected message
+
+            # ── Hard enforcement: breadth questions must use eligibility tool ──
+            if (
+                is_breadth_question
+                and "check_breadth_eligibility" not in tools_tried
+            ):
+                conversation.append({
+                    "role": "user",
+                    "content": (
+                        "[System: The student is asking whether a course counts "
+                        "toward a breadth requirement. "
+                        "You MUST call check_breadth_eligibility for the relevant "
+                        "course and program before writing your response. "
+                        "Do not rely on search_handbook alone.]"
+                    )
+                })
+                continue
 
             answer_text = message.content or ""
             non_system = [m for m in messages if normalize_role(m) != "system"]
