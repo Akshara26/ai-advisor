@@ -180,10 +180,16 @@ def _is_deadline_question(user_message: str) -> bool:
 
 
 def _is_course_difficulty_question(user_message: str) -> bool:
+    text = user_message.lower()
+
     return bool(
         re.search(
             r"\b(hard|difficult|difficulty|workload|manageable|challenging)\b",
-            user_message.lower(),
+            text,
+        )
+        or re.search(
+            r"\ba lot of work\b",
+            text,
         )
     )
 

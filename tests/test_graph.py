@@ -13,7 +13,14 @@ from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
 import pytest
-from advisor.graph import parse_email_block, AdvisorMeta, advisor_node, chat, _is_prerequisite_question, _is_deadline_question
+from advisor.graph import parse_email_block, AdvisorMeta, advisor_node, chat, _is_prerequisite_question, _is_deadline_question, _is_course_difficulty_question
+
+class TestCourseDifficultyIntentDetection:
+
+    def test_detects_natural_course_difficulty_wording(self):
+        assert _is_course_difficulty_question(
+            "Is CSCI 5521 a lot of work?"
+        ) is True
 
 class TestPrerequisiteIntentDetection:
 
