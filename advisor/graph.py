@@ -144,6 +144,50 @@ def normalize_content(msg) -> str:
         return msg.content or ""
     return msg.get("content", "")
 
+def _is_prerequisite_question(user_message: str) -> bool:
+    return bool(
+        re.search(
+            r"\bprereq(?:uisite)?s?\b",
+            user_message.lower(),
+        )
+    )
+
+
+def _is_deadline_question(user_message: str) -> bool:
+    return bool(
+        re.search(
+            r"\b(deadline|due date|last day)\b",
+            user_message.lower(),
+        )
+    )
+
+
+def _is_course_difficulty_question(user_message: str) -> bool:
+    return bool(
+        re.search(
+            r"\b(hard|difficult|difficulty|workload|manageable|challenging)\b",
+            user_message.lower(),
+        )
+    )
+
+
+def _is_breadth_question(user_message: str) -> bool:
+    return bool(
+        re.search(
+            r"\bbreadth\b",
+            user_message.lower(),
+        )
+    )
+
+
+def _is_courses_requiring_question(user_message: str) -> bool:
+    return bool(
+        re.search(
+            r"\b(which|what)\s+courses?\s+(require|requires|requiring)\b",
+            user_message.lower(),
+        )
+    )
+
 
 # ── Advisor node ──────────────────────────────────────────────────────────────
 def advisor_node(state: AdvisorState) -> AdvisorState:
@@ -155,40 +199,15 @@ def advisor_node(state: AdvisorState) -> AdvisorState:
         ""
     )
 
-    is_prerequisite_question = bool(
-        re.search(
-            r"\bprereq(?:uisite)?s?\b",
-            user_message.lower(),
-        )
-    )
+    is_prerequisite_question = _is_prerequisite_question(user_message)
 
-    is_deadline_question = bool(
-        re.search(
-            r"\b(deadline|due date|last day)\b",
-            user_message.lower(),
-        )
-    )
+    is_deadline_question = _is_deadline_question(user_message)
 
-    is_course_difficulty_question = bool(
-        re.search(
-            r"\b(hard|difficult|difficulty|workload|manageable|challenging)\b",
-            user_message.lower(),
-        )
-    )
+    is_course_difficulty_question = (_is_course_difficulty_question(user_message))
 
-    is_breadth_question = bool(
-        re.search(
-            r"\bbreadth\b",
-            user_message.lower(),
-        )
-    )
+    is_breadth_question = _is_breadth_question(user_message)
 
-    is_courses_requiring_question = bool(
-        re.search(
-            r"\b(which|what)\s+courses?\s+(require|requires|requiring)\b",
-            user_message.lower(),
-        )
-    )
+    is_courses_requiring_question = (_is_courses_requiring_question(user_message))
 
     escalation = check_hard_escalation(user_message)
     if escalation:
