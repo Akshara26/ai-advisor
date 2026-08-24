@@ -162,6 +162,13 @@ def advisor_node(state: AdvisorState) -> AdvisorState:
         )
     )
 
+    is_deadline_question = bool(
+        re.search(
+            r"\b(deadline|due date|last day)\b",
+            user_message.lower(),
+        )
+    )
+
     escalation = check_hard_escalation(user_message)
     if escalation:
         msg = escalation.get("message_template", "Please contact the appropriate office.")
@@ -226,6 +233,22 @@ def advisor_node(state: AdvisorState) -> AdvisorState:
                     "content": (
                         "[System: The student is asking about course prerequisites. "
                         "You MUST call check_prerequisites for the relevant course "
+                        "before writing your response. "
+                        "Do not rely on search_handbook alone.]"
+                    )
+                })
+                continue  # re-enter the for loop, LLM will see the injected message
+
+            # ── Hard enforcement: deadline questions must use get_deadline ──
+            if (
+                is_deadline_question
+                and "get_deadline" not in tools_tried
+            ):
+                conversation.append({
+                    "role": "user",
+                    "content": (
+                        "[System: The student is asking about a deadline. "
+                        "You MUST call get_deadline for the relevant process "
                         "before writing your response. "
                         "Do not rely on search_handbook alone.]"
                     )

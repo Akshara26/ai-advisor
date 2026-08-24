@@ -909,3 +909,290 @@ class TestPrerequisiteRoutingIntegration:
         assert result["answered"] is True
         assert result["confidence"] == "high"
         assert result["question_type"] == "course_prerequisite"
+
+class TestDeadlineRoutingIntegration:
+
+    def test_deadline_question_cannot_rely_on_handbook_alone(self):
+        handbook_call = SimpleNamespace(
+            id="call_handbook",
+            type="function",
+            function=SimpleNamespace(
+                name="search_handbook",
+                arguments='{"query":"graduation application deadline"}',
+            ),
+        )
+
+        first_response = SimpleNamespace(
+            choices=[
+                SimpleNamespace(
+                    message=SimpleNamespace(
+                        content="",
+                        tool_calls=[handbook_call],
+                    )
+                )
+            ]
+        )
+
+        premature_answer = SimpleNamespace(
+            choices=[
+                SimpleNamespace(
+                    message=SimpleNamespace(
+                        content=(
+                            "The graduation deadline is listed in "
+                            "the university calendar."
+                        ),
+                        tool_calls=None,
+                    )
+                )
+            ]
+        )
+
+        deadline_call = SimpleNamespace(
+            id="call_deadline",
+            type="function",
+            function=SimpleNamespace(
+                name="get_deadline",
+                arguments=(
+                    '{"process_name":"graduation_application"}'
+                ),
+            ),
+        )
+
+        deadline_response = SimpleNamespace(
+            choices=[
+                SimpleNamespace(
+                    message=SimpleNamespace(
+                        content="",
+                        tool_calls=[deadline_call],
+                    )
+                )
+            ]
+        )
+
+        final_response = SimpleNamespace(
+            choices=[
+                SimpleNamespace(
+                    message=SimpleNamespace(
+                        content=(
+                            "The deadline tool confirms the "
+                            "graduation application timing."
+                        ),
+                        tool_calls=None,
+                    )
+                )
+            ]
+        )
+
+        meta_response = SimpleNamespace(
+            choices=[
+                SimpleNamespace(
+                    message=SimpleNamespace(
+                        parsed=AdvisorMeta(
+                            answered=True,
+                            needs_clarification=False,
+                            confidence="high",
+                            question_type="deadline",
+                        )
+                    )
+                )
+            ]
+        )
+
+        fake_client = MagicMock()
+
+        fake_client.chat.completions.create.side_effect = [
+            first_response,
+            premature_answer,
+            deadline_response,
+            final_response,
+        ]
+
+        fake_client.beta.chat.completions.parse.return_value = (
+            meta_response
+        )
+
+        def fake_run_tool(tool_name, tool_args):
+            if tool_name == "search_handbook":
+                return "HANDBOOK RESULT: General graduation information."
+
+            if tool_name == "get_deadline":
+                return (
+                    "DEADLINE RESULT: "
+                    "Graduation application timing found."
+                )
+
+            raise AssertionError(
+                f"Unexpected tool called: {tool_name}"
+            )
+
+        initial_state = {
+            "messages": [
+                {
+                    "role": "user",
+                    "content": (
+                        "What is the graduation application deadline?"
+                    ),
+                }
+            ],
+            "answer": "",
+            "answered": False,
+            "needs_clarification": False,
+            "confidence": "none",
+            "question_type": "unknown",
+            "tools_tried": [],
+            "drafted_email": "",
+            "tool_contexts": [],
+            "escalation_office": "",
+        }
+
+        with patch("advisor.graph.client", fake_client), \
+             patch(
+                 "advisor.graph.run_tool",
+                 side_effect=fake_run_tool,
+             ) as mock_run_tool, \
+             patch(
+                 "advisor.graph.check_hard_escalation",
+                 return_value=None,
+             ):
+
+            advisor_node(initial_state)
+
+        called_tools = [
+            call.args[0]
+            for call in mock_run_tool.call_args_list
+        ]
+
+        assert called_tools == [
+            "search_handbook",
+            "get_deadline",
+        ]
+
+
+        def test_deadline_question_uses_deadline_tool_directly(self):
+            deadline_call = SimpleNamespace(
+                id="call_deadline",
+                type="function",
+                function=SimpleNamespace(
+                    name="get_deadline",
+                    arguments='{"process_name":"graduation_application"}',
+                ),
+            )
+
+            first_response = SimpleNamespace(
+                choices=[
+                    SimpleNamespace(
+                        message=SimpleNamespace(
+                            content="",
+                            tool_calls=[deadline_call],
+                        )
+                    )
+                ]
+            )
+
+            final_response = SimpleNamespace(
+                choices=[
+                    SimpleNamespace(
+                        message=SimpleNamespace(
+                            content=(
+                                "The graduation application timing was "
+                                "checked using the deadline tool."
+                            ),
+                            tool_calls=None,
+                        )
+                    )
+                ]
+            )
+
+            meta_response = SimpleNamespace(
+                choices=[
+                    SimpleNamespace(
+                        message=SimpleNamespace(
+                            parsed=AdvisorMeta(
+                                answered=True,
+                                needs_clarification=False,
+                                confidence="high",
+                                question_type="deadline",
+                            )
+                        )
+                    )
+                ]
+            )
+
+            fake_client = MagicMock()
+
+            fake_client.chat.completions.create.side_effect = [
+                first_response,
+                final_response,
+            ]
+
+            fake_client.beta.chat.completions.parse.return_value = (
+                meta_response
+            )
+
+            def fake_run_tool(tool_name, tool_args):
+                if tool_name == "get_deadline":
+                    return (
+                        "DEADLINE RESULT: "
+                        "Graduation application timing found."
+                    )
+
+                raise AssertionError(
+                    f"Unexpected tool called: {tool_name}"
+                )
+
+            initial_state = {
+                "messages": [
+                    {
+                        "role": "user",
+                        "content": (
+                            "What is the graduation application deadline?"
+                        ),
+                    }
+                ],
+                "answer": "",
+                "answered": False,
+                "needs_clarification": False,
+                "confidence": "none",
+                "question_type": "unknown",
+                "tools_tried": [],
+                "drafted_email": "",
+                "tool_contexts": [],
+                "escalation_office": "",
+            }
+
+            with patch("advisor.graph.client", fake_client), \
+                patch(
+                    "advisor.graph.run_tool",
+                    side_effect=fake_run_tool,
+                ) as mock_run_tool, \
+                patch(
+                    "advisor.graph.check_hard_escalation",
+                    return_value=None,
+                ):
+
+                result = advisor_node(initial_state)
+
+            called_tools = [
+                call.args[0]
+                for call in mock_run_tool.call_args_list
+            ]
+
+            assert called_tools == [
+                "get_deadline",
+            ]
+
+            deadline_args = (
+                mock_run_tool.call_args_list[0].args[1]
+            )
+
+            assert (
+                deadline_args["process_name"]
+                == "graduation_application"
+            )
+
+            assert len(result["tool_contexts"]) == 1
+            assert "DEADLINE RESULT" in result["tool_contexts"][0]
+
+            assert result["answered"] is True
+            assert result["confidence"] == "high"
+            assert result["question_type"] == "deadline"
