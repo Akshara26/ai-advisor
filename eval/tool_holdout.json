@@ -1,0 +1,85 @@
+[
+  {
+    "id": "H001",
+    "user_question": "I'm M.S. Plan C. I completed CSCI 5511, CSCI 5421, CSCI 5751, CSCI 8970, CSCI 5527, and four 3-credit STAT graduate courses. The STAT courses haven't been approved yet. Am I finished with the degree?",
+    "required_tool": "degree_audit",
+    "expected_program": "ms",
+    "expected_plan": "C",
+    "required_answer_terms": [
+      "STAT"
+    ],
+    "required_answer_any_groups": [
+      [
+        "approval",
+        "approved",
+        "verification",
+        "verified",
+        "applicability"
+      ]
+    ]
+  },
+  {
+    "id": "H002",
+    "user_question": "I'm M.S. Plan B. I have enough credits overall, but only 13 credits are CSCI courses. Can I graduate?",
+    "required_tool": "degree_audit",
+    "expected_program": "ms",
+    "expected_plan": "B",
+    "required_answer_terms": [
+      "CSCI"
+    ]
+  },
+  {
+    "id": "H003",
+    "user_question": "I'm M.S. Plan A and have 10 coursework credits plus thesis credits that bring me above the total degree credit requirement. Does that satisfy the required CSCI coursework minimum?",
+    "evaluation_track": "rag"
+  },
+  {
+    "id": "H004",
+    "user_question": "I'm M.S. Plan C. I took CSCI 4041, CSCI 5511, CSCI 5421, CSCI 5751, CSCI 5527, and CSCI 8970. Does CSCI 4041 help satisfy my graduate degree requirements?",
+    "required_tool": "degree_audit",
+    "expected_program": "ms",
+    "expected_plan": "C",
+    "required_answer_terms": [
+      "CSCI 4041"
+    ],
+    "required_answer_any_groups": [
+      [
+        "does not count",
+        "doesn't count",
+        "excluded",
+        "not count"
+      ]
+    ]
+  },
+  {
+    "id": "H005",
+    "user_question": "I'm pursuing the Ph.D. I completed CSCI 5511, CSCI 5421, CSCI 5751, and CSCI 8970. What requirements am I still missing?",
+    "required_tool": "degree_audit",
+    "expected_program": "phd"
+  },
+  {
+    "id": "H006",
+    "user_question": "I'm M.S. Plan C. I have CSCI 5511, CSCI 5421, CSCI 5751, CSCI 5527, CSCI 8970, an approved 3-credit EE graduate course, and another 3-credit EE course whose approval is still pending. Am I done?",
+    "required_tool": "degree_audit",
+    "expected_program": "ms",
+    "expected_plan": "C",
+    "required_answer_any_groups": [
+      [
+        "pending",
+        "approval",
+        "verification",
+        "applicability"
+      ]
+    ]
+  },
+  {
+    "id": "H007",
+    "user_question": "I'm M.S. Plan C and have completed CSCI 5421. What are the overall Plan C degree requirements?",
+    "evaluation_track": "rag"
+  },
+  {
+    "id": "H008",
+    "user_question": "I'm M.S. Plan C. My coursework satisfies the credit, breadth, colloquium, and advanced-course requirements. I haven't completed the Plan C project yet. Am I ready to graduate?",
+    "evaluation_track": "rag"
+  }
+]

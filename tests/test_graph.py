@@ -285,6 +285,183 @@ class TestDegreeAuditGraphIntegration:
         # assert result["messages"][0]["role"] == "user"
         # assert result["messages"][1]["role"] == "assistant"
 
+    def test_degree_audit_preserves_non_csci_metadata_in_tool_arguments(self):
+        degree_audit_call = SimpleNamespace(
+            id="call_degree_audit_metadata",
+            type="function",
+            function=SimpleNamespace(
+                name="degree_audit",
+                arguments=(
+                    '{'
+                    '"completed_courses":['
+                    '"CSCI5521",'
+                    '{"code":"STAT5302","credits":3,"degree_approved":true}'
+                    '],'
+                    '"program":"ms",'
+                    '"plan":"C",'
+                    '"non_csci_credit_summary":{'
+                    '"approved":3,'
+                    '"pending_approval":3'
+                    '}'
+                    '}'
+                ),
+            ),
+        )
+
+        first_response = SimpleNamespace(
+            choices=[
+                SimpleNamespace(
+                    message=SimpleNamespace(
+                        content="",
+                        tool_calls=[degree_audit_call],
+                    )
+                )
+            ]
+        )
+
+        # degree_audit must still be followed by handbook retrieval.
+        premature_answer = SimpleNamespace(
+            choices=[
+                SimpleNamespace(
+                    message=SimpleNamespace(
+                        content="Audit complete.",
+                        tool_calls=None,
+                    )
+                )
+            ]
+        )
+
+        handbook_call = SimpleNamespace(
+            id="call_handbook_metadata",
+            type="function",
+            function=SimpleNamespace(
+                name="search_handbook",
+                arguments='{"query":"MS Plan C degree requirements"}',
+            ),
+        )
+
+        handbook_response = SimpleNamespace(
+            choices=[
+                SimpleNamespace(
+                    message=SimpleNamespace(
+                        content="",
+                        tool_calls=[handbook_call],
+                    )
+                )
+            ]
+        )
+
+        final_response = SimpleNamespace(
+            choices=[
+                SimpleNamespace(
+                    message=SimpleNamespace(
+                        content=(
+                            "Your approved non-CSCI credits can contribute "
+                            "toward the degree total, while the remaining "
+                            "non-CSCI credits are pending approval."
+                        ),
+                        tool_calls=None,
+                    )
+                )
+            ]
+        )
+
+        meta_response = SimpleNamespace(
+            choices=[
+                SimpleNamespace(
+                    message=SimpleNamespace(
+                        parsed=AdvisorMeta(
+                            answered=True,
+                            needs_clarification=False,
+                            confidence="high",
+                            question_type="degree_audit",
+                        )
+                    )
+                )
+            ]
+        )
+
+        fake_client = MagicMock()
+
+        fake_client.chat.completions.create.side_effect = [
+            first_response,
+            premature_answer,
+            handbook_response,
+            final_response,
+        ]
+
+        fake_client.beta.chat.completions.parse.return_value = (
+            meta_response
+        )
+
+        def fake_run_tool(tool_name, tool_args):
+            if tool_name == "degree_audit":
+                return "DEGREE AUDIT RESULT"
+
+            if tool_name == "search_handbook":
+                return "HANDBOOK RESULT"
+
+            raise AssertionError(
+                f"Unexpected tool called: {tool_name}"
+            )
+
+        with patch("advisor.graph.client", fake_client), \
+            patch(
+                "advisor.graph.run_tool",
+                side_effect=fake_run_tool,
+            ) as mock_run_tool, \
+            patch(
+                "advisor.graph.check_hard_escalation",
+                return_value=None,
+            ):
+
+            initial_state = {
+                "messages": [
+                    {
+                        "role": "user",
+                        "content": (
+                            "I'm an M.S. Plan C student. "
+                            "STAT 5302 is 3 credits and approved "
+                            "toward my degree. I also have 3 approved "
+                            "non-CSCI credits and 3 more non-CSCI "
+                            "credits pending approval. Run my degree audit."
+                        ),
+                    }
+                ],
+                "answer": "",
+                "answered": False,
+                "needs_clarification": False,
+                "confidence": "none",
+                "question_type": "unknown",
+                "tools_tried": [],
+                "drafted_email": "",
+                "tool_contexts": [],
+                "escalation_office": "",
+            }
+
+            advisor_node(initial_state)
+
+        degree_audit_args = (
+            mock_run_tool.call_args_list[0].args[1]
+        )
+
+        assert degree_audit_args["completed_courses"] == [
+            "CSCI5521",
+            {
+                "code": "STAT5302",
+                "credits": 3,
+                "degree_approved": True,
+            },
+        ]
+
+        assert degree_audit_args["non_csci_credit_summary"] == {
+            "approved": 3,
+            "pending_approval": 3,
+        }
+
+        assert degree_audit_args["program"] == "ms"
+        assert degree_audit_args["plan"] == "C"
+
 
 class TestDegreeAuditSynthesisGuards:
 
@@ -679,6 +856,182 @@ class TestDegreeAuditSynthesisGuards:
 
         assert calls[5].kwargs["tool_choice"] == "none"
         assert calls[6].kwargs["tool_choice"] == "none"
+
+
+    def test_degree_audit_preserves_pending_non_csci_credits_in_final_answer(self):
+        degree_call = SimpleNamespace(
+            id="call_degree_pending_non_csci",
+            type="function",
+            function=SimpleNamespace(
+                name="degree_audit",
+                arguments=json.dumps({
+                    "completed_courses": [
+                        "CSCI5511",
+                        "CSCI5421",
+                        "CSCI5751",
+                        "CSCI5527",
+                        "CSCI8970",
+                    ],
+                    "program": "ms",
+                    "plan": "C",
+                    "non_csci_credit_summary": {
+                        "approved": 3,
+                        "pending_approval": 3,
+                    },
+                }),
+            ),
+        )
+
+        handbook_call = SimpleNamespace(
+            id="call_handbook_pending_non_csci",
+            type="function",
+            function=SimpleNamespace(
+                name="search_handbook",
+                arguments=json.dumps({
+                    "query": "MS Plan C degree requirements",
+                }),
+            ),
+        )
+
+        degree_response = SimpleNamespace(
+            choices=[
+                SimpleNamespace(
+                    message=SimpleNamespace(
+                        content="",
+                        tool_calls=[degree_call],
+                    )
+                )
+            ]
+        )
+
+        handbook_response = SimpleNamespace(
+            choices=[
+                SimpleNamespace(
+                    message=SimpleNamespace(
+                        content="",
+                        tool_calls=[handbook_call],
+                    )
+                )
+            ]
+        )
+
+        # This is the live failure we just observed:
+        # approved non-CSCI credits are preserved,
+        # but pending credits disappear.
+        bad_final_response = SimpleNamespace(
+            choices=[
+                SimpleNamespace(
+                    message=SimpleNamespace(
+                        content=(
+                            "You have 16/31 confirmed degree credits, "
+                            "including 3 approved non-CSCI credits. "
+                            "You therefore need 15 more degree credits."
+                        ),
+                        tool_calls=None,
+                    )
+                )
+            ]
+        )
+
+        corrected_final_response = SimpleNamespace(
+            choices=[
+                SimpleNamespace(
+                    message=SimpleNamespace(
+                        content=(
+                            "You have 16/31 confirmed degree credits, "
+                            "including 3 approved non-CSCI credits. "
+                            "You also have 3 non-CSCI credits pending "
+                            "degree-applicability approval, so those "
+                            "credits are not yet included in the "
+                            "confirmed total."
+                        ),
+                        tool_calls=None,
+                    )
+                )
+            ]
+        )
+
+        meta_response = SimpleNamespace(
+            choices=[
+                SimpleNamespace(
+                    message=SimpleNamespace(
+                        parsed=AdvisorMeta(
+                            answered=True,
+                            needs_clarification=False,
+                            confidence="high",
+                            question_type="degree_audit",
+                        )
+                    )
+                )
+            ]
+        )
+
+        fake_client = MagicMock()
+
+        fake_client.chat.completions.create.side_effect = [
+            degree_response,
+            handbook_response,
+            bad_final_response,
+            corrected_final_response,
+        ]
+
+        fake_client.beta.chat.completions.parse.return_value = (
+            meta_response
+        )
+
+        def fake_run_tool(tool_name, tool_args):
+            if tool_name == "degree_audit":
+                return (
+                    "Confirmed degree credits: 16/31 required\n"
+                    "Approved non-CSCI credits counted: 3\n"
+                    "Non-CSCI credits pending "
+                    "degree-applicability approval: 3"
+                )
+
+            if tool_name == "search_handbook":
+                return "HANDBOOK RESULT"
+
+            raise AssertionError(
+                f"Unexpected tool called: {tool_name}"
+            )
+
+        with patch("advisor.graph.client", fake_client), \
+            patch(
+                "advisor.graph.run_tool",
+                side_effect=fake_run_tool,
+            ), \
+            patch(
+                "advisor.graph.check_hard_escalation",
+                return_value=None,
+            ):
+
+            initial_state = {
+                "messages": [
+                    {
+                        "role": "user",
+                        "content": (
+                            "I'm an M.S. Plan C student. "
+                            "I have 3 approved non-CSCI credits "
+                            "and another 3 non-CSCI credits "
+                            "pending approval. Am I done?"
+                        ),
+                    }
+                ],
+                "answer": "",
+                "answered": False,
+                "needs_clarification": False,
+                "confidence": "none",
+                "question_type": "unknown",
+                "tools_tried": [],
+                "drafted_email": "",
+                "tool_contexts": [],
+                "escalation_office": "",
+            }
+
+            result = advisor_node(initial_state)
+
+        assert "pending" in result["answer"].lower()
+        assert "3" in result["answer"]
 
 # ── parse_state_block: valid input ────────────────────────────────────────────
 

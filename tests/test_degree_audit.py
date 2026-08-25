@@ -694,6 +694,36 @@ class TestCreditCounting:
         in result
     )
 
+    def test_ms_audit_accepts_aggregate_non_csci_credit_summary(self):
+        result = degree_audit(
+            completed_courses=[
+                "CSCI5521",
+                "CSCI5421",
+                "CSCI5801",
+                "CSCI8970",
+            ],
+            program="ms",
+            plan="C",
+            non_csci_credit_summary={
+                "approved": 3,
+                "pending_approval": 3,
+            },
+        )
+
+        # The mocked fixture gives these CSCI courses 10 confirmed credits.
+        # Adding 3 approved non-CSCI credits should produce 13 confirmed total.
+        assert "Confirmed degree credits: 13/31 required" in result
+        assert "Approved non-CSCI credits counted: 3" in result
+
+        # Pending credits must remain visible but unconfirmed.
+        assert (
+            "Non-CSCI credits pending degree-applicability approval: 3"
+            in result
+        )
+
+        # The pending 3 credits must not be counted as confirmed.
+        assert "Confirmed degree credits: 16/31 required" not in result
+
 # class TestErrorHandling:
 
 #     def test_unknown_program_returns_error_message(self):

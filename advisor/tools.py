@@ -241,8 +241,80 @@ tools = [
                 "properties": {
                     "completed_courses": {
                         "type": "array",
-                        "items": {"type": "string"},
-                        "description": "List of completed course codes e.g. ['CSCI5521', 'CSCI8970']"
+                        "items": {
+                            "anyOf": [
+                                {
+                                    "type": "string"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "code": {
+                                            "type": "string",
+                                            "description": "Course code, e.g. CSCI5521 or STAT5302",
+                                        },
+                                        "credits": {
+                                            "type": "number",
+                                            "minimum": 0,
+                                            "description": "Actual completed credit value when known.",
+                                        },
+                                        "degree_approved": {
+                                            "type": "boolean",
+                                            "description": (
+                                                "For non-CSCI coursework, whether the student "
+                                                "explicitly says the course is approved to count "
+                                                "toward the degree."
+                                            ),
+                                        },
+                                        "phd_credit_type": {
+                                            "type": "string",
+                                            "enum": ["supporting", "minor"],
+                                            "description": (
+                                                "For Ph.D. non-CSCI coursework, classify the "
+                                                "credit as supporting-program or minor coursework "
+                                                "only when explicitly known."
+                                            ),
+                                        },
+                                    },
+                                    "required": ["code"],
+                                },
+                            ],
+                        },
+                        "description": (
+                            "Completed courses. Use a course-code string when only the code is "
+                            "known. Use a structured record when actual credits or explicit "
+                            "degree-approval metadata are known."
+                        ),
+                    },
+                    "non_csci_credit_summary": {
+                        "type": "object",
+                        "description": (
+                            "Aggregate non-CSCI credits explicitly stated by the student "
+                            "when individual course codes are unavailable. "
+                            "Use 'approved' only for credits the student explicitly says "
+                            "are approved to count toward the degree. "
+                            "Use 'pending_approval' for credits whose degree applicability "
+                            "is still pending or unverified. "
+                            "Do not include credits already represented in completed_courses."
+                        ),
+                        "properties": {
+                            "approved": {
+                                "type": "number",
+                                "minimum": 0,
+                                "description": (
+                                    "Total non-CSCI credits explicitly confirmed as "
+                                    "approved toward the degree."
+                                ),
+                            },
+                            "pending_approval": {
+                                "type": "number",
+                                "minimum": 0,
+                                "description": (
+                                    "Total non-CSCI credits whose degree applicability "
+                                    "is pending or unverified."
+                                ),
+                            },
+                        },
                     },
                     "program": {
                         "type": "string",

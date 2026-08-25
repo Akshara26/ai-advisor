@@ -218,6 +218,7 @@ def _is_courses_requiring_question(user_message: str) -> bool:
         )
     )
 
+
 def _mentions_non_csci_context(user_message: str) -> bool:
     return bool(
         re.search(
@@ -253,6 +254,52 @@ def _preserves_non_csci_context(answer_text: str) -> bool:
         mentions_non_csci
         and qualifies_applicability
     )
+
+def _degree_audit_has_pending_non_csci(tool_trace: list) -> bool:
+    """Return True when a successful degree audit received pending non-CSCI credits."""
+    for trace in reversed(tool_trace):
+        if (
+            trace.get("name") != "degree_audit"
+            or not trace.get("success")
+        ):
+            continue
+
+        arguments = trace.get("arguments") or {}
+        summary = arguments.get("non_csci_credit_summary") or {}
+
+        pending = summary.get("pending_approval", 0) or 0
+
+        try:
+            return float(pending) > 0
+        except (TypeError, ValueError):
+            return False
+
+    return False
+
+
+def _preserves_pending_non_csci_context(answer_text: str) -> bool:
+    """Check that pending non-CSCI approval status survives synthesis."""
+    text = answer_text.lower()
+
+    mentions_non_csci = (
+        "non-csci" in text
+        or "non csci" in text
+        or "noncsci" in text
+    )
+
+    mentions_pending_status = any(
+        phrase in text
+        for phrase in (
+            "pending",
+            "unverified",
+            "awaiting approval",
+            "not yet approved",
+            "needs approval",
+            "requires approval",
+        )
+    )
+
+    return mentions_non_csci and mentions_pending_status
 
 
 # ── Advisor node ──────────────────────────────────────────────────────────────
@@ -424,6 +471,25 @@ def advisor_node(state: AdvisorState) -> AdvisorState:
                 continue
 
             answer_text = message.content or ""
+            if (
+                "degree_audit" in successful_tools
+                and _degree_audit_has_pending_non_csci(tool_trace)
+                and not _preserves_pending_non_csci_context(answer_text)
+            ):
+                conversation.append({
+                    "role": "user",
+                    "content": (
+                        "[System: The degree audit includes non-CSCI credits "
+                        "whose degree applicability is still pending approval. "
+                        "Your draft answer omitted that pending status. "
+                        "You MUST explicitly preserve those pending non-CSCI "
+                        "credits in the final answer and make clear that they "
+                        "are not yet included in the confirmed degree-credit total.]"
+                    ),
+                })
+                continue
+
+            # ── Hard enforcement: preserve general non-CSCI context ──
             if (
                 "degree_audit" in successful_tools
                 and _mentions_non_csci_context(user_message)

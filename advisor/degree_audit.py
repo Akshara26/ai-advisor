@@ -273,9 +273,10 @@ def _calculate_phd_supporting_minor_credits(
     )
 
 def degree_audit(completed_courses: list, program: str = "ms", plan: str | None = None,
-    milestones: dict | None = None,) -> str:
+    milestones: dict | None = None, non_csci_credit_summary: dict | None = None,) -> str:
 
     milestones = milestones or {}
+    non_csci_credit_summary = non_csci_credit_summary or {}
 
     if program == "ms" and plan not in ("A", "B", "C"):
         return "M.S. degree audits require a plan: A, B, or C."
@@ -850,7 +851,30 @@ def degree_audit(completed_courses: list, program: str = "ms", plan: str | None 
             pending_non_csci_credit,
         ) = _calculate_non_csci_degree_credits(course_records)
 
-        confirmed_degree_credits = csci_credits + approved_non_csci_credits
+        aggregate_approved_non_csci = (
+            non_csci_credit_summary.get(
+                "approved",
+                0,
+            )
+            or 0
+        )
+
+        aggregate_pending_non_csci = (
+            non_csci_credit_summary.get(
+                "pending_approval",
+                0,
+            )
+            or 0
+        )
+
+        approved_non_csci_credits += (
+            aggregate_approved_non_csci
+        )
+
+        confirmed_degree_credits = (
+            csci_credits
+            + approved_non_csci_credits
+        )
         required_total_credits = req["total_credits"]
 
         total_degree_complete = (
@@ -866,6 +890,13 @@ def degree_audit(completed_courses: list, program: str = "ms", plan: str | None 
             results.append(
                 f"  Approved non-CSCI credits counted: "
                 f"{approved_non_csci_credits}"
+            )
+
+        if aggregate_pending_non_csci:
+            results.append(
+                f"  ⚠️ Non-CSCI credits pending "
+                f"degree-applicability approval: "
+                f"{aggregate_pending_non_csci}"
             )
 
         if pending_non_csci_approval:
