@@ -2584,3 +2584,429 @@ class TestAdvisorFallbackBehavior:
             "HANDBOOK RESULT" in context
             for context in result["tool_contexts"]
         )
+
+
+class TestToolExecutionTrace:
+
+    def test_successful_tool_call_records_structured_trace(self):
+        prerequisite_call = SimpleNamespace(
+            id="call_prerequisite",
+            type="function",
+            function=SimpleNamespace(
+                name="check_prerequisites",
+                arguments='{"course_code":"CSCI5521"}',
+            ),
+        )
+
+        first_response = SimpleNamespace(
+            choices=[
+                SimpleNamespace(
+                    message=SimpleNamespace(
+                        content="",
+                        tool_calls=[prerequisite_call],
+                    )
+                )
+            ]
+        )
+
+        final_response = SimpleNamespace(
+            choices=[
+                SimpleNamespace(
+                    message=SimpleNamespace(
+                        content=(
+                            "CSCI 5521 prerequisites were checked."
+                        ),
+                        tool_calls=None,
+                    )
+                )
+            ]
+        )
+
+        meta_response = SimpleNamespace(
+            choices=[
+                SimpleNamespace(
+                    message=SimpleNamespace(
+                        parsed=AdvisorMeta(
+                            answered=True,
+                            needs_clarification=False,
+                            confidence="high",
+                            question_type="course_prerequisite",
+                        )
+                    )
+                )
+            ]
+        )
+
+        fake_client = MagicMock()
+
+        fake_client.chat.completions.create.side_effect = [
+            first_response,
+            final_response,
+        ]
+
+        fake_client.beta.chat.completions.parse.return_value = (
+            meta_response
+        )
+
+        def fake_run_tool(tool_name, tool_args):
+            assert tool_name == "check_prerequisites"
+
+            return (
+                "PREREQUISITE RESULT: "
+                "CSCI5521 prerequisites checked."
+            )
+
+        initial_state = {
+            "messages": [
+                {
+                    "role": "user",
+                    "content": (
+                        "What are the prerequisites for CSCI 5521?"
+                    ),
+                }
+            ],
+            "answer": "",
+            "answered": False,
+            "needs_clarification": False,
+            "confidence": "none",
+            "question_type": "unknown",
+            "tools_tried": [],
+            "drafted_email": "",
+            "tool_contexts": [],
+            "tool_trace": [],
+            "escalation_office": "",
+        }
+
+        with patch("advisor.graph.client", fake_client), \
+             patch(
+                 "advisor.graph.run_tool",
+                 side_effect=fake_run_tool,
+             ), \
+             patch(
+                 "advisor.graph.check_hard_escalation",
+                 return_value=None,
+             ):
+
+            result = advisor_node(initial_state)
+
+        assert len(result["tool_trace"]) == 1
+
+        trace = result["tool_trace"][0]
+
+        assert trace["name"] == "check_prerequisites"
+        assert trace["arguments"] == {
+            "course_code": "CSCI5521",
+        }
+        assert trace["success"] is True
+
+
+    def test_failed_tool_call_records_structured_trace(self):
+        handbook_call = SimpleNamespace(
+            id="call_handbook",
+            type="function",
+            function=SimpleNamespace(
+                name="search_handbook",
+                arguments='{"query":"program policy"}',
+            ),
+        )
+
+        first_response = SimpleNamespace(
+            choices=[
+                SimpleNamespace(
+                    message=SimpleNamespace(
+                        content="",
+                        tool_calls=[handbook_call],
+                    )
+                )
+            ]
+        )
+
+        final_response = SimpleNamespace(
+            choices=[
+                SimpleNamespace(
+                    message=SimpleNamespace(
+                        content=(
+                            "I could not retrieve the program policy reliably."
+                ),
+                        tool_calls=None,
+                    )
+                )
+            ]
+        )
+
+        meta_response = SimpleNamespace(
+            choices=[
+                SimpleNamespace(
+                    message=SimpleNamespace(
+                        parsed=AdvisorMeta(
+                            answered=False,
+                            needs_clarification=False,
+                            confidence="none",
+                            question_type="policy",
+                        )
+                    )
+                )
+            ]
+        )
+
+        fake_client = MagicMock()
+
+        fake_client.chat.completions.create.side_effect = [
+            first_response,
+            final_response,
+        ]
+
+        fake_client.beta.chat.completions.parse.return_value = (
+            meta_response
+        )
+
+        def fake_run_tool(tool_name, tool_args):
+            assert tool_name == "search_handbook"
+            assert tool_args == {
+                "query": "program policy",
+            }
+
+            raise RuntimeError(
+                "Temporary handbook retrieval failure"
+            )
+
+        initial_state = {
+            "messages": [
+                {
+                    "role": "user",
+                    "content": "Tell me about this program policy.",
+                }
+            ],
+            "answer": "",
+            "answered": False,
+            "needs_clarification": False,
+            "confidence": "none",
+            "question_type": "unknown",
+            "tools_tried": [],
+            "drafted_email": "",
+            "tool_contexts": [],
+            "tool_trace": [],
+            "escalation_office": "",
+        }
+
+        with patch("advisor.graph.client", fake_client), \
+            patch(
+                "advisor.graph.run_tool",
+                side_effect=fake_run_tool,
+            ), \
+            patch(
+                "advisor.graph.check_hard_escalation",
+                return_value=None,
+            ):
+
+            result = advisor_node(initial_state)
+
+        assert len(result["tool_trace"]) == 1
+
+        trace = result["tool_trace"][0]
+
+        assert trace["name"] == "search_handbook"
+        assert trace["arguments"] == {
+            "query": "program policy",
+        }
+        assert trace["success"] is False
+
+        assert "error" in trace
+        assert (
+            "Temporary handbook retrieval failure"
+            in trace["error"]
+        )
+
+        # Failed tool output must not become trusted context.
+        assert result["tool_contexts"] == []
+
+        # But the attempt should remain visible in the audit trail.
+        assert result["tools_tried"] == [
+            "search_handbook",
+        ]
+
+    def test_malformed_tool_arguments_record_trace(self):
+        malformed_call = SimpleNamespace(
+            id="call_bad_args",
+            type="function",
+            function=SimpleNamespace(
+                name="check_prerequisites",
+                arguments='{"course_code":"CSCI5521"',
+            ),
+        )
+
+        first_response = SimpleNamespace(
+            choices=[
+                SimpleNamespace(
+                    message=SimpleNamespace(
+                        content="",
+                        tool_calls=[malformed_call],
+                    )
+                )
+            ]
+        )
+
+        # The model tries to answer even though the malformed
+        # prerequisite tool call never executed successfully.
+        premature_answer = SimpleNamespace(
+            choices=[
+                SimpleNamespace(
+                    message=SimpleNamespace(
+                        content=(
+                            "I could not reliably process the "
+                            "prerequisite lookup."
+                        ),
+                        tool_calls=None,
+                    )
+                )
+            ]
+        )
+
+        # Hard enforcement should cause the model to retry
+        # check_prerequisites with valid JSON.
+        retry_call = SimpleNamespace(
+            id="call_good_args",
+            type="function",
+            function=SimpleNamespace(
+                name="check_prerequisites",
+                arguments='{"course_code":"CSCI5521"}',
+            ),
+        )
+
+        retry_response = SimpleNamespace(
+            choices=[
+                SimpleNamespace(
+                    message=SimpleNamespace(
+                        content="",
+                        tool_calls=[retry_call],
+                    )
+                )
+            ]
+        )
+
+        final_response = SimpleNamespace(
+            choices=[
+                SimpleNamespace(
+                    message=SimpleNamespace(
+                        content=(
+                            "CSCI 5521 prerequisites were "
+                            "successfully checked."
+                        ),
+                        tool_calls=None,
+                    )
+                )
+            ]
+        )
+
+        meta_response = SimpleNamespace(
+            choices=[
+                SimpleNamespace(
+                    message=SimpleNamespace(
+                        parsed=AdvisorMeta(
+                            answered=True,
+                            needs_clarification=False,
+                            confidence="high",
+                            question_type="course_prerequisite",
+                        )
+                    )
+                )
+            ]
+        )
+
+        fake_client = MagicMock()
+
+        fake_client.chat.completions.create.side_effect = [
+            first_response,
+            premature_answer,
+            retry_response,
+            final_response,
+        ]
+
+        fake_client.beta.chat.completions.parse.return_value = (
+            meta_response
+        )
+
+        def fake_run_tool(tool_name, tool_args):
+            assert tool_name == "check_prerequisites"
+            assert tool_args == {
+                "course_code": "CSCI5521",
+            }
+
+            return (
+                "PREREQUISITE RESULT: "
+                "CSCI5521 prerequisites checked."
+            )
+
+        initial_state = {
+            "messages": [
+                {
+                    "role": "user",
+                    "content": (
+                        "What are the prerequisites for CSCI 5521?"
+                    ),
+                }
+            ],
+            "answer": "",
+            "answered": False,
+            "needs_clarification": False,
+            "confidence": "none",
+            "question_type": "unknown",
+            "tools_tried": [],
+            "drafted_email": "",
+            "tool_contexts": [],
+            "tool_trace": [],
+            "escalation_office": "",
+        }
+
+        with patch("advisor.graph.client", fake_client), \
+            patch(
+                "advisor.graph.run_tool",
+                side_effect=fake_run_tool,
+            ) as mock_run_tool, \
+            patch(
+                "advisor.graph.check_hard_escalation",
+                return_value=None,
+            ):
+
+            result = advisor_node(initial_state)
+
+        # Malformed JSON must never reach run_tool().
+        # Only the valid retry should execute.
+        mock_run_tool.assert_called_once()
+
+        assert len(result["tool_trace"]) == 2
+
+        # First trace = malformed JSON attempt.
+        failed_trace = result["tool_trace"][0]
+
+        assert failed_trace["name"] == "check_prerequisites"
+        assert failed_trace["success"] is False
+        assert "error" in failed_trace
+
+        assert (
+            "parse" in failed_trace["error"].lower()
+            or "json" in failed_trace["error"].lower()
+        )
+
+        # Second trace = successful retry.
+        successful_trace = result["tool_trace"][1]
+
+        assert successful_trace["name"] == "check_prerequisites"
+
+        assert successful_trace["arguments"] == {
+            "course_code": "CSCI5521",
+        }
+
+        assert successful_trace["success"] is True
+
+        # Only the successful retry becomes trusted context.
+        assert len(result["tool_contexts"]) == 1
+
+        assert (
+            "PREREQUISITE RESULT"
+            in result["tool_contexts"][0]
+        )
+
+        assert result["answered"] is True
+        assert result["confidence"] == "high"
+        assert result["question_type"] == "course_prerequisite"

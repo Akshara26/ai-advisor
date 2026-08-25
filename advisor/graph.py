@@ -102,6 +102,7 @@ class AdvisorState(TypedDict):
     tools_tried: list
     drafted_email: str
     tool_contexts: list
+    tool_trace: list
     escalation_office: str
 
 
@@ -265,6 +266,7 @@ def advisor_node(state: AdvisorState) -> AdvisorState:
     tools_tried = []
     successful_tools = []
     tool_contexts = []
+    tool_trace = list(state.get("tool_trace", []))
 
     conversation = [{"role": "system", "content": ADVISOR_SYSTEM_PROMPT}]
     for msg in messages:
@@ -430,6 +432,7 @@ def advisor_node(state: AdvisorState) -> AdvisorState:
                 "question_type": question_type,
                 "tools_tried":   tools_tried,
                 "tool_contexts": tool_contexts,
+                "tool_trace": tool_trace,
                 "messages":      messages + [{"role": "assistant", "content": answer_text}],
             }
 
@@ -452,19 +455,40 @@ def advisor_node(state: AdvisorState) -> AdvisorState:
                 tool_args = json.loads(tool_call.function.arguments)
                 tools_tried.append(tool_name)
             except json.JSONDecodeError:
+                tool_trace.append({
+                    "name": tool_name,
+                    "arguments": tool_call.function.arguments,
+                    "success": False,
+                    "error": "Could not parse tool arguments as JSON.",
+                })
+
                 conversation.append({
                     "role": "tool",
                     "tool_call_id": tool_call.id,
                     "content": "Error: could not parse tool arguments."
                 })
+
                 continue
 
             try:
                 result = run_tool(tool_name, tool_args)
                 tool_contexts.append(result)
                 successful_tools.append(tool_name)
+                tool_trace.append({
+                    "name": tool_name,
+                    "arguments": tool_args,
+                    "success": True,
+                    })
+
             except Exception as e:
                 result = f"Error running tool: {e}"
+
+                tool_trace.append({
+                    "name": tool_name,
+                    "arguments": tool_args,
+                    "success": False,
+                    "error": str(e),
+                })
 
             conversation.append({"role": "tool", "tool_call_id": tool_call.id, "content": result})
 
@@ -480,6 +504,7 @@ def advisor_node(state: AdvisorState) -> AdvisorState:
         "question_type": "unknown",
         "successful_tools":   successful_tools,
         "tool_contexts": tool_contexts,
+        "tool_trace": tool_trace,
         "messages":      conversation,
     }
 
@@ -605,6 +630,7 @@ def chat(user_message: str, conversation_history: list) -> tuple:
         "tools_tried":       [],
         "drafted_email":     "",
         "tool_contexts":     [],
+        "tool_trace": [],
         "escalation_office": "",
     }
 
