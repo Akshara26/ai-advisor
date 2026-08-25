@@ -218,6 +218,42 @@ def _is_courses_requiring_question(user_message: str) -> bool:
         )
     )
 
+def _mentions_non_csci_context(user_message: str) -> bool:
+    return bool(
+        re.search(
+            r"\bnon[-\s]?csci\b",
+            user_message.lower(),
+        )
+    )
+
+
+def _preserves_non_csci_context(answer_text: str) -> bool:
+    text = answer_text.lower()
+
+    mentions_non_csci = bool(
+        re.search(
+            r"\bnon[-\s]?csci\b",
+            text,
+        )
+    )
+
+    qualifies_applicability = any(
+        term in text
+        for term in [
+            "approval",
+            "approved",
+            "applicability",
+            "verify",
+            "verification",
+            "pending",
+        ]
+    )
+
+    return (
+        mentions_non_csci
+        and qualifies_applicability
+    )
+
 
 # ── Advisor node ──────────────────────────────────────────────────────────────
 def advisor_node(state: AdvisorState) -> AdvisorState:
@@ -272,12 +308,21 @@ def advisor_node(state: AdvisorState) -> AdvisorState:
     for msg in messages:
         conversation.append({"role": normalize_role(msg), "content": normalize_content(msg)})
 
-    for _ in range(5):
+    MAX_TOOL_ROUNDS = 5
+    MAX_SYNTHESIS_ROUNDS = 2
+
+    for iteration in range(
+        MAX_TOOL_ROUNDS + MAX_SYNTHESIS_ROUNDS
+    ):
         response = client.chat.completions.create(
             model="gpt-4o-mini",
             messages=conversation,
             tools=tool_schemas,
-            tool_choice="auto",
+            tool_choice=(
+                "auto"
+                if iteration < MAX_TOOL_ROUNDS
+                else "none"
+            ),
         )
 
         message = response.choices[0].message
@@ -379,6 +424,31 @@ def advisor_node(state: AdvisorState) -> AdvisorState:
                 continue
 
             answer_text = message.content or ""
+            if (
+                "degree_audit" in successful_tools
+                and _mentions_non_csci_context(user_message)
+                and not _preserves_non_csci_context(answer_text)
+            ):
+                conversation.append({
+                    "role": "user",
+                    "content": (
+                        "[System: The student explicitly mentioned "
+                        "non-CSCI coursework or credits. Your draft "
+                        "answer dropped or misrepresented that information. "
+                        "You MUST preserve the student's non-CSCI context. "
+                        "Do not treat those credits as definitely missing "
+                        "just because they were not included in the "
+                        "degree_audit course records. Explain that non-CSCI "
+                        "credits may count toward the degree total only when "
+                        "their degree applicability/approval is confirmed, "
+                        "and describe unverified credits as pending approval "
+                        "or verification. If the student named the type of "
+                        "non-CSCI coursework, such as STAT courses, "
+                        "acknowledge that context explicitly.]"
+                    ),
+                })
+                continue
+
             non_system = [m for m in messages if normalize_role(m) != "system"]
             recent_context = ""
             if len(non_system) > 1:
@@ -642,3 +712,33 @@ def chat(user_message: str, conversation_history: list) -> tuple:
     ]
 
     return result["answer"], updated_history, result.get("drafted_email", ""), result.get("tool_contexts", [])
+
+def chat_for_evaluation(
+    user_message: str,
+    conversation_history: list,
+) -> dict:
+    initial_state: AdvisorState = {
+        "messages": (
+            conversation_history
+            + [{"role": "user", "content": user_message}]
+        ),
+        "answer": "",
+        "answered": False,
+        "needs_clarification": False,
+        "confidence": "none",
+        "question_type": "unknown",
+        "tools_tried": [],
+        "drafted_email": "",
+        "tool_contexts": [],
+        "tool_trace": [],
+        "escalation_office": "",
+    }
+
+    result = advisor_graph.invoke(initial_state)
+
+    return {
+        "answer": result["answer"],
+        "drafted_email": result.get("drafted_email", ""),
+        "tool_contexts": result.get("tool_contexts", []),
+        "tool_trace": result.get("tool_trace", []),
+    }

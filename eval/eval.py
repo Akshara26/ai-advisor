@@ -41,8 +41,11 @@ from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 load_dotenv()
 
 openai_key = os.getenv("OPENAI_API_KEY")
-
-from advisor.graph import chat as graph_chat
+from advisor.graph import (
+    chat as graph_chat,
+    chat_for_evaluation as graph_chat_for_evaluation,
+)
+from eval.tool_scoring import score_tool_execution
 from advisor.escalation import OFFICE_DIRECTORY
 from ragas import RunConfig   # add to imports
 
@@ -60,6 +63,22 @@ context_recall  = ContextRecall(llm=judge_llm)
 RAGAS_PREFIXES      = {'A.', 'B.', 'D.', 'E.', 'F.'}
 # Behavioral track: questions where correct agent behavior is clarify or escalate
 BEHAVIORAL_PREFIXES = {'C.', 'G.'}
+
+def evaluation_track(q: dict) -> str:
+    explicit_track = q.get("evaluation_track")
+
+    if explicit_track:
+        return explicit_track
+
+    prefix = q.get("category", "")[:2]
+
+    if prefix in RAGAS_PREFIXES:
+        return "rag"
+
+    if prefix in BEHAVIORAL_PREFIXES:
+        return "behavioral"
+
+    return "skip"
 
 
 # ── Agent call ────────────────────────────────────────────────────────────────
@@ -87,6 +106,18 @@ def run_agent(question: str) -> tuple[str, list[str], str]:
     clean = CITATION_RE.sub('', response).strip()
     return clean, tool_contexts if tool_contexts else ["no context retrieved"], drafted_email
 
+def run_agent_for_tool_eval(question: str) -> dict:
+    """Returns evaluation-only graph output including structured tool_trace."""
+    result = graph_chat_for_evaluation(question, [])
+
+    return {
+        **result,
+        "answer": CITATION_RE.sub(
+            "",
+            result.get("answer", ""),
+        ).strip(),
+    }
+
 # ── Load dataset ──────────────────────────────────────────────────────────────
 DATASET_PATH = os.path.join(os.path.dirname(__file__), "eval_dataset.json")
 if not os.path.exists(DATASET_PATH):
@@ -101,15 +132,19 @@ def q_text(q):
 def q_truth(q):
     return q.get("ground_truth") or q.get("gold_answer") or q.get("expected_behavior", "")
 
-ragas_qs      = [q for q in all_questions if q.get("category", "")[:2] in RAGAS_PREFIXES]
-behavioral_qs = [q for q in all_questions if q.get("category", "")[:2] in BEHAVIORAL_PREFIXES]
-unknown_qs    = [q for q in all_questions if q.get("category", "")[:2] not in RAGAS_PREFIXES | BEHAVIORAL_PREFIXES]
+ragas_qs = [q for q in all_questions if evaluation_track(q) == "rag"]
+
+tool_qs = [q for q in all_questions if evaluation_track(q) == "tool"]
+
+behavioral_qs = [q for q in all_questions if evaluation_track(q) == "behavioral"]
+
+skipped_qs = [q for q in all_questions if evaluation_track(q) == "skip"]
 
 print(f"Dataset: {len(all_questions)} total questions")
 print(f"  RAGAS track:      {len(ragas_qs)} questions")
+print(f"  Tool track:       {len(tool_qs)} questions")
 print(f"  Behavioral track: {len(behavioral_qs)} questions")
-if unknown_qs:
-    print(f"  Uncategorized:    {len(unknown_qs)} questions (skipped)")
+print(f"  Skipped:          {len(skipped_qs)} questions")
 print()
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -164,10 +199,83 @@ print(f"Answer Relevancy: {fmt(relevancy_score)}")
 print(f"Context Recall:   {fmt(recall_score)}")
 print(f"Overall:          {fmt(ragas_overall)}")
 
+
 # ═══════════════════════════════════════════════════════════════════════════════
-# TRACK 2 — Behavioral evaluation
+# TRACK 2 — Deterministic tool evaluation
 # ═══════════════════════════════════════════════════════════════════════════════
-print(f"\n── Track 2: Behavioral ─────────────────────────────────────────")
+print(
+    "\n── Track 2: Tool correctness "
+    "─────────────────────────────────────────"
+)
+
+tool_rows = []
+
+for i, q in enumerate(tool_qs):
+    qt = q_text(q)
+
+    print(
+        f"[{i+1}/{len(tool_qs)}] "
+        f"{q.get('id', '')}: {qt[:70]}..."
+    )
+
+    try:
+        result = run_agent_for_tool_eval(qt)
+        score = score_tool_execution(q, result)
+
+    except Exception as e:
+        print(f"  ⚠ Error: {e}")
+
+        result = {
+            "answer": f"ERROR: {e}",
+            "tool_trace": [],
+        }
+
+        score = score_tool_execution(q, result)
+
+    status = "✅ PASS" if score["passed"] else "❌ FAIL"
+
+    print(
+        f"  {status} — "
+        f"called={score['tool_called']}, "
+        f"succeeded={score['tool_succeeded']}, "
+        f"program={score['program_match']}, "
+        f"plan={score['plan_match']}, "
+        f"answer={score['answer_nonempty']}"
+    )
+
+    tool_rows.append({
+        "id": q.get("id", ""),
+        "question": qt,
+        "required_tool": q.get("required_tool", ""),
+        "expected_program": q.get("expected_program", ""),
+        "expected_plan": q.get("expected_plan", ""),
+        **score,
+        "trace_count": len(result.get("tool_trace", [])),
+        "answer_snip": result.get("answer", "")[:120],
+    })
+
+
+tool_pass_rate = (
+    sum(1 for row in tool_rows if row["passed"])
+    / len(tool_rows)
+    if tool_rows
+    else 1.0
+)
+
+print(
+    f"\n=== TOOL RESULTS ({len(tool_qs)} questions) ==="
+)
+
+print(
+    f"Pass rate: {tool_pass_rate:.2%}  "
+    f"({sum(1 for row in tool_rows if row['passed'])}"
+    f"/{len(tool_rows)})"
+)
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# TRACK 3 — Behavioral evaluation
+# ═══════════════════════════════════════════════════════════════════════════════
+print(f"\n── Track 3: Behavioral ─────────────────────────────────────────")
 
 CLARIFICATION_SIGNALS = [
     "which program", "which plan", "what program", "what plan",
@@ -175,10 +283,10 @@ CLARIFICATION_SIGNALS = [
     "please clarify", "please specify", "more information",
     "more details", "let me know", "which degree", "what course",
     "which course", "what class",
-    "are you in",       # ← add this
-    "are you enrolled", # ← add this
-    "what is your",     # ← add this
-    "which track",      # ← add this
+    "are you in",
+    "are you enrolled",
+    "what is your",
+    "which track",
 ]
 
 behavioral_rows = []

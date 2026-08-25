@@ -8,6 +8,7 @@ the entire routing decision depends on parse_state_block being correct.
 Run with: pytest tests/test_graph.py -v
 """
 from curses import meta
+import json
 
 from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
@@ -285,6 +286,400 @@ class TestDegreeAuditGraphIntegration:
         # assert result["messages"][1]["role"] == "assistant"
 
 
+class TestDegreeAuditSynthesisGuards:
+
+    def test_degree_audit_preserves_non_csci_context_in_final_answer(self):
+        degree_call = SimpleNamespace(
+            id="call_degree",
+            type="function",
+            function=SimpleNamespace(
+                name="degree_audit",
+                arguments=json.dumps({
+                    "completed_courses": [
+                        "CSCI5511",
+                        "CSCI5421",
+                        "CSCI5751",
+                        "CSCI8970",
+                        "CSCI4041",
+                        "CSCI5527",
+                    ],
+                    "program": "ms",
+                    "plan": "C",
+                }),
+            ),
+        )
+
+        handbook_call = SimpleNamespace(
+            id="call_handbook",
+            type="function",
+            function=SimpleNamespace(
+                name="search_handbook",
+                arguments=json.dumps({
+                    "query": "MS Plan C degree requirements",
+                }),
+            ),
+        )
+
+        degree_response = SimpleNamespace(
+            choices=[
+                SimpleNamespace(
+                    message=SimpleNamespace(
+                        content="",
+                        tool_calls=[degree_call],
+                    )
+                )
+            ]
+        )
+
+        handbook_response = SimpleNamespace(
+            choices=[
+                SimpleNamespace(
+                    message=SimpleNamespace(
+                        content="",
+                        tool_calls=[handbook_call],
+                    )
+                )
+            ]
+        )
+
+        bad_final_response = SimpleNamespace(
+            choices=[
+                SimpleNamespace(
+                    message=SimpleNamespace(
+                        content=(
+                            "You have 13 confirmed degree credits "
+                            "and therefore need 18 more total credits."
+                        ),
+                        tool_calls=None,
+                    )
+                )
+            ]
+        )
+
+        corrected_final_response = SimpleNamespace(
+            choices=[
+                SimpleNamespace(
+                    message=SimpleNamespace(
+                        content=(
+                            "You said your non-CSCI coursework brings "
+                            "you to 31 total credits. Those credits should "
+                            "not be treated as missing, but their degree "
+                            "applicability still needs approval or "
+                            "verification."
+                        ),
+                        tool_calls=None,
+                    )
+                )
+            ]
+        )
+
+        fake_client = MagicMock()
+
+        fake_client.chat.completions.create.side_effect = [
+            degree_response,
+            handbook_response,
+            bad_final_response,
+            corrected_final_response,
+        ]
+
+        fake_client.beta.chat.completions.parse.return_value = (
+            SimpleNamespace(
+                choices=[
+                    SimpleNamespace(
+                        message=SimpleNamespace(
+                            parsed=SimpleNamespace(
+                                answered=True,
+                                needs_clarification=False,
+                                confidence="high",
+                                question_type="degree_audit",
+                            )
+                        )
+                    )
+                ]
+            )
+        )
+
+        def fake_run_tool(tool_name, tool_args):
+            if tool_name == "degree_audit":
+                return (
+                    "DEGREE AUDIT RESULT: "
+                    "13 confirmed CSCI credits."
+                )
+
+            if tool_name == "search_handbook":
+                return (
+                    "HANDBOOK RESULT: "
+                    "The M.S. requires 31 total credits."
+                )
+
+            raise AssertionError(
+                f"Unexpected tool: {tool_name}"
+            )
+
+        initial_state = {
+            "messages": [
+                {
+                    "role": "user",
+                    "content": (
+                        "I'm M.S. Plan C. I have CSCI 5511, "
+                        "CSCI 5421, CSCI 5751, CSCI 8970, "
+                        "CSCI 4041, CSCI 5527, and enough "
+                        "non-CSCI credits to reach 31. Am I done?"
+                    ),
+                }
+            ],
+            "answer": "",
+            "answered": False,
+            "needs_clarification": False,
+            "confidence": "none",
+            "question_type": "unknown",
+            "tools_tried": [],
+            "drafted_email": "",
+            "tool_contexts": [],
+            "tool_trace": [],
+            "escalation_office": "",
+        }
+
+        with patch("advisor.graph.client", fake_client), \
+             patch(
+                 "advisor.graph.run_tool",
+                 side_effect=fake_run_tool,
+             ), \
+             patch(
+                 "advisor.graph.check_hard_escalation",
+                 return_value=None,
+             ):
+
+            result = advisor_node(initial_state)
+
+        answer = result["answer"].lower()
+
+        assert "non-csci" in answer
+
+        assert any(
+            term in answer
+            for term in [
+                "approval",
+                "approved",
+                "verify",
+                "verification",
+                "pending",
+            ]
+        )
+
+        assert "18 more total credits" not in answer
+
+        assert (
+            fake_client.chat.completions.create.call_count
+            == 4
+        )
+
+    def test_final_synthesis_guard_gets_one_correction_only_retry(self):
+        degree_call = SimpleNamespace(
+            id="call_degree",
+            type="function",
+            function=SimpleNamespace(
+                name="degree_audit",
+                arguments=json.dumps({
+                    "completed_courses": [
+                        "CSCI5511",
+                        "CSCI5521",
+                        "CSCI5103",
+                        "CSCI5751",
+                        "CSCI8970",
+                    ],
+                    "program": "ms",
+                    "plan": "C",
+                }),
+            ),
+        )
+
+        handbook_call = SimpleNamespace(
+            id="call_handbook",
+            type="function",
+            function=SimpleNamespace(
+                name="search_handbook",
+                arguments=json.dumps({
+                    "query": "MS Plan C requirements",
+                }),
+            ),
+        )
+
+        breadth_call = SimpleNamespace(
+            id="call_breadth",
+            type="function",
+            function=SimpleNamespace(
+                name="check_breadth_eligibility",
+                arguments=json.dumps({
+                    "course_code": "CSCI5511",
+                    "program": "ms",
+                }),
+            ),
+        )
+
+        degree_response = SimpleNamespace(
+            choices=[
+                SimpleNamespace(
+                    message=SimpleNamespace(
+                        content="",
+                        tool_calls=[degree_call],
+                    )
+                )
+            ]
+        )
+
+        handbook_response = SimpleNamespace(
+            choices=[
+                SimpleNamespace(
+                    message=SimpleNamespace(
+                        content="",
+                        tool_calls=[handbook_call],
+                    )
+                )
+            ]
+        )
+
+        breadth_response = SimpleNamespace(
+            choices=[
+                SimpleNamespace(
+                    message=SimpleNamespace(
+                        content="",
+                        tool_calls=[breadth_call],
+                    )
+                )
+            ]
+        )
+
+        bad_final_response = SimpleNamespace(
+            choices=[
+                SimpleNamespace(
+                    message=SimpleNamespace(
+                        content=(
+                            "You are missing the Theory and Algorithms "
+                            "breadth area."
+                        ),
+                        tool_calls=None,
+                    )
+                )
+            ]
+        )
+
+        corrected_final_response = SimpleNamespace(
+            choices=[
+                SimpleNamespace(
+                    message=SimpleNamespace(
+                        content=(
+                            "You are missing the Theory and Algorithms "
+                            "breadth area. Your non-CSCI STAT coursework "
+                            "may contribute toward total degree credits, "
+                            "but its applicability requires verification."
+                        ),
+                        tool_calls=None,
+                    )
+                )
+            ]
+        )
+
+        fake_client = MagicMock()
+
+        # Consume all five tool-capable rounds first.
+        fake_client.chat.completions.create.side_effect = [
+            degree_response,
+            handbook_response,
+            breadth_response,
+            handbook_response,
+            handbook_response,
+            bad_final_response,
+            corrected_final_response,
+        ]
+
+        fake_client.beta.chat.completions.parse.return_value = (
+            SimpleNamespace(
+                choices=[
+                    SimpleNamespace(
+                        message=SimpleNamespace(
+                            parsed=SimpleNamespace(
+                                answered=True,
+                                needs_clarification=False,
+                                confidence="high",
+                                question_type="degree_audit",
+                            )
+                        )
+                    )
+                ]
+            )
+        )
+
+        def fake_run_tool(tool_name, tool_args):
+            if tool_name == "degree_audit":
+                return "DEGREE AUDIT RESULT: partial audit"
+
+            if tool_name == "search_handbook":
+                return "HANDBOOK RESULT: relevant policy"
+
+            if tool_name == "check_breadth_eligibility":
+                return (
+                    "BREADTH RESULT: CSCI 5511 is eligible "
+                    "for the Applications breadth area."
+                )
+
+            raise AssertionError(
+                f"Unexpected tool: {tool_name}"
+            )
+
+        initial_state = {
+            "messages": [
+                {
+                    "role": "user",
+                    "content": (
+                        "I'm M.S. Plan C. I completed CSCI 5511, "
+                        "CSCI 5521, CSCI 5103, CSCI 5751, "
+                        "CSCI 8970, and five non-CSCI STAT courses. "
+                        "Do I satisfy breadth?"
+                    ),
+                }
+            ],
+            "answer": "",
+            "answered": False,
+            "needs_clarification": False,
+            "confidence": "none",
+            "question_type": "unknown",
+            "tools_tried": [],
+            "drafted_email": "",
+            "tool_contexts": [],
+            "tool_trace": [],
+            "escalation_office": "",
+        }
+
+        with patch("advisor.graph.client", fake_client), \
+            patch(
+                "advisor.graph.run_tool",
+                side_effect=fake_run_tool,
+            ), \
+            patch(
+                "advisor.graph.check_hard_escalation",
+                return_value=None,
+            ):
+
+            result = advisor_node(initial_state)
+
+        answer = result["answer"].lower()
+
+        assert result["answered"] is True
+        assert "non-csci" in answer
+        assert "verification" in answer
+
+        assert (
+            fake_client.chat.completions.create.call_count
+            == 7
+        )
+
+        # Both post-tool calls must be synthesis-only.
+        calls = fake_client.chat.completions.create.call_args_list
+
+        assert calls[5].kwargs["tool_choice"] == "none"
+        assert calls[6].kwargs["tool_choice"] == "none"
+
 # ── parse_state_block: valid input ────────────────────────────────────────────
 
 # class TestParseStateBlockValid:
@@ -561,6 +956,72 @@ class TestChatWrapper:
         assert initial_state["tool_contexts"] == []
         assert initial_state["escalation_office"] == ""
 
+
+class TestEvaluationChatWrapper:
+
+    def test_chat_for_evaluation_exposes_tool_trace(self):
+        import advisor.graph as graph_module
+
+        fake_graph_result = {
+            "answer": "Your degree audit is complete.",
+            "drafted_email": "",
+            "tool_contexts": [
+                "DEGREE AUDIT RESULT",
+                "HANDBOOK RESULT",
+            ],
+            "tool_trace": [
+                {
+                    "name": "degree_audit",
+                    "arguments": {
+                        "program": "ms",
+                        "plan": "C",
+                        "completed_courses": ["CSCI5521"],
+                    },
+                    "success": True,
+                },
+                {
+                    "name": "search_handbook",
+                    "arguments": {
+                        "query": "MS Plan C degree requirements",
+                    },
+                    "success": True,
+                },
+            ],
+        }
+
+        with patch(
+            "advisor.graph.advisor_graph.invoke",
+            return_value=fake_graph_result,
+        ) as mock_invoke:
+
+            result = graph_module.chat_for_evaluation(
+                "Can you audit my M.S. Plan C courses?",
+                [],
+            )
+
+        assert result["answer"] == "Your degree audit is complete."
+
+        assert result["tool_contexts"] == [
+            "DEGREE AUDIT RESULT",
+            "HANDBOOK RESULT",
+        ]
+
+        assert result["tool_trace"] == fake_graph_result["tool_trace"]
+
+        assert result["drafted_email"] == ""
+
+        mock_invoke.assert_called_once()
+
+        initial_state = mock_invoke.call_args.args[0]
+
+        assert initial_state["tool_trace"] == []
+
+        assert initial_state["messages"] == [
+            {
+                "role": "user",
+                "content": "Can you audit my M.S. Plan C courses?",
+            }
+        ]
 
 class TestMSDegreeAuditClarification:
 
@@ -2457,6 +2918,20 @@ class TestAdvisorFallbackBehavior:
             ]
         )
 
+        final_response = SimpleNamespace(
+            choices=[
+                SimpleNamespace(
+                    message=SimpleNamespace(
+                        content=(
+                            "The handbook suggests some prerequisite "
+                            "information."
+                        ),
+                        tool_calls=None,
+                    )
+                )
+            ]
+        )
+
         fake_client = MagicMock()
 
         # advisor_node has a max of 5 iterations
@@ -2466,6 +2941,8 @@ class TestAdvisorFallbackBehavior:
             tool_response,
             tool_response,
             tool_response,
+            final_response,
+            final_response,
         ]
 
         def fake_run_tool(tool_name, tool_args):
@@ -2476,7 +2953,7 @@ class TestAdvisorFallbackBehavior:
             "messages": [
                 {
                     "role": "user",
-                    "content": "Can you answer this ambiguous advising question?",
+                    "content": "What prerequisites does CSCI 5521 have?",
                 }
             ],
             "answer": "",
@@ -2528,6 +3005,20 @@ class TestAdvisorFallbackBehavior:
             ]
         )
 
+        final_response = SimpleNamespace(
+            choices=[
+                SimpleNamespace(
+                    message=SimpleNamespace(
+                        content=(
+                            "The handbook contains some prerequisite "
+                            "information."
+                        ),
+                        tool_calls=None,
+                    )
+                )
+            ]
+        )
+
         fake_client = MagicMock()
 
         fake_client.chat.completions.create.side_effect = [
@@ -2536,6 +3027,8 @@ class TestAdvisorFallbackBehavior:
             tool_response,
             tool_response,
             tool_response,
+            final_response,
+            final_response,
         ]
 
         def fake_run_tool(tool_name, tool_args):
@@ -2550,7 +3043,7 @@ class TestAdvisorFallbackBehavior:
             "messages": [
                 {
                     "role": "user",
-                    "content": "Can you answer this ambiguous advising question?",
+                    "content": "What prerequisites does CSCI 5521 have?",
                 }
             ],
             "answer": "",
@@ -2583,6 +3076,154 @@ class TestAdvisorFallbackBehavior:
         assert all(
             "HANDBOOK RESULT" in context
             for context in result["tool_contexts"]
+        )
+
+    def test_five_tool_rounds_still_allow_final_answer(self):
+        tool_names = [
+            "degree_audit",
+            "search_handbook",
+            "check_breadth_eligibility",
+            "check_breadth_eligibility",
+            "check_breadth_eligibility",
+        ]
+
+        tool_args = [
+            {
+                "completed_courses": [
+                    "CSCI5511",
+                    "CSCI5521",
+                    "CSCI5103",
+                    "CSCI5751",
+                    "CSCI8970",
+                ],
+                "program": "ms",
+                "plan": "C",
+            },
+            {
+                "query": "MS Plan C breadth requirements",
+            },
+            {
+                "course_code": "CSCI5103",
+                "program": "ms",
+            },
+            {
+                "course_code": "CSCI5511",
+                "program": "ms",
+            },
+            {
+                "course_code": "CSCI5521",
+                "program": "ms",
+            },
+        ]
+
+        tool_responses = []
+
+        for i, (name, arguments) in enumerate(
+            zip(tool_names, tool_args)
+        ):
+            tool_call = SimpleNamespace(
+                id=f"call_{i}",
+                type="function",
+                function=SimpleNamespace(
+                    name=name,
+                    arguments=json.dumps(arguments),
+                ),
+            )
+
+            tool_responses.append(
+                SimpleNamespace(
+                    choices=[
+                        SimpleNamespace(
+                            message=SimpleNamespace(
+                                content="",
+                                tool_calls=[tool_call],
+                            )
+                        )
+                    ]
+                )
+            )
+
+        final_response = SimpleNamespace(
+            choices=[
+                SimpleNamespace(
+                    message=SimpleNamespace(
+                        content=(
+                            "You do not yet satisfy all three "
+                            "breadth areas."
+                        ),
+                        tool_calls=None,
+                    )
+                )
+            ]
+        )
+
+        fake_client = MagicMock()
+
+        fake_client.chat.completions.create.side_effect = [
+            *tool_responses,
+            final_response,
+        ]
+
+        fake_client.beta.chat.completions.parse.return_value = (
+            SimpleNamespace(
+                choices=[
+                    SimpleNamespace(
+                        message=SimpleNamespace(
+                            parsed=SimpleNamespace(
+                                answered=True,
+                                needs_clarification=False,
+                                confidence="high",
+                                question_type="degree_audit",
+                            )
+                        )
+                    )
+                ]
+            )
+        )
+
+        initial_state = {
+            "messages": [
+                {
+                    "role": "user",
+                    "content": (
+                        "I'm M.S. Plan C. Completed CSCI 5511, "
+                        "CSCI 5521, CSCI 5103, CSCI 5751, "
+                        "and CSCI 8970. Do I satisfy breadth?"
+                    ),
+                }
+            ],
+            "answer": "",
+            "answered": False,
+            "needs_clarification": False,
+            "confidence": "none",
+            "question_type": "unknown",
+            "tools_tried": [],
+            "drafted_email": "",
+            "tool_contexts": [],
+            "tool_trace": [],
+            "escalation_office": "",
+        }
+
+        with patch("advisor.graph.client", fake_client), \
+            patch(
+                "advisor.graph.run_tool",
+                return_value="VALID TOOL RESULT",
+            ), \
+            patch(
+                "advisor.graph.check_hard_escalation",
+                return_value=None,
+            ):
+
+            result = advisor_node(initial_state)
+
+        assert result["answered"] is True
+        assert "do not yet satisfy" in result["answer"].lower()
+
+        assert len(result["tool_trace"]) == 5
+
+        assert (
+            fake_client.chat.completions.create.call_count
+            == 6
         )
 
 
