@@ -4004,3 +4004,207 @@ class TestToolExecutionTrace:
         assert result["answered"] is True
         assert result["confidence"] == "high"
         assert result["question_type"] == "course_prerequisite"
+
+class TestPreliminaryHardEscalation:
+
+    def test_allow_preliminary_answer_does_not_short_circuit_advisor(self):
+        final_response = SimpleNamespace(
+            choices=[
+                SimpleNamespace(
+                    message=SimpleNamespace(
+                        content=(
+                            "I can give you a preliminary graduation "
+                            "checklist, but official eligibility must "
+                            "be verified by the CS Graduate Office."
+                        ),
+                        tool_calls=None,
+                    )
+                )
+            ]
+        )
+
+        meta_response = SimpleNamespace(
+            choices=[
+                SimpleNamespace(
+                    message=SimpleNamespace(
+                        parsed=AdvisorMeta(
+                            answered=True,
+                            needs_clarification=False,
+                            confidence="high",
+                            question_type="degree_audit",
+                        )
+                    )
+                )
+            ]
+        )
+
+        fake_client = MagicMock()
+        fake_client.chat.completions.create.return_value = (
+            final_response
+        )
+        fake_client.beta.chat.completions.parse.return_value = (
+            meta_response
+        )
+
+        preliminary_rule = {
+            "escalation_level": "hard",
+            "office": "cs_grad",
+            "message_template": (
+                "Official graduation eligibility must be "
+                "confirmed with the CS Graduate Office."
+            ),
+            "allow_preliminary_answer": True,
+            "preliminary_answer_note": (
+                "Bot may show requirement checklist but MUST "
+                "include disclaimer and offer escalation."
+            ),
+        }
+
+        initial_state = {
+            "messages": [
+                {
+                    "role": "user",
+                    "content": (
+                        "I'm an M.S. Plan B student. "
+                        "Can I graduate?"
+                    ),
+                }
+            ],
+            "answer": "",
+            "answered": False,
+            "needs_clarification": False,
+            "confidence": "none",
+            "question_type": "unknown",
+            "tools_tried": [],
+            "drafted_email": "",
+            "tool_contexts": [],
+            "tool_trace": [],
+            "escalation_office": "",
+        }
+
+        with patch("advisor.graph.client", fake_client), \
+             patch(
+                 "advisor.graph.check_hard_escalation",
+                 return_value=preliminary_rule,
+             ):
+
+            result = advisor_node(initial_state)
+
+        # A preliminary-answer rule must allow the advisor loop to run.
+        assert fake_client.chat.completions.create.called
+
+        assert (
+            "preliminary graduation checklist"
+            in result["answer"].lower()
+        )
+
+        assert result["question_type"] == "degree_audit"
+
+    def test_preliminary_answer_must_preserve_official_verification_guidance(self):
+        bad_final_response = SimpleNamespace(
+            choices=[
+                SimpleNamespace(
+                    message=SimpleNamespace(
+                        content=(
+                            "Based on the information you provided, "
+                            "you appear to satisfy the graduation requirements."
+                        ),
+                        tool_calls=None,
+                    )
+                )
+            ]
+        )
+
+        corrected_final_response = SimpleNamespace(
+            choices=[
+                SimpleNamespace(
+                    message=SimpleNamespace(
+                        content=(
+                            "Based on the information you provided, "
+                            "you appear to satisfy the preliminary checklist. "
+                            "However, official graduation eligibility must be "
+                            "confirmed with the CS Graduate Office."
+                        ),
+                        tool_calls=None,
+                    )
+                )
+            ]
+        )
+
+        meta_response = SimpleNamespace(
+            choices=[
+                SimpleNamespace(
+                    message=SimpleNamespace(
+                        parsed=AdvisorMeta(
+                            answered=True,
+                            needs_clarification=False,
+                            confidence="high",
+                            question_type="degree_audit",
+                        )
+                    )
+                )
+            ]
+        )
+
+        fake_client = MagicMock()
+
+        fake_client.chat.completions.create.side_effect = [
+            bad_final_response,
+            corrected_final_response,
+        ]
+
+        fake_client.beta.chat.completions.parse.return_value = (
+            meta_response
+        )
+
+        preliminary_rule = {
+            "escalation_level": "hard",
+            "office": "cs_grad",
+            "message_template": (
+                "Official graduation eligibility must be "
+                "confirmed with the CS Graduate Office."
+            ),
+            "allow_preliminary_answer": True,
+            "preliminary_answer_note": (
+                "Bot may show requirement checklist but MUST "
+                "include disclaimer and offer escalation."
+            ),
+        }
+
+        initial_state = {
+            "messages": [
+                {
+                    "role": "user",
+                    "content": (
+                        "I'm an M.S. Plan B student. "
+                        "Can I graduate?"
+                    ),
+                }
+            ],
+            "answer": "",
+            "answered": False,
+            "needs_clarification": False,
+            "confidence": "none",
+            "question_type": "unknown",
+            "tools_tried": [],
+            "drafted_email": "",
+            "tool_contexts": [],
+            "tool_trace": [],
+            "escalation_office": "",
+        }
+
+        with patch("advisor.graph.client", fake_client), \
+            patch(
+                "advisor.graph.check_hard_escalation",
+                return_value=preliminary_rule,
+            ):
+
+            result = advisor_node(initial_state)
+
+        answer = result["answer"].lower()
+
+        assert "official" in answer
+        assert "cs graduate office" in answer
+
+        # The unsafe first draft should have been rejected.
+        assert fake_client.chat.completions.create.call_count == 2

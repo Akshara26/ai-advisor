@@ -301,6 +301,33 @@ def _preserves_pending_non_csci_context(answer_text: str) -> bool:
 
     return mentions_non_csci and mentions_pending_status
 
+def _preserves_preliminary_escalation_guidance(answer_text: str) -> bool:
+    """Check that a preliminary answer preserves official-verification guidance."""
+    text = answer_text.lower()
+
+    mentions_official_status = any(
+        phrase in text
+        for phrase in (
+            "official",
+            "officially",
+            "final determination",
+            "final eligibility",
+        )
+    )
+
+    mentions_verification = any(
+        term in text
+        for term in (
+            "confirm",
+            "confirmed",
+            "verification",
+            "verify",
+            "verified",
+        )
+    )
+
+    return mentions_official_status and mentions_verification
+
 
 # ── Advisor node ──────────────────────────────────────────────────────────────
 def advisor_node(state: AdvisorState) -> AdvisorState:
@@ -323,7 +350,10 @@ def advisor_node(state: AdvisorState) -> AdvisorState:
     is_courses_requiring_question = (_is_courses_requiring_question(user_message))
 
     escalation = check_hard_escalation(user_message)
-    if escalation:
+    if (
+        escalation
+        and not escalation.get("allow_preliminary_answer", False)
+    ):
         msg = escalation.get("message_template", "Please contact the appropriate office.")
         crisis = escalation.get("stop_advising", False)
         office_id = escalation.get("office", "")
@@ -471,6 +501,39 @@ def advisor_node(state: AdvisorState) -> AdvisorState:
                 continue
 
             answer_text = message.content or ""
+
+            # ── Hard enforcement: preliminary escalation guidance ──
+            if (
+                escalation
+                and escalation.get("allow_preliminary_answer", False)
+                and not _preserves_preliminary_escalation_guidance(answer_text)
+            ):
+                message_template = escalation.get(
+                    "message_template",
+                    "Official verification is still required.",
+                )
+
+                preliminary_note = escalation.get(
+                    "preliminary_answer_note",
+                    "",
+                )
+
+                conversation.append({
+                    "role": "user",
+                    "content": (
+                        "[System: This request matched an escalation rule that "
+                        "allows a preliminary answer, but your draft omitted the "
+                        "required official-verification guidance. You may provide "
+                        "the preliminary academic guidance, but you MUST clearly "
+                        "state that the result is not an official determination "
+                        "and that official confirmation or verification is still "
+                        "required. Preserve the escalation guidance below.\n\n"
+                        f"Escalation guidance: {message_template}\n"
+                        f"Rule note: {preliminary_note}]"
+                    ),
+                })
+                continue
+
             if (
                 "degree_audit" in successful_tools
                 and _degree_audit_has_pending_non_csci(tool_trace)
