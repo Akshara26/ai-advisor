@@ -302,6 +302,12 @@ class TestDegreeAuditGraphIntegration:
                     '"non_csci_credit_summary":{'
                     '"approved":3,'
                     '"pending_approval":3'
+                    '},'
+                    '"csci_credit_summary":{'
+                    '"confirmed":13'
+                    '},'
+                    '"degree_credit_summary":{'
+                    '"confirmed":31'
                     '}'
                     '}'
                 ),
@@ -457,6 +463,14 @@ class TestDegreeAuditGraphIntegration:
         assert degree_audit_args["non_csci_credit_summary"] == {
             "approved": 3,
             "pending_approval": 3,
+        }
+
+        assert degree_audit_args["csci_credit_summary"] == {
+            "confirmed": 13,
+        }
+
+        assert degree_audit_args["degree_credit_summary"] == {
+            "confirmed": 31,
         }
 
         assert degree_audit_args["program"] == "ms"

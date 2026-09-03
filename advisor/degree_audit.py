@@ -273,10 +273,12 @@ def _calculate_phd_supporting_minor_credits(
     )
 
 def degree_audit(completed_courses: list, program: str = "ms", plan: str | None = None,
-    milestones: dict | None = None, non_csci_credit_summary: dict | None = None,) -> str:
+    milestones: dict | None = None, non_csci_credit_summary: dict | None = None, csci_credit_summary: dict | None = None, degree_credit_summary: dict | None = None,) -> str:
 
     milestones = milestones or {}
     non_csci_credit_summary = non_csci_credit_summary or {}
+    csci_credit_summary = csci_credit_summary or {}
+    degree_credit_summary = degree_credit_summary or {}
 
     if program == "ms" and plan not in ("A", "B", "C"):
         return "M.S. degree audits require a plan: A, B, or C."
@@ -284,6 +286,12 @@ def degree_audit(completed_courses: list, program: str = "ms", plan: str | None 
         plan = None
 
     completed, course_records = _normalize_completed_courses(completed_courses)
+
+    aggregate_csci_only = (
+        program == "ms"
+        and not completed
+        and "confirmed" in csci_credit_summary
+    )
 
     if program not in REQUIREMENTS:
         return f"Unknown program: {program}. Valid options: ms, phd"
@@ -305,6 +313,8 @@ def degree_audit(completed_courses: list, program: str = "ms", plan: str | None 
     for category, courses in breadth_categories.items():
         fulfilled = [c for c in completed if c in courses]
         breadth_met[category] = fulfilled
+        if aggregate_csci_only:
+            continue
         if fulfilled:
             results.append(f"  ✅ {category.replace('_', ' ').title()}: {', '.join(fulfilled)}")
         else:
@@ -321,37 +331,45 @@ def degree_audit(completed_courses: list, program: str = "ms", plan: str | None 
     all_categories_covered = len(categories_missing) == 0
     breadth_complete = all_categories_covered and total_breadth_completed >= required_breadth_courses
 
-    if breadth_complete:
-        results.append(f"  ✅ All {len(breadth_categories)} breadth areas satisfied.")
-    else:
+    if aggregate_csci_only:
         results.append(
-            f"  Breadth courses completed: {total_breadth_completed} of "
-            f"{required_breadth_courses} required"
+            "  ⚠️ Course-level requirements cannot be assessed "
+            "without completed course codes"
         )
-    if not breadth_complete:
-        if categories_missing:
+    else:
+        if breadth_complete:
+            results.append(f"  ✅ All {len(breadth_categories)} breadth areas satisfied.")
+        else:
             results.append(
-                f"  ⚠️ Missing category: {', '.join(c.replace('_', ' ').title() for c in categories_missing)}"
+                f"  Breadth courses completed: {total_breadth_completed} of "
+                f"{required_breadth_courses} required"
             )
-        extra_needed = required_breadth_courses - total_breadth_completed
-        if extra_needed > 0:
-            if all_categories_covered:
+        if not breadth_complete:
+            if categories_missing:
                 results.append(
-                    f"  ⚠️ All categories covered but {extra_needed} more breadth "
-                    f"course(s) needed — may be from any breadth area."
+                    f"  ⚠️ Missing category: {', '.join(c.replace('_', ' ').title() for c in categories_missing)}"
                 )
-            else:
-                results.append(
-                    f"  ⚠️ Need {extra_needed} more breadth course(s); at least "
-                    f"{len(categories_missing)} must satisfy the missing category above."
-                )
+            extra_needed = required_breadth_courses - total_breadth_completed
+            if extra_needed > 0:
+                if all_categories_covered:
+                    results.append(
+                        f"  ⚠️ All categories covered but {extra_needed} more breadth "
+                        f"course(s) needed — may be from any breadth area."
+                    )
+                else:
+                    results.append(
+                        f"  ⚠️ Need {extra_needed} more breadth course(s); at least "
+                        f"{len(categories_missing)} must satisfy the missing category above."
+                    )
     results.append("")
 
     # ── Required courses ──────────────────────────────────────────────────────
     results.append("REQUIRED COURSES:")
     colloquium = "CSCI8970"
 
-    if colloquium in completed:
+    if aggregate_csci_only:
+        pass
+    elif colloquium in completed:
         results.append(f"  ✅ Colloquium ({colloquium}): complete")
     else:
         results.append(f"  ❌ Colloquium ({colloquium}): not completed")
@@ -362,10 +380,11 @@ def degree_audit(completed_courses: list, program: str = "ms", plan: str | None 
         project_course = plan_req.get("project_course")
         plan_b_project_complete = project_course in completed
 
-        if plan_b_project_complete:
-            results.append(f"  ✅ Plan B project course ({project_course}): complete")
-        else:
-            results.append(f"  ❌ Plan B project course ({project_course}): not completed")
+        if not aggregate_csci_only:
+            if plan_b_project_complete:
+                results.append(f"  ✅ Plan B project course ({project_course}): complete")
+            else:
+                results.append(f"  ❌ Plan B project course ({project_course}): not completed")
 
     if program == "ms" and plan == "A":
         thesis_course = plan_req.get("thesis_course")
@@ -573,6 +592,10 @@ def degree_audit(completed_courses: list, program: str = "ms", plan: str | None 
             else:
                 # Use known credit values before falling back to 3
                 csci_credits += KNOWN_CREDITS.get(code, 3)
+
+    aggregate_confirmed_csci = (csci_credit_summary.get("confirmed", 0) or 0)
+
+    csci_credits = max(csci_credits, aggregate_confirmed_csci,)
 
     results.append("CSCI CREDIT REQUIREMENT:")
     results.append(f"  CSCI credits completed: {csci_credits}/{req['csci_credits']} required")
@@ -875,16 +898,51 @@ def degree_audit(completed_courses: list, program: str = "ms", plan: str | None 
             csci_credits
             + approved_non_csci_credits
         )
+
+        aggregate_confirmed_degree_credits = (
+            degree_credit_summary.get("confirmed", 0) or 0
+        )
+
+        confirmed_degree_credits = max(
+            confirmed_degree_credits,
+            aggregate_confirmed_degree_credits,
+        )
+
+        reported_total_requirement_satisfied = (
+            degree_credit_summary.get("requirement_satisfied") is True
+        )
+
         required_total_credits = req["total_credits"]
 
-        total_degree_complete = (
-            confirmed_degree_credits >= required_total_credits)
+        if reported_total_requirement_satisfied:
+            total_degree_complete = True
+        else:
+            total_degree_complete = (
+                confirmed_degree_credits >= required_total_credits
+            )
 
         results.append("TOTAL DEGREE CREDIT REQUIREMENT:")
-        results.append(
-            f"  Confirmed degree credits: "
-            f"{confirmed_degree_credits}/{required_total_credits} required"
+
+        current_confirmed_gap = max(
+            required_total_credits - confirmed_degree_credits,
+            0,
         )
+
+        if reported_total_requirement_satisfied:
+            results.append(
+                "  ✅ Student reports the total degree credit requirement "
+                "is satisfied"
+            )
+        else:
+            results.append(
+                f"  Confirmed degree credits: "
+                f"{confirmed_degree_credits}/{required_total_credits} required"
+            )
+
+            results.append(
+                f"  Current confirmed-credit gap: "
+                f"{current_confirmed_gap}"
+            )
 
         if approved_non_csci_credits:
             results.append(
@@ -898,6 +956,18 @@ def degree_audit(completed_courses: list, program: str = "ms", plan: str | None 
                 f"degree-applicability approval: "
                 f"{aggregate_pending_non_csci}"
             )
+
+            if not reported_total_requirement_satisfied:
+                projected_remaining_degree_credits = max(
+                    current_confirmed_gap - aggregate_pending_non_csci,
+                    0,
+                )
+
+                results.append(
+                    f"  If all {aggregate_pending_non_csci} pending non-CSCI "
+                    f"credits are approved, projected remaining degree credits: "
+                    f"{projected_remaining_degree_credits}"
+                )
 
         if pending_non_csci_approval:
             results.append(
@@ -937,16 +1007,22 @@ def degree_audit(completed_courses: list, program: str = "ms", plan: str | None 
         advanced_complete = advanced_credits >= required_advanced
 
         results.append("ADVANCED CSCI REQUIREMENT:")
-        results.append(
-            f"  Confirmed advanced CSCI credits: "
-            f"{advanced_credits}/{required_advanced} required"
-        )
-
-        if advanced_verify:
+        if aggregate_csci_only:
             results.append(
-                "  ⚠️ Credit value must be verified for: "
-                + ", ".join(advanced_verify)
+                "  ⚠️ Advanced CSCI completion cannot be assessed "
+                "without completed course codes"
             )
+        else:
+            results.append(
+                f"  Confirmed advanced CSCI credits: "
+                f"{advanced_credits}/{required_advanced} required"
+            )
+
+            if advanced_verify:
+                results.append(
+                    "  ⚠️ Credit value must be verified for: "
+                    + ", ".join(advanced_verify)
+                )
 
         results.append("")
 
@@ -991,29 +1067,51 @@ def degree_audit(completed_courses: list, program: str = "ms", plan: str | None 
             )
     else:
         missing = []
-        if categories_missing:
-            missing.append(f"breadth in: {', '.join(categories_missing)}")
-        extra_needed = required_breadth_courses - total_breadth_completed
-        if extra_needed > 0 and all_categories_covered:
-            missing.append(f"{extra_needed} additional breadth course(s) from any area")
-        if colloquium not in completed:
-            missing.append(f"{colloquium} colloquium")
-        if not plan_b_project_complete:
-            missing.append("CSCI8760 Plan B project course")
-        if not intro_complete:
-            missing.append(f"{intro} Intro to Research")
-        if not advanced_complete:
-            advanced_needed = required_advanced - advanced_credits
 
-            if advanced_verify:
+        if not aggregate_csci_only:
+            if categories_missing:
                 missing.append(
-                    f"{advanced_needed:g} more confirmed advanced CSCI credit(s) "
-                    f"(verify earned credits for {', '.join(advanced_verify)})"
+                    f"breadth in: {', '.join(categories_missing)}"
                 )
-            else:
+
+            extra_needed = (
+                required_breadth_courses
+                - total_breadth_completed
+            )
+
+            if extra_needed > 0 and all_categories_covered:
                 missing.append(
-                    f"{advanced_needed:g} more advanced CSCI credit(s)"
+                    f"{extra_needed} additional breadth course(s) "
+                    f"from any area"
                 )
+
+            if colloquium not in completed:
+                missing.append(f"{colloquium} colloquium")
+
+            if not plan_b_project_complete:
+                missing.append("CSCI8760 Plan B project course")
+
+            if not advanced_complete:
+                advanced_needed = (
+                    required_advanced
+                    - advanced_credits
+                )
+
+                if advanced_verify:
+                    missing.append(
+                        f"{advanced_needed:g} more confirmed advanced "
+                        f"CSCI credit(s) "
+                        f"(verify earned credits for "
+                        f"{', '.join(advanced_verify)})"
+                    )
+                else:
+                    missing.append(
+                        f"{advanced_needed:g} more advanced CSCI credit(s)"
+                    )
+
+        if program == "phd" and not intro_complete:
+            missing.append(f"{intro} Intro to Research")
+
         if not csci_credit_complete:
             csci_needed = req["csci_credits"] - csci_credits
 
@@ -1092,12 +1190,19 @@ def degree_audit(completed_courses: list, program: str = "ms", plan: str | None 
                 + needs_csci_credit_verification
             )
 
-            if pending_total_verification:
+            if aggregate_pending_non_csci:
+                missing.append(
+                    f"{total_needed:g} more confirmed degree credit(s) "
+                    f"currently needed"
+                )
+
+            elif pending_total_verification:
                 missing.append(
                     f"{total_needed:g} more confirmed degree credit(s) "
                     f"(pending verification for: "
                     f"{', '.join(pending_total_verification)})"
                 )
+
             else:
                 missing.append(
                     f"{total_needed:g} more degree credit(s)"

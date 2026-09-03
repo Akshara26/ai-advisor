@@ -316,6 +316,52 @@ tools = [
                             },
                         },
                     },
+                    "csci_credit_summary": {
+                        "type": "object",
+                        "description": (
+                            "Aggregate confirmed CSCI credits explicitly stated by the student "
+                            "when individual course codes are unavailable or incomplete. "
+                            "The confirmed value represents the student's total confirmed CSCI "
+                            "credits, not additional credits to add to completed_courses."
+                        ),
+                        "properties": {
+                            "confirmed": {
+                                "type": "number",
+                                "minimum": 0,
+                                "description": (
+                                    "Total confirmed CSCI credits explicitly stated "
+                                    "by the student."
+                                ),
+                            },
+                        },
+                    },
+                    "degree_credit_summary": {
+                        "type": "object",
+                        "description": (
+                            "Aggregate confirmed total degree credits explicitly stated by the "
+                            "student when a complete course list is unavailable. "
+                            "The confirmed value represents the student's total confirmed degree "
+                            "credits, not additional credits to add to completed_courses."
+                        ),
+                        "properties": {
+                            "confirmed": {
+                                "type": "number",
+                                "minimum": 0,
+                                "description": (
+                                    "Total confirmed degree credits explicitly stated "
+                                    "by the student."
+                                ),
+                            },
+                            "requirement_satisfied": {
+                                "type": "boolean",
+                                "description": (
+                                    "Use true only when the student explicitly states that "
+                                    "the total degree credit requirement is already satisfied "
+                                    "but does not provide an exact total."
+                                ),
+                            },
+                        },
+                    },
                     "program": {
                         "type": "string",
                         "description": "Degree program: ms or phd",

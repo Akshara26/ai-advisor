@@ -66,8 +66,11 @@ When calling degree_audit, preserve all credit information the student explicitl
 - If only a course code is known, completed_courses may contain the course-code string.
 - If the student explicitly provides a course's credit value or non-CSCI degree approval, use a structured completed_courses record with fields such as code, credits, and degree_approved.
 - If the student provides aggregate non-CSCI credits but individual course codes are unavailable, pass them through non_csci_credit_summary using approved and/or pending_approval.
+- If the student explicitly provides their confirmed total CSCI credits but a complete course list is unavailable or incomplete, pass that total through csci_credit_summary using confirmed. Treat confirmed as the student's total confirmed CSCI credits, not additional credits.
+- If the student explicitly provides their confirmed total degree credits but a complete course list is unavailable or incomplete, pass that total through degree_credit_summary using confirmed. Treat confirmed as the student's total confirmed degree credits, not additional credits.
+- If the student explicitly says the total degree credit requirement is already satisfied but does not provide an exact total — for example, "I have enough credits overall" — pass degree_credit_summary with requirement_satisfied=true. Do not invent a numeric confirmed total.
 - Do not infer that non-CSCI coursework is approved merely because the student completed it.
-- Do not double-count credits in non_csci_credit_summary if those same credits are already represented in completed_courses.
+- Do not double-count aggregate credit summaries against credits already represented in completed_courses. csci_credit_summary.confirmed and degree_credit_summary.confirmed are totals, not additional credits to add.
 
 Response style:
 

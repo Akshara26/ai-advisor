@@ -201,6 +201,20 @@ class TestPhD:
         assert "Breadth courses completed: 3 of 4 required" in result
         assert "1 additional breadth course(s) from any area" in result
 
+    def test_phd_summary_includes_missing_intro_research(self):
+        courses = [
+            "CSCI5521",
+            "CSCI5421",
+            "CSCI5801",
+            "CSCI8970",
+        ]
+
+        result = degree_audit(courses, "phd")
+
+        summary = result.split("SUMMARY:", 1)[1]
+
+        assert "CSCI8001 Intro to Research" in summary
+
 
 # ── Credit counting ───────────────────────────────────────────────────────────
 
@@ -707,8 +721,14 @@ class TestCreditCounting:
             non_csci_credit_summary={
                 "approved": 3,
                 "pending_approval": 3,
-            },
-        )
+            },)
+        #     non_csci_credit_summary = {
+        #         "approved":3,
+        #         "pending_approval":3
+        #         },
+        #         csci_credit_summary = {"confirmed":13},
+        #         degree_credit_summary={"confirmed":31}
+        # )
 
         # The mocked fixture gives these CSCI courses 10 confirmed credits.
         # Adding 3 approved non-CSCI credits should produce 13 confirmed total.
@@ -723,6 +743,134 @@ class TestCreditCounting:
 
         # The pending 3 credits must not be counted as confirmed.
         assert "Confirmed degree credits: 16/31 required" not in result
+
+    def test_ms_audit_distinguishes_current_and_projected_gap_with_pending_non_csci(self):
+        result = degree_audit(
+            completed_courses=[
+                "CSCI5521",
+                "CSCI5421",
+                "CSCI5801",
+                "CSCI8970",
+            ],
+            non_csci_credit_summary={
+                "pending_approval": 6,
+            },
+            program="ms",
+            plan="C",
+        )
+
+        assert "Confirmed degree credits: 10/31 required" in result
+        assert (
+            "Non-CSCI credits pending degree-applicability approval: 6"
+            in result
+        )
+
+        assert "Current confirmed-credit gap: 21" in result
+
+        assert (
+            "If all 6 pending non-CSCI credits are approved, "
+            "projected remaining degree credits: 15"
+            in result
+        )
+        assert "21 more confirmed degree credit(s) currently needed" in result
+
+    def test_ms_audit_without_aggregate_pending_credits_does_not_crash(self):
+        result = degree_audit(
+            completed_courses=[
+                "CSCI5521",
+                "CSCI5421",
+                "CSCI5801",
+                "CSCI8970",
+            ],
+            program="ms",
+            plan="C",
+        )
+
+        assert "SUMMARY:" in result
+
+    def test_ms_audit_accepts_aggregate_csci_credit_summary(self):
+        result = degree_audit(
+            completed_courses=[],
+            csci_credit_summary={
+                "confirmed": 13,
+            },
+            program="ms",
+            plan="B",
+        )
+
+        assert "CSCI credits completed: 13/16 required" in result
+        assert "3 more CSCI credit(s)" in result
+
+    def test_ms_audit_does_not_mark_course_requirements_incomplete_without_course_codes(self):
+        result = degree_audit(
+            completed_courses=[],
+            csci_credit_summary={
+                "confirmed": 13,
+            },
+            program="ms",
+            plan="B",
+        )
+
+        assert "CSCI credits completed: 13/16 required" in result
+
+        assert (
+            "Course-level requirements cannot be assessed "
+            "without completed course codes"
+            in result
+        )
+
+        assert "Applications: not fulfilled" not in result
+        assert "Theory And Algorithms: not fulfilled" not in result
+        assert "Architecture Systems Software: not fulfilled" not in result
+
+        assert "Colloquium (CSCI8970): not completed" not in result
+        assert "Plan B project course (CSCI8760): not completed" not in result
+
+        assert "Confirmed advanced CSCI credits: 0/6 required" not in result
+
+        assert "CSCI8970 colloquium" not in result
+        assert "CSCI8760 Plan B project course" not in result
+        assert "breadth in:" not in result
+
+    def test_ms_audit_accepts_aggregate_total_degree_credits(self):
+        result = degree_audit(
+            completed_courses=[],
+            csci_credit_summary={
+                "confirmed": 13,
+            },
+            degree_credit_summary={
+                "confirmed": 31,
+            },
+            program="ms",
+            plan="B",
+        )
+
+        assert "CSCI credits completed: 13/16 required" in result
+        assert "Confirmed degree credits: 31/31 required" in result
+
+    def test_ms_audit_accepts_reported_total_credit_requirement_satisfied(self):
+        result = degree_audit(
+            completed_courses=[],
+            csci_credit_summary={
+                "confirmed": 13,
+            },
+            degree_credit_summary={
+                "requirement_satisfied": True,
+            },
+            program="ms",
+            plan="B",
+        )
+
+        assert "CSCI credits completed: 13/16 required" in result
+
+        assert (
+            "Student reports the total degree credit requirement "
+            "is satisfied"
+            in result
+        )
+
+        assert "18 more degree credit(s)" not in result
+        assert "Current confirmed-credit gap: 18" not in result
 
 # class TestErrorHandling:
 

@@ -58,3 +58,39 @@ def test_degree_audit_schema_accepts_rich_course_records():
     assert properties["credits"]["type"] == "number"
     assert properties["degree_approved"]["type"] == "boolean"
     assert properties["phd_credit_type"]["type"] == "string"
+
+
+def test_degree_audit_schema_exposes_aggregate_credit_summaries():
+    degree_audit_tool = next(
+        tool
+        for tool in tools
+        if tool["function"]["name"] == "degree_audit"
+    )
+
+    properties = (
+        degree_audit_tool["function"]["parameters"]["properties"]
+    )
+
+    assert "csci_credit_summary" in properties
+    assert "degree_credit_summary" in properties
+
+    csci_summary_schema = properties["csci_credit_summary"]
+    degree_summary_schema = properties["degree_credit_summary"]
+
+    assert csci_summary_schema["type"] == "object"
+    assert degree_summary_schema["type"] == "object"
+
+    assert (
+        csci_summary_schema["properties"]["confirmed"]["type"]
+        == "number"
+    )
+
+    assert (
+        degree_summary_schema["properties"]["confirmed"]["type"]
+        == "number"
+    )
+
+    assert (
+        degree_summary_schema["properties"]["requirement_satisfied"]["type"]
+        == "boolean"
+    )
