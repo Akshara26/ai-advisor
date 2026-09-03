@@ -15,6 +15,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 from advisor.graph import _is_courses_requiring_question, parse_email_block, AdvisorMeta, advisor_node, chat, _is_prerequisite_question, _is_deadline_question, _is_course_difficulty_question
+from advisor.escalation import check_hard_escalation
 
 class TestCoursesRequiringIntentDetection:
 
@@ -53,6 +54,24 @@ class TestDeadlineIntentDetection:
         assert _is_deadline_question(
             "When do I need to apply to graduate?"
         ) is True
+
+class TestHardEscalationMatching:
+
+    def test_outstanding_does_not_match_standing(self):
+        result = check_hard_escalation(
+            "I'm a Ph.D. student. "
+            "What major academic requirements are still outstanding?"
+        )
+
+        assert result is None
+
+    def test_academic_standing_still_matches(self):
+        result = check_hard_escalation(
+            "Can you tell me about my academic standing?"
+        )
+
+        assert result is not None
+        assert result["escalation_level"] == "hard"
 
 class TestAdvisorMeta:
 

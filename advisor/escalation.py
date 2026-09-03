@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+import re
 
 logger = logging.getLogger(__name__)
 
@@ -34,7 +35,13 @@ def check_hard_escalation(question: str) -> dict | None:
     """
     q_lower = question.lower()
     for rule in HARD_RULES:
-        if any(pattern in q_lower for pattern in rule.get("intent_pattern", [])):
+        if any(
+            re.search(
+                rf"\b{re.escape(pattern.lower())}\b",
+                q_lower,
+            )
+            for pattern in rule.get("intent_pattern", [])
+        ):
             logger.info(f"Hard escalation matched: {rule.get('intent_pattern', [])[:2]}")
             return rule
     return None

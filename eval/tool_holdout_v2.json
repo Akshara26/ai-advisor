@@ -1,0 +1,67 @@
+[
+  {
+    "id": "V201",
+    "user_question": "I'm an M.S. Plan B student. I've completed CSCI 5511, CSCI 5421, CSCI 5751, CSCI 5527, and CSCI 8970. What degree requirements do I still have left?",
+    "required_tool": "degree_audit",
+    "expected_program": "ms",
+    "expected_plan": "B",
+    "required_answer_terms": ["CSCI"],
+    "required_answer_any_groups": [
+      ["8760", "project"]
+    ]
+  },
+  {
+    "id": "V202",
+    "user_question": "I'm a Ph.D. student. I've completed CSCI 5511, CSCI 5421, CSCI 5751, CSCI 8970, and CSCI 8001. What major academic requirements are still outstanding?",
+    "required_tool": "degree_audit",
+    "expected_program": "phd",
+    "required_answer_any_groups": [
+      ["thesis", "8888"],
+      ["breadth", "breadth course"]
+    ]
+  },
+  {
+    "id": "V203",
+    "user_question": "Does CSCI 5521 satisfy a graduate breadth requirement?",
+    "required_tool": "check_breadth_eligibility",
+    "required_answer_terms": ["breadth"]
+  },
+  {
+    "id": "V204",
+    "user_question": "What prerequisites do I need before I can take CSCI 5521?",
+    "required_tool": "check_prerequisites",
+    "required_answer_any_groups": [
+      ["prerequisite", "prerequisites"]
+    ]
+  },
+  {
+    "id": "V205",
+    "user_question": "Which courses list CSCI 4041 as a prerequisite?",
+    "required_tool": "get_courses_requiring",
+    "required_answer_terms": ["CSCI"]
+  },
+  {
+    "id": "V206",
+    "user_question": "Who should I contact in the department about getting transfer credits approved?",
+    "required_tool": "route_contact",
+    "required_answer_any_groups": [
+      ["csgrad", "graduate", "grad"]
+    ]
+  },
+  {
+    "id": "V207",
+    "user_question": "What is the deadline or process for applying to graduate?",
+    "required_tool": "get_deadline",
+    "required_answer_any_groups": [
+      ["deadline", "apply", "graduation"]
+    ]
+  },
+  {
+    "id": "V208",
+    "user_question": "Show me the historical grade distribution for CSCI 5521.",
+    "required_tool": "get_grade_distribution",
+    "required_answer_any_groups": [
+      ["grade", "distribution"]
+    ]
+  }
+]
