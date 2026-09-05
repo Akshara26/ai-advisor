@@ -187,6 +187,5 @@ python -m eval.py
 - Course and grade data come from static snapshots and may not reflect the latest term
 - Some university resources cannot be scraped and are represented by curated reference stubs
 - Official degree clearance, petitions, and policy exceptions still require confirmation from the appropriate UMN office
-- Evaluation results are engineering signals, not guarantees of advising correctness
 
 
