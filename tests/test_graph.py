@@ -1409,6 +1409,275 @@ class TestEvaluationChatWrapper:
             }
         ]
 
+class TestEmailOptInRouting:
+
+    def test_explicit_email_draft_request_routes_to_email_agent(self):
+        import advisor.graph as graph_module
+
+        state = {
+            "messages": [
+                {
+                    "role": "user",
+                    "content": (
+                        "Draft an email to the CS Graduate Program "
+                        "about this issue."
+                    ),
+                },
+                {
+                    "role": "assistant",
+                    "content": (
+                        "You should contact the CS Graduate Program."
+                    ),
+                },
+            ],
+            "answer": "You should contact the CS Graduate Program.",
+            "answered": False,
+            "needs_clarification": False,
+            "confidence": "none",
+            "question_type": "hard_escalation",
+            "tools_tried": [],
+            "drafted_email": "",
+            "tool_contexts": [],
+            "tool_trace": [],
+            "escalation_office": "cs_grad",
+        }
+
+        assert (
+            graph_module.route_after_advisor(state)
+            == "email_agent"
+        )
+
+    def test_email_mention_without_draft_request_does_not_auto_draft(self):
+        import advisor.graph as graph_module
+
+        state = {
+            "messages": [
+                {
+                    "role": "user",
+                    "content": (
+                        "Who should I email about my transfer "
+                        "credit question?"
+                    ),
+                },
+                {
+                    "role": "assistant",
+                    "content": (
+                        "Please contact the CS Graduate Program."
+                    ),
+                },
+            ],
+            "answer": "Please contact the CS Graduate Program.",
+            "answered": False,
+            "needs_clarification": False,
+            "confidence": "none",
+            "question_type": "hard_escalation",
+            "tools_tried": [],
+            "drafted_email": "",
+            "tool_contexts": [],
+            "tool_trace": [],
+            "escalation_office": "cs_grad",
+        }
+
+        assert graph_module.route_after_advisor(state) == "end"
+
+class TestEmailAgentNode:
+
+    def test_email_agent_generates_draft_for_selected_office(self):
+        import advisor.graph as graph_module
+
+        email_response = SimpleNamespace(
+            choices=[
+                SimpleNamespace(
+                    message=SimpleNamespace(
+                        content=(
+                            "---EMAIL---\n"
+                            "Subject: Question About Transfer Credits\n\n"
+                            "To: CS Graduate Program "
+                            "(csgradmn@umn.edu)\n\n"
+                            "I am writing to ask about how my transfer "
+                            "credits apply to my degree requirements.\n"
+                            "---END EMAIL---"
+                        )
+                    )
+                )
+            ]
+        )
+
+        fake_client = MagicMock()
+        fake_client.chat.completions.create.return_value = (
+            email_response
+        )
+
+        state = {
+            "messages": [
+                {
+                    "role": "user",
+                    "content": (
+                        "Draft an email about my transfer credit question."
+                    ),
+                }
+            ],
+            "answer": (
+                "Please contact the CS Graduate Program "
+                "for confirmation."
+            ),
+            "answered": False,
+            "needs_clarification": False,
+            "confidence": "none",
+            "question_type": "policy",
+            "tools_tried": ["search_handbook"],
+            "drafted_email": "",
+            "tool_contexts": [],
+            "tool_trace": [],
+            "escalation_office": "cs_grad",
+        }
+
+        with patch("advisor.graph.client", fake_client):
+            result = graph_module.email_agent_node(state)
+
+        assert "Subject: Question About Transfer Credits" in (
+            result["drafted_email"]
+        )
+        assert "csgradmn@umn.edu" in result["drafted_email"]
+
+        assert "---EMAIL---" not in result["drafted_email"]
+        assert "---END EMAIL---" not in result["drafted_email"]
+
+        fake_client.chat.completions.create.assert_called_once()
+
+        prompt = (
+            fake_client.chat.completions.create
+            .call_args.kwargs["messages"][1]["content"]
+        )
+
+        assert "csgradmn@umn.edu" in prompt
+        assert "search_handbook" in prompt
+
+class TestEmailOptInIntegration:
+
+    def test_explicit_email_request_flows_through_email_agent(self):
+        import advisor.graph as graph_module
+
+        advisor_response = SimpleNamespace(
+            choices=[
+                SimpleNamespace(
+                    message=SimpleNamespace(
+                        content="I can help you draft that email.",
+                        tool_calls=None,
+                    )
+                )
+            ]
+        )
+
+        email_response = SimpleNamespace(
+            choices=[
+                SimpleNamespace(
+                    message=SimpleNamespace(
+                        content=(
+                            "---EMAIL---\n"
+                            "Subject: Advising Appointment Request\n\n"
+                            "To: CS Graduate Program Office "
+                            "(csgradmn@umn.edu)\n\n"
+                            "I am writing to ask if I could schedule "
+                            "an advising appointment.\n"
+                            "---END EMAIL---"
+                        )
+                    )
+                )
+            ]
+        )
+
+        meta_response = SimpleNamespace(
+            choices=[
+                SimpleNamespace(
+                    message=SimpleNamespace(
+                        parsed=AdvisorMeta(
+                            answered=True,
+                            needs_clarification=False,
+                            confidence="high",
+                            question_type="unknown",
+                        )
+                    )
+                )
+            ]
+        )
+
+        fake_client = MagicMock()
+
+        fake_client.chat.completions.create.side_effect = [
+            advisor_response,
+            email_response,
+        ]
+
+        fake_client.beta.chat.completions.parse.return_value = (
+            meta_response
+        )
+
+        initial_state = {
+            "messages": [
+                {
+                    "role": "user",
+                    "content": (
+                        "Draft an email to the CS Graduate Program "
+                        "asking for an advising appointment."
+                    ),
+                }
+            ],
+            "answer": "",
+            "answered": False,
+            "needs_clarification": False,
+            "confidence": "none",
+            "question_type": "unknown",
+            "tools_tried": [],
+            "drafted_email": "",
+            "tool_contexts": [],
+            "tool_trace": [],
+            "escalation_office": "",
+        }
+
+        with patch("advisor.graph.client", fake_client), \
+             patch(
+                 "advisor.graph.check_hard_escalation",
+                 return_value=None,
+             ):
+
+            advisor_result = graph_module.advisor_node(
+                initial_state
+            )
+
+            route = graph_module.route_after_advisor(
+                advisor_result
+            )
+
+            assert route == "email_agent"
+
+            final_result = graph_module.email_agent_node(
+                advisor_result
+            )
+
+        assert advisor_result["answer"] == (
+            "I can help you draft that email."
+        )
+
+        assert "Subject: Advising Appointment Request" in (
+            final_result["drafted_email"]
+        )
+
+        assert "csgradmn@umn.edu" in (
+            final_result["drafted_email"]
+        )
+
+        assert "---EMAIL---" not in (
+            final_result["drafted_email"]
+        )
+
+        assert "---END EMAIL---" not in (
+            final_result["drafted_email"]
+        )
+
+        # One LLM call in advisor_node + one in email_agent_node.
+        assert fake_client.chat.completions.create.call_count == 2
+
 class TestMSDegreeAuditClarification:
 
     def test_ms_degree_audit_without_plan_asks_for_clarification(self):
@@ -2685,6 +2954,125 @@ class TestBreadthEligibilityRoutingIntegration:
             "check_breadth_eligibility",
         ]
 
+    def test_generic_breadth_policy_does_not_force_course_tool(self):
+        handbook_call = SimpleNamespace(
+            id="call_handbook",
+            type="function",
+            function=SimpleNamespace(
+                name="search_handbook",
+                arguments=(
+                    '{"query":"MS breadth requirements courses from another department"}'
+                ),
+            ),
+        )
+
+        first_response = SimpleNamespace(
+            choices=[
+                SimpleNamespace(
+                    message=SimpleNamespace(
+                        content="",
+                        tool_calls=[handbook_call],
+                    )
+                )
+            ]
+        )
+
+        final_response = SimpleNamespace(
+            choices=[
+                SimpleNamespace(
+                    message=SimpleNamespace(
+                        content=(
+                            "The handbook does not establish another-department "
+                            "course as a standard breadth substitute."
+                        ),
+                        tool_calls=None,
+                    )
+                )
+            ]
+        )
+
+        meta_response = SimpleNamespace(
+            choices=[
+                SimpleNamespace(
+                    message=SimpleNamespace(
+                        parsed=AdvisorMeta(
+                            answered=True,
+                            needs_clarification=False,
+                            confidence="high",
+                            question_type="policy",
+                        )
+                    )
+                )
+            ]
+        )
+
+        fake_client = MagicMock()
+
+        fake_client.chat.completions.create.side_effect = [
+            first_response,
+            final_response,
+        ]
+
+        fake_client.beta.chat.completions.parse.return_value = (
+            meta_response
+        )
+
+        def fake_run_tool(tool_name, tool_args):
+            if tool_name == "search_handbook":
+                return (
+                    "HANDBOOK RESULT: Master's breadth courses are "
+                    "part of the required CSCI coursework."
+                )
+
+            raise AssertionError(
+                f"Unexpected tool called: {tool_name}"
+            )
+
+        initial_state = {
+            "messages": [
+                {
+                    "role": "user",
+                    "content": (
+                        "Can I count a course from another department "
+                        "toward my breadth requirement?"
+                    ),
+                }
+            ],
+            "answer": "",
+            "answered": False,
+            "needs_clarification": False,
+            "confidence": "none",
+            "question_type": "unknown",
+            "tools_tried": [],
+            "drafted_email": "",
+            "tool_contexts": [],
+            "escalation_office": "",
+        }
+
+        with patch("advisor.graph.client", fake_client), \
+            patch(
+                "advisor.graph.run_tool",
+                side_effect=fake_run_tool,
+            ) as mock_run_tool, \
+            patch(
+                "advisor.graph.check_hard_escalation",
+                return_value=None,
+            ):
+
+            result = advisor_node(initial_state)
+
+        called_tools = [
+            call.args[0]
+            for call in mock_run_tool.call_args_list
+        ]
+
+        assert called_tools == [
+            "search_handbook",
+        ]
+
+        assert result["answered"] is True
+        assert result["question_type"] == "policy"
+
     def test_breadth_eligibility_uses_breadth_tool_directly(self):
         breadth_call = SimpleNamespace(
             id="call_breadth",
@@ -3279,6 +3667,145 @@ class TestCoursesRequiringRoutingIntegration:
         assert result["answered"] is True
         assert result["confidence"] == "high"
         assert result["question_type"] == "course_prerequisite"
+
+class TestHandbookPolicyRoutingIntegration:
+
+    def test_plan_b_policy_question_forces_handbook_search(self):
+        premature_answer = SimpleNamespace(
+            choices=[
+                SimpleNamespace(
+                    message=SimpleNamespace(
+                        content=(
+                            "No, Plan B cannot use thesis credits "
+                            "instead of the project course."
+                        ),
+                        tool_calls=None,
+                    )
+                )
+            ]
+        )
+
+        handbook_call = SimpleNamespace(
+            id="call_handbook",
+            type="function",
+            function=SimpleNamespace(
+                name="search_handbook",
+                arguments=(
+                    '{"query":"Plan B CSCI 8777 thesis credits '
+                    'CSCI 8760 project requirement"}'
+                ),
+            ),
+        )
+
+        handbook_response = SimpleNamespace(
+            choices=[
+                SimpleNamespace(
+                    message=SimpleNamespace(
+                        content="",
+                        tool_calls=[handbook_call],
+                    )
+                )
+            ]
+        )
+
+        final_response = SimpleNamespace(
+            choices=[
+                SimpleNamespace(
+                    message=SimpleNamespace(
+                        content=(
+                            "No. The handbook requires CSCI 8760 "
+                            "for Plan B and says thesis credits are "
+                            "not accepted for Plan B."
+                        ),
+                        tool_calls=None,
+                    )
+                )
+            ]
+        )
+
+        meta_response = SimpleNamespace(
+            choices=[
+                SimpleNamespace(
+                    message=SimpleNamespace(
+                        parsed=AdvisorMeta(
+                            answered=True,
+                            needs_clarification=False,
+                            confidence="high",
+                            question_type="policy",
+                        )
+                    )
+                )
+            ]
+        )
+
+        fake_client = MagicMock()
+
+        fake_client.chat.completions.create.side_effect = [
+            premature_answer,
+            handbook_response,
+            final_response,
+        ]
+
+        fake_client.beta.chat.completions.parse.return_value = (
+            meta_response
+        )
+
+        def fake_run_tool(tool_name, tool_args):
+            if tool_name == "search_handbook":
+                return (
+                    "HANDBOOK RESULT: Plan B requires 3 credits "
+                    "of CSCI 8760. Thesis credits are not accepted "
+                    "for a Plan B M.S. degree."
+                )
+
+            raise AssertionError(
+                f"Unexpected tool called: {tool_name}"
+            )
+
+        initial_state = {
+            "messages": [
+                {
+                    "role": "user",
+                    "content": (
+                        "Can I use 10 credits of CSCI 8777 thesis "
+                        "instead of CSCI 8760 for Plan B?"
+                    ),
+                }
+            ],
+            "answer": "",
+            "answered": False,
+            "needs_clarification": False,
+            "confidence": "none",
+            "question_type": "unknown",
+            "tools_tried": [],
+            "drafted_email": "",
+            "tool_contexts": [],
+            "escalation_office": "",
+        }
+
+        with patch("advisor.graph.client", fake_client), \
+             patch(
+                 "advisor.graph.run_tool",
+                 side_effect=fake_run_tool,
+             ) as mock_run_tool, \
+             patch(
+                 "advisor.graph.check_hard_escalation",
+                 return_value=None,
+             ):
+
+            result = advisor_node(initial_state)
+
+        called_tools = [
+            call.args[0]
+            for call in mock_run_tool.call_args_list
+        ]
+
+        assert called_tools == [
+            "search_handbook",
+        ]
+
+        assert result["answered"] is True
+        assert "HANDBOOK RESULT" in result["tool_contexts"][0]
 
 
 class TestAdvisorFallbackBehavior:

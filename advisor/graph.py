@@ -194,12 +194,45 @@ def _is_course_difficulty_question(user_message: str) -> bool:
         )
     )
 
+def _is_handbook_policy_question(user_message: str) -> bool:
+    text = user_message.lower()
+
+    return any(
+        re.search(pattern, text)
+        for pattern in (
+            r"\bplan\s*[abc]\b",
+            r"\b(?:m\.?s\.?|mcs|master'?s|ph\.?d\.?|doctoral)\b"
+            r".*\b(?:credit|requirement|committee|thesis|project|breadth|"
+            r"colloquium|transfer|independent study|directed research)\b",
+            r"\bbreadth requirement\b",
+            r"\bthesis credits?\b",
+            r"\bproject course\b",
+            r"\bdegree committee\b",
+            r"\bcolloquium\b",
+            r"\bnon[-\s]?csci\b",
+            r"\banother department\b",
+            r"\boutside institution\b",
+            r"\bindependent study\b",
+            r"\bdirected research\b",
+            r"\b(?:4|5|8)xxx\b",
+            r"\b(?:4|5|8)\d{3}[-\s]?level\b",
+        )
+    )
+
 
 def _is_breadth_question(user_message: str) -> bool:
     return bool(
         re.search(
             r"\bbreadth\b",
             user_message.lower(),
+        )
+    )
+
+def _has_course_code(user_message: str) -> bool:
+    return bool(
+        re.search(
+            r"\b[A-Z]{2,5}\s*-?\s*\d{4}[A-Z]?\b",
+            user_message.upper(),
         )
     )
 
@@ -347,6 +380,10 @@ def advisor_node(state: AdvisorState) -> AdvisorState:
 
     is_breadth_question = _is_breadth_question(user_message)
 
+    has_course_code = _has_course_code(user_message)
+
+    is_handbook_policy_question = _is_handbook_policy_question(user_message)
+
     is_courses_requiring_question = (_is_courses_requiring_question(user_message))
 
     escalation = check_hard_escalation(user_message)
@@ -434,6 +471,27 @@ def advisor_node(state: AdvisorState) -> AdvisorState:
                 })
                 continue  # re-enter the for loop, LLM will see the injected message
 
+            # ── Hard enforcement: academic policy questions must use handbook ──
+            if (
+                is_handbook_policy_question
+                and not (
+                    escalation
+                    and escalation.get("allow_preliminary_answer", False)
+                )
+                and "search_handbook" not in successful_tools
+            ):
+                conversation.append({
+                    "role": "user",
+                    "content": (
+                        "[System: The student is asking about an academic policy "
+                        "or degree requirement. You MUST call search_handbook with "
+                        "a query matching the student's exact program and situation "
+                        "before writing your response. Do not answer this policy "
+                        "question from model memory.]"
+                    )
+                })
+                continue
+
             # ── Hard enforcement: deadline questions must use get_deadline ──
             if (
                 is_deadline_question
@@ -469,6 +527,7 @@ def advisor_node(state: AdvisorState) -> AdvisorState:
             # ── Hard enforcement: breadth questions must use eligibility tool ──
             if (
                 is_breadth_question
+                and has_course_code
                 and "check_breadth_eligibility" not in successful_tools
             ):
                 conversation.append({
@@ -783,6 +842,9 @@ def route_after_advisor(state: AdvisorState) -> str:
             latest_user_msg = normalize_content(msg).lower()
             break
 
+    if _explicit_email_draft_requested(latest_user_msg):
+        return "email_agent"
+
     is_about_professor = any(
         term in latest_user_msg
         for term in ("professor", "instructor", "which prof", "who teaches", "who's teaching", "which teacher")
@@ -871,3 +933,17 @@ def chat_for_evaluation(
         "tool_contexts": result.get("tool_contexts", []),
         "tool_trace": result.get("tool_trace", []),
     }
+
+def _explicit_email_draft_requested(user_message: str) -> bool:
+    text = user_message.lower()
+
+    return bool(
+        re.search(
+            r"\b(?:draft|write|compose)\b.*\b(?:email|message)\b",
+            text,
+        )
+        or re.search(
+            r"\bhelp me\b.*\b(?:write|draft|compose)\b.*\b(?:email|message)\b",
+            text,
+        )
+    )

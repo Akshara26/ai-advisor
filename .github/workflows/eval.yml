@@ -38,6 +38,9 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements-eval.txt
 
+      - name: Run tests
+        run: pytest -q
+
       - name: Run eval
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
@@ -45,16 +48,16 @@ jobs:
           LANGSMITH_TRACING: "false"
           TRANSFORMERS_OFFLINE: "0"
           HF_DATASETS_OFFLINE: "1"
-        run: python eval/eval.py
+        run: python -m eval.eval
 
       - name: Upload eval results
         uses: actions/upload-artifact@v4
         with:
           name: eval-results
           path: |
-            eval_results.json
-            eval_results_ragas.csv
-            eval_results_behavioral.csv
+            eval/eval_results.json
+            eval/eval_results_ragas.csv
+            eval/eval_results_behavioral.csv
 
       - name: Comment scores on PR
         if: github.event_name == 'pull_request'
@@ -62,7 +65,7 @@ jobs:
         with:
           script: |
             const fs = require('fs');
-            const results = JSON.parse(fs.readFileSync('eval_results.json', 'utf8'));
+            const results = JSON.parse(fs.readFileSync('eval/eval_results.json', 'utf8'));
             const body = `## RAGAS Eval Results
             | Metric | Score |
             |--------|-------|
