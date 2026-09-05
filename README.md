@@ -1,8 +1,8 @@
 # UMN CS Graduate Advisor
 
-An AI-powered academic advisor for University of Minnesota Computer Science graduate students. Answers policy questions, audits degree progress, checks course prerequisites, and drafts escalation emails to program coordinators for questions that require human judgment.
+An AI-powered academic advisor for University of Minnesota Computer Science graduate students. It answers handbook-grounded policy questions, audits degree progress, checks course prerequisites and breadth eligibility, retrieves academic data, and can draft an email to the appropriate university office when the student explicitly asks for one.
 
-**Live app:** https://cse-umn-advisor.streamlit.app  
+**Live app:** https://cse-umn-advisor.streamlit.app
 
 ---
 
@@ -10,78 +10,65 @@ An AI-powered academic advisor for University of Minnesota Computer Science grad
 
 Students ask natural-language questions about the CSCI graduate program. The advisor:
 
-- Answers policy questions from the CS Graduate Handbook and official UMN sources
-- Audits degree progress against real MS/PhD requirements given a list of completed courses
-- Accepts a PDF transcript upload to auto-populate the degree audit instead of manual entry
-- Checks course prerequisites for any of 162 CSCI courses
-- Retrieves historical grade distributions from GopherGrades
-- Drafts a contextual email to `csgradmn@umn.edu` for questions involving personal circumstances, petition decisions, or handbook ambiguity
-- Cites every policy claim inline with its source: `[Handbook p.12]`, `[cs.umn.edu]`, `[policy.umn.edu]`
+- Answers policy questions using the CS Graduate Handbook and official UMN sources
+- Audits degree progress from completed-course and credit information
+- Accepts a PDF transcript upload to help populate a degree audit
+- Checks course prerequisites and reverse prerequisite relationships
+- Retrieves historical course-level grade distributions from GopherGrades
+- Looks up deadlines and routes administrative questions to the appropriate university office
+- Uses deterministic tools for academic rules where structured data is more reliable than free-form generation
+- Drafts a contextual email only when the student explicitly asks it to write, draft, or compose one
+
+The system does **not** automatically generate escalation emails based on confidence or question type. When a question requires official confirmation, it provides the relevant office or contact information; email drafting remains opt-in.
 
 ---
 
 ## Architecture
 
-```
+```text
 User question
       │
       ▼
-┌─────────────────────────────────────────────┐
-│              Advisor Node (LangGraph)        │
-│                                             │
-│  ┌──────────────┐   ┌─────────────────────┐ │
-│  │search_handbook│   │   degree_audit      │ │
-│  │  (RAG + rerank│   │ check_prerequisites │ │
-│  │   PGVector)  │   │ get_grade_distribution│ │
-│  └──────────────┘   └─────────────────────┘ │
-│                                             │
-│  STATE: answered, confidence, question_type  │
-└────────────────┬────────────────────────────┘
-                 │
-        ┌────────┴────────┐
-        │ confidence=high │   confidence=low/medium
-        │  or medium      │   or answered=false
-        ▼                 ▼
-   Answer to user    Email Agent Node
-                          │
-                          ▼
-                    Draft email to
-                    csgradmn@umn.edu
+┌───────────────────────────────────────────────┐
+│              Advisor Node (LangGraph)         │
+│                                               │
+│  LLM orchestration + bounded tool loop        │
+│                                               │
+│  Retrieval / policy                           │
+│  ├── search_handbook                          │
+│  │    OpenAI embeddings → PGVector            │
+│  │    → top-10 retrieval → top-7 reranking    │
+│  │                                            │
+│  Deterministic academic tools                 │
+│  ├── degree_audit                             │
+│  ├── check_prerequisites                      │
+│  ├── check_breadth_eligibility                │
+│  ├── get_courses_requiring                    │
+│  ├── get_grade_distribution                   │
+│  ├── get_deadline                             │
+│  └── route_contact                            │
+│                                               │
+│  Reliability guards                           │
+│  ├── policy questions require handbook        │
+│  │   retrieval before synthesis               │
+│  ├── specialized questions require the        │
+│  │   corresponding deterministic tool         │
+│  └── degree audits are followed by handbook   │
+│      retrieval for policy grounding           │
+└───────────────────────┬───────────────────────┘
+                        │
+                        ▼
+                  Answer to student
+                        │
+          explicit email-drafting request?
+                  ┌─────┴─────┐
+                 no           yes
+                  │             │
+                 END      Email Agent Node
+                                │
+                                ▼
+                         Contextual email draft
 ```
-
-The graph uses conditional routing: if the advisor node resolves the question with high or medium confidence, the answer goes directly to the student. Otherwise, the email agent drafts a contextual escalation email and both the partial answer and draft are shown.
-
----
-
-## Evaluation
-
-Two-track evaluation framework that separates RAG quality from behavioral correctness:
-
-**Track 1 — RAGAS **
-
-Measures faithfulness, answer relevancy, and context recall on questions across five categories: clean policy, edge cases, multi-hop reasoning, negation traps, and degree audit stress tests.
-
-| Metric | Score |
-|--------|-------|
-| Faithfulness | ~70% |
-| Answer Relevancy | ~64% |
-| Context Recall | ~46% |
-| **Overall** | **~64%** |
-
-Quality gate: ≥ 44% overall. Calibrated for this dataset, which includes degree audit synthesis and multi-hop reasoning — harder than simple handbook retrieval.
-
-**Track 2 — Behavioral **
-
-Checks whether the agent correctly asks for clarification on ambiguous questions (Category C) and correctly escalates to email for personal/unanswerable questions (Category G).
-
-| Metric | Score |
-|--------|-------|
-| Pass rate | ~78% (7/9) |
-
-Quality gate: ≥ 65%.
-
-Both gates run automatically on every push via GitHub Actions. CI fails if either gate is not met.
-
 ---
 
 ## Retrieval pipeline
