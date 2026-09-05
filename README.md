@@ -64,22 +64,23 @@ The LLM handles intent, orchestration, and response synthesis. Structured academ
 
 ## Evaluation
 
-The project evaluates three different parts of the system separately:
-| Track | What it measures | Current Result |
-| RAG | Grounding and retrieval quality | 87.19% descriptive mean|
-| Tool | Correct deterministic tool execution | 100% |
-| Behavioral | Clarification, escalation, and cautious-response behavior | 76.92% |
+The project evaluates three parts of the system separately:
 
----
+| Track | What it measures | Current result |
+|---|---|---:|
+| RAG | Grounding and retrieval quality | **87.19% descriptive mean** |
+| Tool | Correct deterministic tool execution | **100%** |
+| Behavioral | Clarification, escalation, and cautious-response behavior | **76.92%** |
 
-## RAGAS Metrics
+### RAGAS Metrics
 
 | Metric | Score |
-| Faithfulness | 86.50% | 
-| Answer Relevancy | 80.89% |
-| Context Recall | 94.17%| 
+|---|---:|
+| Faithfulness | **86.50%** |
+| Answer Relevancy | **80.89%** |
+| Context Recall | **94.17%** |
 
-The current architecture-aligned evaluation set contains 10 RAG cases, 2 deterministic-tool cases, and 13 behavioral cases. Legacy cases retained for regression/provenance are excluded from current aggregate metrics.
+The current evaluation set contains 10 RAG cases, 2 deterministic-tool cases, and 13 behavioral cases. Legacy cases retained for regression or provenance are excluded from current aggregate metrics.
 
 ---
 
