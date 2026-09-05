@@ -69,15 +69,14 @@ User question
                                 ▼
                          Contextual email draft
 ```
----
-
 ## Retrieval pipeline
 
-1. **Embedding retrieval** — PGVector on Supabase, `text-embedding-3-small`, top-10 candidates
-2. **Cross-encoder reranking** — `cross-encoder/ms-marco-MiniLM-L-6-v2` via `SentenceTransformerRerank`, narrows to top 7 most relevant chunks
-3. **Source-prefixed chunks** — each chunk is prefixed with its origin (`[Handbook p.X]`, `[cs.umn.edu]`) so the LLM can cite inline
+1. **Embedding retrieval** — `text-embedding-3-small` queries PGVector on Supabase for the top 10 candidate chunks.
+2. **Cross-encoder reranking** — `cross-encoder/ms-marco-MiniLM-L-6-v2` reranks those candidates and keeps the top 7.
+3. **Source-prefixed context** — retrieved chunks include labels such as `[Handbook p.X]` or `[cs.umn.edu]` so policy claims can be cited inline.
+4. **Grounding enforcement** — ordinary academic-policy questions are not allowed to return a final answer without handbook retrieval. Specialized questions use their corresponding deterministic tool when available.
 
-The reranker improved faithfulness from 80.9% to ~93% on the original 15-question benchmark by supplying more precisely relevant context to the LLM.
+This separation lets semantic retrieval find relevant policy text while deterministic tools handle rules that should not depend on free-form LLM reasoning.
 
 ---
 
@@ -85,13 +84,15 @@ The reranker improved faithfulness from 80.9% to ~93% on the original 15-questio
 
 | Source | Type | Coverage |
 |--------|------|----------|
-| UMN CS Graduate Handbook 2024–25 | PDF, 53 pages | Degree requirements, policies, procedures |
-| 63 UMN web pages | Scraped HTML | Policy, funding, immigration, assistantships, career, forms |
-| 19 reference stubs | Hand-curated | Blocked/inaccessible pages (ISSS, HR, forms) |
-| 162 CSCI course prerequisites | JSON (Coursedog) | Prerequisite chains for all CSCI courses |
-| GopherGrades grade distributions | SQLite | Historical grade data for UMN courses |
+| UMN CS Graduate Handbook | PDF | Degree requirements, policies, procedures |
+| UMN web pages | Scraped HTML | Policy, funding, immigration, assistantships, career, forms |
+| reference stubs | Hand-curated JSON | Important blocked or inaccessible UMN resources |
+| CSCI courses | JSON catalog snapshot | Course metadata and prerequisite relationships |
+| GopherGrades | SQLite | Historical course-level grade distributions |
 
-Web sources include `cse.umn.edu`, `policy.umn.edu`, `onestop.umn.edu`, `isss.umn.edu`, `grad.umn.edu`, and `hr.umn.edu`. Reference stubs cover important pages that block automated scraping (ISSS CPT/OPT/RCL, HR graduate assistant employment, GAPSA, SASS) — the advisor surfaces the correct URL and contact information for these rather than attempting to answer from unavailable content.
+Web sources include domains such as `cse.umn.edu`, `policy.umn.edu`, `onestop.umn.edu`, `isss.umn.edu`, `grad.umn.edu`, and `hr.umn.edu`.
+
+Reference stubs are used for important university resources that cannot be reliably scraped. They preserve the relevant summary, URL, and contact information so the advisor can route students to an authoritative source rather than inventing missing policy.
 
 ---
 
@@ -103,10 +104,10 @@ Web sources include `cse.umn.edu`, `policy.umn.edu`, `onestop.umn.edu`, `isss.um
 | Agent framework | LangGraph |
 | RAG | LlamaIndex + PGVector (Supabase) |
 | Reranker | SentenceTransformerRerank (`ms-marco-MiniLM-L-6-v2`) |
-| Embeddings | `text-embedding-3-small` (OpenAI) |
-| Memory | Redis (Upstash) — session-persistent conversation history |
+| Embeddings | `text-embedding-3-small` |
+| Memory | Redis / Upstash |
 | Observability | LangSmith |
-| Evaluation | RAGAS 0.4.3 (two-track: RAGAS + behavioral) |
+| Evaluation | RAGAS + deterministic tool scoring + behavioral checks |
 | Frontend | Streamlit |
 | CI | GitHub Actions |
 | Deployment | Streamlit Community Cloud |
@@ -115,22 +116,38 @@ Web sources include `cse.umn.edu`, `policy.umn.edu`, `onestop.umn.edu`, `isss.um
 
 ## Key files
 
-```
-graph.py               LangGraph agent, email agent, routing logic, state schema
-tools.py               Tool definitions, PGVector retriever, cross-encoder reranker
-app.py                 Streamlit frontend with transcript upload and email draft UI
-eval.py                Two-track RAGAS evaluation harness
-degree_audit.py        Degree audit logic against MS/PhD requirements
-requirements.json      MS/PhD degree requirements config (separated from code)
-eval_dataset.json      35-question adversarial evaluation dataset
-ingest_new_pages.py    Ingestion pipeline for UMN web pages
-ingest_stubs.py        Ingestion for reference stubs (blocked pages)
-preview_links.py       URL accessibility checker before ingestion
-.github/workflows/
-  eval.yml             CI evaluation workflow with quality gates
-```
+```text
+advisor/
+  graph.py             LangGraph state, advisor loop, reliability guards,
+                       routing, and opt-in email agent
 
----
+  tools.py             Tool definitions, handbook retrieval, PGVector access,
+                       and cross-encoder reranking
+
+  degree_audit.py      Deterministic M.S./Ph.D. degree-audit logic
+
+  prompts.py           Advisor and email-agent system prompts
+
+app.py                 Streamlit frontend
+
+eval/
+  eval.py              Three-track evaluation runner
+  eval_dataset.json    Architecture-aligned evaluation dataset
+  tool_scoring.py      Deterministic tool-execution scorer
+
+data/
+  courses.json         UMN course catalog snapshot
+  grades.db            Historical grade-distribution data
+  issue_to_office_routing.json
+                       Administrative issue-to-office routing data
+
+scripts/
+  reference_stubs.json Hand-curated references for blocked resources
+  ingest_new_pages.py  Web-page ingestion
+  ingest_stubs.py      Reference-stub ingestion
+
+.github/workflows/
+  eval.yml             Tests, evaluation, artifacts, and PR score reporting
 
 ## Setup
 
