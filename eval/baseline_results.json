@@ -1,0 +1,30 @@
+{
+  "baseline_name": "architecture_aligned_baseline",
+  "commit": "e546fc5",
+  "date": "2026-09-09",
+  "dataset": "eval/eval_dataset.json",
+  "dataset_split": {
+    "total": 38,
+    "rag": 10,
+    "tool": 2,
+    "behavioral": 13,
+    "skip": 13
+  },
+  "results": {
+    "faithfulness": 0.80,
+    "answer_relevancy": 0.8384,
+    "context_recall": 0.9167,
+    "ragas_descriptive_mean": 0.8517,
+    "tool_pass_rate": 1.0,
+    "behavioral_pass_rate": 0.8462
+  },
+  "behavioral_passes": 11,
+  "behavioral_total": 13,
+  "tool_passes": 2,
+  "tool_total": 2,
+  "notes": [
+    "RAGAS values are model- and judge-dependent and may vary across runs.",
+    "This file records a reproducible baseline snapshot for the listed commit.",
+    "Generated detailed evaluation CSV/JSON outputs remain ignored."
+  ]
+}
