@@ -178,3 +178,45 @@ class TestSUGradedCourses:
             result = parse_transcript(b"fake")
         assert "CSCI8970" in result["courses"]
         assert "CSCI5521" in result["courses"]
+
+
+def test_course_records_preserve_grade_and_credits():
+    with _patch_reader(TYPICAL_TRANSCRIPT):
+        result = parse_transcript(b"fake")
+
+    records = {
+        record["code"]: record
+        for record in result["course_records"]
+    }
+
+    assert records["CSCI5523"]["credits"] == 3.0
+    assert records["CSCI5523"]["grade"] == "B+"
+
+    assert records["STAT5302"]["credits"] == 4.0
+    assert records["STAT5302"]["grade"] == "C"
+
+GRADE_FILTER_TRANSCRIPT = """
+Fall Semester 2025
+CSCI 5103 Operating Systems 3.00 3.00 C- 5.100
+CSCI 5511 Artificial Intelligence I 3.00 3.00 D+ 3.900
+CSCI 5521 Machine Learning I 3.00 3.00 D 3.000
+CSCI 5561 Computer Vision 3.00 3.00 D- 2.100
+CSCI 5707 Principles of DB Systems 3.00 0.00 F 0.000
+CSCI 8970 M.S. Colloquium 1.00 1.00 S 0.000
+CSCI 8980 Special Topics 3.00 0.00 U 0.000
+"""
+
+def test_degree_ineligible_grades_are_excluded():
+    with _patch_reader(GRADE_FILTER_TRANSCRIPT):
+        result = parse_transcript(b"fake")
+
+    codes = result["courses"]
+
+    assert "CSCI5103" in codes
+    assert "CSCI8970" in codes
+
+    assert "CSCI5511" not in codes
+    assert "CSCI5521" not in codes
+    assert "CSCI5561" not in codes
+    assert "CSCI5707" not in codes
+    assert "CSCI8980" not in codes

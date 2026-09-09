@@ -3,20 +3,11 @@ def score_tool_execution(question: dict, result: dict) -> dict:
     expected_program = question.get("expected_program")
     expected_plan = question.get("expected_plan")
 
-    required_answer_terms = question.get(
-        "required_answer_terms",
-        [],
-    )
+    required_answer_terms = question.get("required_answer_terms", [],)
 
-    required_answer_any_groups = question.get(
-        "required_answer_any_groups",
-        [],
-    )
+    required_answer_any_groups = question.get("required_answer_any_groups", [],)
 
-    forbidden_answer_terms = question.get(
-        "forbidden_answer_terms",
-        [],
-    )
+    forbidden_answer_terms = question.get( "forbidden_answer_terms", [],)
 
     tool_trace = result.get("tool_trace", [])
 
@@ -62,9 +53,7 @@ def score_tool_execution(question: dict, result: dict) -> dict:
         )
     )
 
-    answer_nonempty = bool(
-        result.get("answer", "").strip()
-    )
+    answer_nonempty = bool(result.get("answer", "").strip())
 
     answer_text = result.get("answer", "").lower()
 

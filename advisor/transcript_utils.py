@@ -6,18 +6,30 @@ import io
 import re
 from pypdf import PdfReader
 
+DEGREE_ELIGIBLE_GRADES = {
+    "A", "A-",
+    "B+", "B", "B-",
+    "C+", "C", "C-",
+    "S",
+}
+
 
 def parse_transcript(pdf_bytes: bytes) -> dict:
     """
     Parse a UMN unofficial transcript PDF.
-    Returns completed course codes (e.g. CSCI5523) and cumulative GPA.
-    Only includes courses with earned credits > 0 and a valid grade.
-    Does NOT store or log any PII — raw bytes are processed in memory only.
+
+    Returns:
+    - completed degree-eligible course codes
+    - richer course records containing code, earned credits, and grade
+    - cumulative GPA
+
+    Only includes courses with earned credits > 0 and a degree-eligible grade.
+    Raw PDF bytes are processed in memory only and are not stored or logged.
     """
     reader = PdfReader(io.BytesIO(pdf_bytes))
     text = "\n".join(page.extract_text() or "" for page in reader.pages)
 
-    courses, gpa = [], None
+    courses, course_records, gpa = [], [], None
 
     for line in text.split("\n"):
         line = line.strip()
@@ -40,8 +52,16 @@ def parse_transcript(pdf_bytes: bytes) -> dict:
             line
         )
         if grade_match:
-            _, earned, _ = grade_match.groups()
-            if float(earned) > 0:
-                courses.append(f"{dept}{num}")
+            _, earned, grade = grade_match.groups()
 
-    return {"courses": courses, "gpa": gpa}
+            if float(earned) > 0 and grade in DEGREE_ELIGIBLE_GRADES:
+                code = f"{dept}{num}"
+
+                courses.append(code)
+                course_records.append({
+                    "code": code,
+                    "credits": float(earned),
+                    "grade": grade,
+                })
+
+    return {"courses": courses, "course_records": course_records, "gpa": gpa}

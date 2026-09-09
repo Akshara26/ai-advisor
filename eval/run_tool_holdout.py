@@ -20,26 +20,14 @@ def main():
     passed = 0
 
     for question in tool_questions:
-        result = chat_for_evaluation(
-            question["user_question"],
-            [],
-        )
+        result = chat_for_evaluation(question["user_question"],[],)
 
-        score = score_tool_execution(
-            question,
-            result,
-        )
+        score = score_tool_execution( question, result,)
 
-        status = (
-            "PASS"
-            if score["passed"]
-            else "FAIL"
-        )
+        status = ("PASS" if score["passed"] else "FAIL")
 
         print("=" * 80)
-        print(
-            f"{question['id']} {status}"
-        )
+        print(f"{question['id']} {status}")
         print(score)
 
         print("\nTool trace:")
@@ -50,12 +38,7 @@ def main():
             print(trace)
 
         print("\nAnswer:")
-        print(
-            result.get(
-                "answer",
-                "",
-            )
-        )
+        print(result.get("answer","",))
 
         if score["passed"]:
             passed += 1

@@ -15,18 +15,17 @@ st.caption("Ask me anything about the CS graduate program at University of Minne
 with st.sidebar:
     st.header("📄 Degree Audit")
     st.caption(
-    "The PDF is not stored. Only course codes are extracted and included "
-    "in your conversation history, which is kept for 7 days."
+    "The PDF is not stored. Course codes, grades, earned credits, and cumulative GPA "
+    "are extracted in memory. Selected course information is included in your conversation history, which is kept for 7 days."
     )
 
-    uploaded = st.file_uploader(
-        "Transcript PDF", type=["pdf"], label_visibility="collapsed"
-    )
+    uploaded = st.file_uploader("Transcript PDF", type=["pdf"], label_visibility="collapsed")
 
     if uploaded:
         try:
             result = parse_transcript(uploaded.read())
             all_courses  = result["courses"]
+            course_records = result["course_records"]
             csci_courses = [c for c in all_courses if c.startswith("CSCI")]
             other_courses = [c for c in all_courses if not c.startswith("CSCI")]
 
@@ -56,16 +55,41 @@ with st.sidebar:
 
                 program = st.selectbox("Program:", ["MS", "PhD"])
 
+                plan = None
+                if program == "MS":
+                    plan = st.selectbox("M.S. Plan:", ["A", "B", "C"])
+
                 if result["gpa"]:
                     st.metric("Cumulative GPA", result["gpa"])
 
                 if st.button("Run degree audit →", use_container_width=True, type="primary"):
+                    record_by_code = {
+                        record["code"]: record
+                        for record in course_records
+                    }
                     selected = selected_csci + selected_other
+
+                    selected_with_credits = []
+
+                    for code in selected:
+                        record = record_by_code.get(code)
+
+                        if record:
+                            selected_with_credits.append(
+                                f"{code} ({record['credits']:g} credits)"
+                            )
+                        else:
+                            selected_with_credits.append(code)
+                    if program == "MS":
+                        program_text = f"M.S. Plan {plan}"
+                    else:
+                        program_text = "Ph.D."
+
                     audit_q = (
-                        f"I'm in the CSCI {program} program. "
-                        f"I have completed: {', '.join(selected)}. "
+                        f"I'm in the CSCI {program_text} program. "
+                        f"I have completed: {', '.join(selected_with_credits)}. "
                         f"What requirements do I still need to fulfill to graduate?"
-        )
+                    )
                     st.session_state.pending_question = audit_q
                     st.rerun()
 

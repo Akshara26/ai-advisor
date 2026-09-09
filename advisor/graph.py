@@ -29,7 +29,7 @@ class AdvisorMeta(BaseModel):
     question_type: Literal[
     "policy", "personal", "degree_audit", "deadline",
     "procedure", "course_prerequisite", "course_difficulty",
-    "course_recommendation",   # ← ADD THIS
+    "course_recommendation",
     "unknown"]
 
 META_CLASSIFIER_PROMPT = """Classify an academic advisor's response.
@@ -77,14 +77,10 @@ confidence:
 - "none": could not find relevant information to answer
 
 question_type: policy, personal, degree_audit, deadline, procedure, course_prerequisite, or unknown
-Use "course_difficulty" when the student asks how hard a course is in general,
-what grade distributions look like, or whether a course is manageable workload-wise.
-Do NOT use "course_difficulty" for questions about specific professors, instructor
-ratings, or which section to take — those are "personal" or "unknown".
-Use "course_recommendation" when the student asks which course to take next,
-what to prioritize, or which electives to choose given their completed courses.
-Do NOT use "course_recommendation" for choices between degree plans (Plan A vs
-Plan B vs Plan C), programs (M.S. vs Ph.D.), or research paths — those
+Use "course_difficulty" when the student asks how hard a course is in general, what grade distributions look like, or whether a course is manageable workload-wise.
+Do NOT use "course_difficulty" for questions about specific professors, instructor ratings, or which section to take — those are "personal" or "unknown".
+Use "course_recommendation" when the student asks which course to take next, what to prioritize, or which electives to choose given their completed courses.
+Do NOT use "course_recommendation" for choices between degree plans (Plan A vs Plan B vs Plan C), programs (M.S. vs Ph.D.), or research paths — those
 are "personal" or "policy"."""
 
 logging.basicConfig(level=logging.INFO)
@@ -283,18 +279,12 @@ def _preserves_non_csci_context(answer_text: str) -> bool:
         ]
     )
 
-    return (
-        mentions_non_csci
-        and qualifies_applicability
-    )
+    return mentions_non_csci and qualifies_applicability
 
 def _degree_audit_has_pending_non_csci(tool_trace: list) -> bool:
     """Return True when a successful degree audit received pending non-CSCI credits."""
     for trace in reversed(tool_trace):
-        if (
-            trace.get("name") != "degree_audit"
-            or not trace.get("success")
-        ):
+        if trace.get("name") != "degree_audit" or not trace.get("success"):
             continue
 
         arguments = trace.get("arguments") or {}
@@ -373,24 +363,15 @@ def advisor_node(state: AdvisorState) -> AdvisorState:
     )
 
     is_prerequisite_question = _is_prerequisite_question(user_message)
-
     is_deadline_question = _is_deadline_question(user_message)
-
     is_course_difficulty_question = (_is_course_difficulty_question(user_message))
-
     is_breadth_question = _is_breadth_question(user_message)
-
     has_course_code = _has_course_code(user_message)
-
     is_handbook_policy_question = _is_handbook_policy_question(user_message)
-
     is_courses_requiring_question = (_is_courses_requiring_question(user_message))
-
     escalation = check_hard_escalation(user_message)
-    if (
-        escalation
-        and not escalation.get("allow_preliminary_answer", False)
-    ):
+
+    if  escalation and not escalation.get("allow_preliminary_answer", False):
         msg = escalation.get("message_template", "Please contact the appropriate office.")
         crisis = escalation.get("stop_advising", False)
         office_id = escalation.get("office", "")
@@ -432,11 +413,7 @@ def advisor_node(state: AdvisorState) -> AdvisorState:
             model="gpt-4o-mini",
             messages=conversation,
             tools=tool_schemas,
-            tool_choice=(
-                "auto"
-                if iteration < MAX_TOOL_ROUNDS
-                else "none"
-            ),
+            tool_choice=("auto" if iteration < MAX_TOOL_ROUNDS else "none"),
         )
 
         message = response.choices[0].message
@@ -455,70 +432,48 @@ def advisor_node(state: AdvisorState) -> AdvisorState:
                 continue  # re-enter the for loop, LLM will see the injected message
 
             # ── Hard enforcement: prerequisite questions must use check_prerequisites ──
-            if (
-                is_prerequisite_question
-                and not is_courses_requiring_question
-                and "check_prerequisites" not in successful_tools
-            ):
+            if is_prerequisite_question and not is_courses_requiring_question and "check_prerequisites" not in successful_tools:
                 conversation.append({
                     "role": "user",
                     "content": (
                         "[System: The student is asking about course prerequisites. "
-                        "You MUST call check_prerequisites for the relevant course "
-                        "before writing your response. "
+                        "You MUST call check_prerequisites for the relevant course before writing your response. "
                         "Do not rely on search_handbook alone.]"
                     )
                 })
                 continue  # re-enter the for loop, LLM will see the injected message
 
             # ── Hard enforcement: academic policy questions must use handbook ──
-            if (
-                is_handbook_policy_question
-                and not (
-                    escalation
-                    and escalation.get("allow_preliminary_answer", False)
-                )
-                and "search_handbook" not in successful_tools
-            ):
+            if is_handbook_policy_question and not (escalation and escalation.get("allow_preliminary_answer", False)) and "search_handbook" not in successful_tools:
                 conversation.append({
                     "role": "user",
                     "content": (
-                        "[System: The student is asking about an academic policy "
-                        "or degree requirement. You MUST call search_handbook with "
-                        "a query matching the student's exact program and situation "
-                        "before writing your response. Do not answer this policy "
+                        "[System: The student is asking about an academic policy or degree requirement. You MUST call search_handbook with "
+                        "a query matching the student's exact program and situation before writing your response. Do not answer this policy "
                         "question from model memory.]"
                     )
                 })
                 continue
 
             # ── Hard enforcement: deadline questions must use get_deadline ──
-            if (
-                is_deadline_question
-                and "get_deadline" not in successful_tools
-            ):
+            if is_deadline_question and "get_deadline" not in successful_tools:
                 conversation.append({
                     "role": "user",
                     "content": (
                         "[System: The student is asking about a deadline. "
-                        "You MUST call get_deadline for the relevant process "
-                        "before writing your response. "
+                        "You MUST call get_deadline for the relevant process before writing your response. "
                         "Do not rely on search_handbook alone.]"
                     )
                 })
                 continue  # re-enter the for loop, LLM will see the injected message
 
             # ── Hard enforcement: course-difficulty questions must use grade data ──
-            if (
-                is_course_difficulty_question
-                and "get_grade_distribution" not in successful_tools
-            ):
+            if is_course_difficulty_question and "get_grade_distribution" not in successful_tools:
                 conversation.append({
                     "role": "user",
                     "content": (
                         "[System: The student is asking about course difficulty or workload. "
-                        "You MUST call get_grade_distribution for the relevant course "
-                        "before writing your response. "
+                        "You MUST call get_grade_distribution for the relevant course before writing your response. "
                         "Do not rely on search_handbook alone.]"
                     )
                 })
@@ -533,27 +488,20 @@ def advisor_node(state: AdvisorState) -> AdvisorState:
                 conversation.append({
                     "role": "user",
                     "content": (
-                        "[System: The student is asking whether a course counts "
-                        "toward a breadth requirement. "
-                        "You MUST call check_breadth_eligibility for the relevant "
-                        "course and program before writing your response. "
+                        "[System: The student is asking whether a course counts toward a breadth requirement. "
+                        "You MUST call check_breadth_eligibility for the relevant course and program before writing your response. "
                         "Do not rely on search_handbook alone.]"
                     )
                 })
                 continue
 
             # ── Hard enforcement: reverse prerequisite questions must use lookup tool ──
-            if (
-                is_courses_requiring_question
-                and "get_courses_requiring" not in successful_tools
-            ):
+            if is_courses_requiring_question and "get_courses_requiring" not in successful_tools:
                 conversation.append({
                     "role": "user",
                     "content": (
-                        "[System: The student is asking which courses require "
-                        "a particular course. "
-                        "You MUST call get_courses_requiring for that course "
-                        "before writing your response. "
+                        "[System: The student is asking which courses require a particular course. "
+                        "You MUST call get_courses_requiring for that course before writing your response. "
                         "Do not rely on search_handbook alone.]"
                     )
                 })
@@ -580,12 +528,9 @@ def advisor_node(state: AdvisorState) -> AdvisorState:
                 conversation.append({
                     "role": "user",
                     "content": (
-                        "[System: This request matched an escalation rule that "
-                        "allows a preliminary answer, but your draft omitted the "
-                        "required official-verification guidance. You may provide "
-                        "the preliminary academic guidance, but you MUST clearly "
-                        "state that the result is not an official determination "
-                        "and that official confirmation or verification is still "
+                        "[System: This request matched an escalation rule that allows a preliminary answer, but your draft omitted the "
+                        "required official-verification guidance. You may provide the preliminary academic guidance, but you MUST clearly "
+                        "state that the result is not an official determination and that official confirmation or verification is still "
                         "required. Preserve the escalation guidance below.\n\n"
                         f"Escalation guidance: {message_template}\n"
                         f"Rule note: {preliminary_note}]"
@@ -601,12 +546,9 @@ def advisor_node(state: AdvisorState) -> AdvisorState:
                 conversation.append({
                     "role": "user",
                     "content": (
-                        "[System: The degree audit includes non-CSCI credits "
-                        "whose degree applicability is still pending approval. "
-                        "Your draft answer omitted that pending status. "
-                        "You MUST explicitly preserve those pending non-CSCI "
-                        "credits in the final answer and make clear that they "
-                        "are not yet included in the confirmed degree-credit total.]"
+                        "[System: The degree audit includes non-CSCI credits whose degree applicability is still pending approval. "
+                        "Your draft answer omitted that pending status. You MUST explicitly preserve those pending non-CSCI "
+                        "credits in the final answer and make clear that they are not yet included in the confirmed degree-credit total.]"
                     ),
                 })
                 continue
@@ -620,19 +562,13 @@ def advisor_node(state: AdvisorState) -> AdvisorState:
                 conversation.append({
                     "role": "user",
                     "content": (
-                        "[System: The student explicitly mentioned "
-                        "non-CSCI coursework or credits. Your draft "
+                        "[System: The student explicitly mentioned non-CSCI coursework or credits. Your draft "
                         "answer dropped or misrepresented that information. "
-                        "You MUST preserve the student's non-CSCI context. "
-                        "Do not treat those credits as definitely missing "
-                        "just because they were not included in the "
-                        "degree_audit course records. Explain that non-CSCI "
-                        "credits may count toward the degree total only when "
-                        "their degree applicability/approval is confirmed, "
-                        "and describe unverified credits as pending approval "
-                        "or verification. If the student named the type of "
-                        "non-CSCI coursework, such as STAT courses, "
-                        "acknowledge that context explicitly.]"
+                        "You MUST preserve the student's non-CSCI context. Do not treat those credits as definitely missing "
+                        "just because they were not included in the degree_audit course records. Explain that non-CSCI "
+                        "credits may count toward the degree total only when their degree applicability/approval is confirmed, "
+                        "and describe unverified credits as pending approval or verification. If the student named the type of "
+                        "non-CSCI coursework, such as STAT courses, acknowledge that context explicitly.]"
                     ),
                 })
                 continue

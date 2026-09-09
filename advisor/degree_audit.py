@@ -25,10 +25,8 @@ KNOWN_CREDITS = {
     "CSCI8002": 1,
 }
 
-def _is_advanced_csci_course(code: str, advanced_config: dict,
-    plan_config: dict,) -> bool:
+def _is_advanced_csci_course(code: str, advanced_config: dict, plan_config: dict,) -> bool:
     """Return True if a course is eligible for the M.S. advanced CSCI requirement."""
-
     code = code.upper().replace(" ", "")
 
     # Explicitly approved 5xxx courses
@@ -63,19 +61,13 @@ def _calculate_advanced_csci_credits(completed_courses: list, advanced_config: d
     plan_config: dict,) -> tuple[float, list[str]]:
     """
     Calculate confirmed advanced CSCI credits.
-
-    Variable-credit courses such as CSCI8991/8994 are returned separately
-    because a course code alone does not tell us how many credits were earned.
+    Variable-credit courses such as CSCI8991/8994 are returned separately, because a course code alone does not tell us how many credits were earned.
     """
 
     confirmed_credits = 0
     needs_credit_verification = []
 
-    limited_courses = set(
-        advanced_config
-        .get("limited_8xxx", {})
-        .get("courses", [])
-    )
+    limited_courses = set(advanced_config.get("limited_8xxx", {}).get("courses", []))
 
     limited_confirmed_credits = 0
 
@@ -87,11 +79,7 @@ def _calculate_advanced_csci_credits(completed_courses: list, advanced_config: d
             code = item.upper().replace(" ", "")
             provided_credits = None
 
-        if not _is_advanced_csci_course(
-            code,
-            advanced_config,
-            plan_config,
-        ):
+        if not _is_advanced_csci_course(code, advanced_config, plan_config,):
             continue
 
         # We know these courses can count, but not how many credits
@@ -101,27 +89,20 @@ def _calculate_advanced_csci_credits(completed_courses: list, advanced_config: d
                 needs_credit_verification.append(code)
                 continue
 
-            max_limited_credits = (
-                advanced_config
-                .get("limited_8xxx", {})
-                .get("max_combined_credits", 6)
-            )
+            max_limited_credits = (advanced_config.get("limited_8xxx", {}).get("max_combined_credits", 6))
 
             remaining_allowed = max_limited_credits - limited_confirmed_credits
 
             if remaining_allowed > 0:
                 credits_to_count = min(provided_credits, remaining_allowed)
-
                 confirmed_credits += credits_to_count
                 limited_confirmed_credits += credits_to_count
-
             continue
 
         course = code_to_course.get(code)
 
         if course:
             credits = course.get("cred_min")
-
             if credits is not None:
                 confirmed_credits += credits
             else:
@@ -134,7 +115,6 @@ def _calculate_advanced_csci_credits(completed_courses: list, advanced_config: d
 def _normalize_completed_courses(completed_courses: list) -> tuple[list[str], list[dict]]:
     """
     Normalize degree-audit input.
-
     Supports both legacy course-code strings:
         "CSCI5521"
 
@@ -144,7 +124,6 @@ def _normalize_completed_courses(completed_courses: list) -> tuple[list[str], li
             "credits": 3,
             "degree_approved": True,
         }
-
     Returns:
         completed_codes: normalized course codes
         course_records: normalized records with code/credits/approval metadata
@@ -172,7 +151,6 @@ def _normalize_completed_courses(completed_courses: list) -> tuple[list[str], li
                 continue
 
             code = raw_code.upper().replace(" ", "")
-
             completed_codes.append(code)
             course_records.append({
                 "code": code,
@@ -186,7 +164,6 @@ def _normalize_completed_courses(completed_courses: list) -> tuple[list[str], li
 def _calculate_non_csci_degree_credits(course_records: list[dict],) -> tuple[float, list[str], list[str]]:
     """
     Count confirmed approved non-CSCI degree credits.
-
     Returns:
         confirmed_credits
         pending_approval
@@ -215,18 +192,11 @@ def _calculate_non_csci_degree_credits(course_records: list[dict],) -> tuple[flo
         elif approved is None:
             pending_approval.append(code)
 
-    return (
-        confirmed_credits,
-        pending_approval,
-        pending_credit_verification,
-    )
+    return (confirmed_credits, pending_approval, pending_credit_verification,)
 
-def _calculate_phd_supporting_minor_credits(
-    course_records: list[dict],
-) -> tuple[float, float, list[str], list[str]]:
+def _calculate_phd_supporting_minor_credits(course_records: list[dict],) -> tuple[float, float, list[str], list[str]]:
     """
     Calculate confirmed Ph.D. supporting-program and minor credits.
-
     Only courses explicitly marked degree_approved=True count.
 
     Returns:
@@ -238,7 +208,6 @@ def _calculate_phd_supporting_minor_credits(
 
     supporting_credits = 0
     minor_credits = 0
-
     pending_supporting = []
     pending_minor = []
 
@@ -265,12 +234,7 @@ def _calculate_phd_supporting_minor_credits(
         else:
             minor_credits += credits
 
-    return (
-        supporting_credits,
-        minor_credits,
-        pending_supporting,
-        pending_minor,
-    )
+    return (supporting_credits, minor_credits, pending_supporting, pending_minor,)
 
 def degree_audit(completed_courses: list, program: str = "ms", plan: str | None = None,
     milestones: dict | None = None, non_csci_credit_summary: dict | None = None, csci_credit_summary: dict | None = None, degree_credit_summary: dict | None = None,) -> str:
@@ -287,11 +251,7 @@ def degree_audit(completed_courses: list, program: str = "ms", plan: str | None 
 
     completed, course_records = _normalize_completed_courses(completed_courses)
 
-    aggregate_csci_only = (
-        program == "ms"
-        and not completed
-        and "confirmed" in csci_credit_summary
-    )
+    aggregate_csci_only = (program == "ms" and not completed and "confirmed" in csci_credit_summary)
 
     if program not in REQUIREMENTS:
         return f"Unknown program: {program}. Valid options: ms, phd"
@@ -333,15 +293,14 @@ def degree_audit(completed_courses: list, program: str = "ms", plan: str | None 
 
     if aggregate_csci_only:
         results.append(
-            "  ⚠️ Course-level requirements cannot be assessed "
-            "without completed course codes"
+            "  ⚠️ Course-level requirements cannot be assessed without completed course codes"
         )
     else:
         if breadth_complete:
-            results.append(f"  ✅ All {len(breadth_categories)} breadth areas satisfied.")
+            results.append(f"✅ All {len(breadth_categories)} breadth areas satisfied.")
         else:
             results.append(
-                f"  Breadth courses completed: {total_breadth_completed} of "
+                f"Breadth courses completed: {total_breadth_completed} of "
                 f"{required_breadth_courses} required"
             )
         if not breadth_complete:
@@ -390,22 +349,11 @@ def degree_audit(completed_courses: list, program: str = "ms", plan: str | None 
         thesis_course = plan_req.get("thesis_course")
         thesis_credits_required = plan_req.get("thesis_credits", 10)
 
-        thesis_records = [
-            record
-            for record in course_records
-            if record["code"] == thesis_course
-        ]
+        thesis_records = [record for record in course_records if record["code"] == thesis_course]
 
-        confirmed_thesis_credits = sum(
-            record["credits"]
-            for record in thesis_records
-            if record.get("credits") is not None
-        )
+        confirmed_thesis_credits = sum(record["credits"] for record in thesis_records if record.get("credits") is not None)
 
-        has_unknown_thesis_credits = any(
-            record.get("credits") is None
-            for record in thesis_records
-        )
+        has_unknown_thesis_credits = any(record.get("credits") is None for record in thesis_records )
 
         results.append("PLAN A THESIS REQUIREMENT:")
 
@@ -437,9 +385,7 @@ def degree_audit(completed_courses: list, program: str = "ms", plan: str | None 
                 f"{thesis_needed} more thesis credit(s) required"
             )
 
-        results.append(
-            "  ⚠️ Thesis committee and oral defense require manual/program verification"
-        )
+        results.append("  ⚠️ Thesis committee and oral defense require manual/program verification")
 
     if program == "ms" and plan == "C":
         project_hours = plan_req.get("project_hours", 100)
@@ -449,12 +395,8 @@ def degree_audit(completed_courses: list, program: str = "ms", plan: str | None 
             f"  ⚠️ Not assessed from course codes: "
             f"{project_hours}-hour significant project"
         )
-        results.append(
-            "  ⚠️ Written project report requires manual/program verification"
-        )
-        results.append(
-            "  ⚠️ Oral project presentation requires manual/program verification"
-        )
+        results.append("  ⚠️ Written project report requires manual/program verification")
+        results.append("  ⚠️ Oral project presentation requires manual/program verification")
 
     results.append("")
 
@@ -479,11 +421,7 @@ def degree_audit(completed_courses: list, program: str = "ms", plan: str | None 
         phd_thesis_course = req["thesis_course"]
         phd_thesis_credits_required = req["thesis_credits"]
 
-        thesis_records = [
-            record
-            for record in course_records
-            if record["code"] == phd_thesis_course
-        ]
+        thesis_records = [record for record in course_records if record["code"] == phd_thesis_course]
 
         confirmed_phd_thesis_credits = sum(
             record["credits"]
@@ -491,15 +429,9 @@ def degree_audit(completed_courses: list, program: str = "ms", plan: str | None 
             if record.get("credits") is not None
         )
 
-        phd_thesis_complete = (
-            confirmed_phd_thesis_credits
-            >= phd_thesis_credits_required
-        )
+        phd_thesis_complete = (confirmed_phd_thesis_credits >= phd_thesis_credits_required)
 
-        has_unknown_phd_thesis_credits = any(
-            record.get("credits") is None
-            for record in thesis_records
-        )
+        has_unknown_phd_thesis_credits = any(record.get("credits") is None for record in thesis_records)
 
         results.append("PH.D. THESIS REQUIREMENT:")
 
@@ -523,10 +455,7 @@ def degree_audit(completed_courses: list, program: str = "ms", plan: str | None 
             )
 
         else:
-            thesis_needed = (
-                phd_thesis_credits_required
-                - confirmed_phd_thesis_credits
-            )
+            thesis_needed = (phd_thesis_credits_required - confirmed_phd_thesis_credits)
 
             results.append(
                 f"  ❌ Confirmed thesis credits: "
@@ -563,16 +492,14 @@ def degree_audit(completed_courses: list, program: str = "ms", plan: str | None 
             continue
 
         if program == "phd" and code == phd_thesis_course:
-        # Thesis credits are tracked separately from
-        # the Ph.D. CSCI coursework requirement.
+            # Thesis credits are tracked separately from
+            # the Ph.D. CSCI coursework requirement.
             continue
 
         course_number = code[4:]
 
         if course_number.isdigit() and int(course_number) < 5000:
-            excluded_courses.append(
-                f"{code} (4xxx-level course)"
-            )
+            excluded_courses.append(f"{code} (4xxx-level course)")
             continue
 
         if code in variable_credit_courses:
@@ -605,17 +532,11 @@ def degree_audit(completed_courses: list, program: str = "ms", plan: str | None 
             + ", ".join(needs_csci_credit_verification)
         )
     if excluded_courses:
-        results.append(
-            f"  ⚠️ Excluded from degree credit count: {', '.join(excluded_courses)}"
-        )
+        results.append(f"  ⚠️ Excluded from degree credit count: {', '.join(excluded_courses)}")
     if program == "ms":
-        results.append(
-            "  Note: approved non-CSCI coursework is counted separately below"
-        )
+        results.append("  Note: approved non-CSCI coursework is counted separately below")
     else:
-        results.append(
-            "  Note: non-CSCI coursework is not included in this CSCI subtotal"
-        )
+        results.append("  Note: non-CSCI coursework is not included in this CSCI subtotal")
 
     results.append("")
 
@@ -630,16 +551,11 @@ def degree_audit(completed_courses: list, program: str = "ms", plan: str | None 
             pending_non_csci_credit,
         ) = _calculate_non_csci_degree_credits(course_records)
 
-        confirmed_phd_course_credits = (
-            csci_credits + approved_non_csci_credits
-        )
+        confirmed_phd_course_credits = (csci_credits + approved_non_csci_credits)
 
         required_phd_course_credits = req["course_credits"]
 
-        phd_course_credits_complete = (
-            confirmed_phd_course_credits
-            >= required_phd_course_credits
-        )
+        phd_course_credits_complete = (confirmed_phd_course_credits >= required_phd_course_credits)
 
         results.append("PH.D. COURSE CREDIT REQUIREMENT:")
         results.append(
@@ -687,17 +603,11 @@ def degree_audit(completed_courses: list, program: str = "ms", plan: str | None 
         required_supporting = req["supporting_program_credits"]
         required_minor = req["minor_credits"]
 
-        supporting_complete = (
-            confirmed_supporting_credits >= required_supporting
-        )
+        supporting_complete = (confirmed_supporting_credits >= required_supporting)
 
-        minor_complete = (
-            confirmed_minor_credits >= required_minor
-        )
+        minor_complete = (confirmed_minor_credits >= required_minor)
 
-        phd_support_minor_complete = (
-            supporting_complete or minor_complete
-        )
+        phd_support_minor_complete = (supporting_complete or minor_complete)
 
         results.append("PH.D. SUPPORTING / MINOR REQUIREMENT:")
         results.append(
@@ -710,17 +620,11 @@ def degree_audit(completed_courses: list, program: str = "ms", plan: str | None 
         )
 
         if supporting_complete:
-            results.append(
-                "  ✅ Supporting-program pathway satisfied"
-            )
+            results.append("  ✅ Supporting-program pathway satisfied")
         elif minor_complete:
-            results.append(
-                "  ✅ Minor pathway satisfied"
-            )
+            results.append("  ✅ Minor pathway satisfied")
         else:
-            results.append(
-                "  ❌ Neither pathway is confirmed complete"
-            )
+            results.append("  ❌ Neither pathway is confirmed complete")
 
         if pending_supporting:
             results.append(
@@ -741,17 +645,11 @@ def degree_audit(completed_courses: list, program: str = "ms", plan: str | None 
     confirmed_phd_total_credits = 0
 
     if program == "phd":
-        confirmed_phd_total_credits = (
-            confirmed_phd_course_credits
-            + confirmed_phd_thesis_credits
-        )
+        confirmed_phd_total_credits = (confirmed_phd_course_credits + confirmed_phd_thesis_credits)
 
         required_phd_total_credits = req["total_credits"]
 
-        phd_total_credits_complete = (
-            confirmed_phd_total_credits
-            >= required_phd_total_credits
-        )
+        phd_total_credits_complete = (confirmed_phd_total_credits >= required_phd_total_credits)
 
         results.append("PH.D. TOTAL CREDIT REQUIREMENT:")
         results.append(
@@ -774,10 +672,7 @@ def degree_audit(completed_courses: list, program: str = "ms", plan: str | None 
             )
 
         if has_unknown_phd_thesis_credits:
-            results.append(
-                "  ⚠️ Total may increase after verifying "
-                "CSCI8888 thesis credits"
-            )
+            results.append("  ⚠️ Total may increase after verifying CSCI8888 thesis credits")
 
         results.append("")
 
@@ -787,58 +682,40 @@ def degree_audit(completed_courses: list, program: str = "ms", plan: str | None 
 
     if program == "phd":
         results.append("PH.D. MILESTONES REQUIRING MANUAL VERIFICATION:")
-
         wpe_status = milestones.get("wpe")
 
         if wpe_status is True:
-            results.append(
-                "  ✅ Written Preliminary Examination (WPE): complete"
-            )
+            results.append("  ✅ Written Preliminary Examination (WPE): complete")
         elif wpe_status is False:
-            results.append(
-                "  ❌ Written Preliminary Examination (WPE): not complete"
-            )
+            results.append("  ❌ Written Preliminary Examination (WPE): not complete")
             phd_incomplete_milestones.append("WPE")
         else:
-            results.append(
-                "  ⚠️ Written Preliminary Examination (WPE) completion "
-                "requires manual/program verification"
-            )
+            results.append("  ⚠️ Written Preliminary Examination (WPE) completion requires manual/program verification")
             phd_pending_milestones.append("WPE")
 
         ope_status = milestones.get("ope")
 
         if ope_status is True:
-            results.append(
-                "  ✅ Oral Preliminary Examination (OPE): complete"
-            )
+            results.append("  ✅ Oral Preliminary Examination (OPE): complete")
         elif ope_status is False:
-            results.append(
-                "  ❌ Oral Preliminary Examination (OPE): not complete"
-            )
+            results.append("  ❌ Oral Preliminary Examination (OPE): not complete")
             phd_incomplete_milestones.append("OPE")
         else:
             results.append(
-                "  ⚠️ Oral Preliminary Examination (OPE) completion "
-                "requires manual/program verification"
+                "  ⚠️ Oral Preliminary Examination (OPE) completion requires manual/program verification"
             )
             phd_pending_milestones.append("OPE")
 
         thesis_proposal_status = milestones.get("thesis_proposal")
 
         if thesis_proposal_status is True:
-            results.append(
-                "  ✅ Thesis Proposal Examination: complete"
-            )
+            results.append("  ✅ Thesis Proposal Examination: complete")
         elif thesis_proposal_status is False:
-            results.append(
-                "  ❌ Thesis Proposal Examination: not complete"
-            )
+            results.append("  ❌ Thesis Proposal Examination: not complete")
             phd_incomplete_milestones.append("Thesis Proposal Examination")
         else:
             results.append(
-                "  ⚠️ Thesis Proposal Examination completion "
-                "requires manual/program verification"
+                "  ⚠️ Thesis Proposal Examination completion requires manual/program verification"
             )
             phd_pending_milestones.append("Thesis Proposal Examination")
 
@@ -846,19 +723,16 @@ def degree_audit(completed_courses: list, program: str = "ms", plan: str | None 
 
         if final_defense_status is True:
             results.append(
-                "  ✅ Final dissertation committee/reviewer approval "
-                "and oral defense: complete"
+                "  ✅ Final dissertation committee/reviewer approval and oral defense: complete"
             )
         elif final_defense_status is False:
             results.append(
-                "  ❌ Final dissertation committee/reviewer approval "
-                "and oral defense: not complete"
+                "  ❌ Final dissertation committee/reviewer approval and oral defense: not complete"
             )
             phd_incomplete_milestones.append("Final defense")
         else:
             results.append(
-                "  ⚠️ Final dissertation committee/reviewer approval and "
-                "oral defense require manual/program verification"
+                "  ⚠️ Final dissertation committee/reviewer approval and oral defense require manual/program verification"
             )
             phd_pending_milestones.append("Final defense")
         results.append("")
@@ -874,64 +748,34 @@ def degree_audit(completed_courses: list, program: str = "ms", plan: str | None 
             pending_non_csci_credit,
         ) = _calculate_non_csci_degree_credits(course_records)
 
-        aggregate_approved_non_csci = (
-            non_csci_credit_summary.get(
-                "approved",
-                0,
-            )
-            or 0
-        )
+        aggregate_approved_non_csci = non_csci_credit_summary.get("approved",0,)or 0
 
-        aggregate_pending_non_csci = (
-            non_csci_credit_summary.get(
-                "pending_approval",
-                0,
-            )
-            or 0
-        )
+        aggregate_pending_non_csci = non_csci_credit_summary.get("pending_approval",0,)or 0
 
-        approved_non_csci_credits += (
-            aggregate_approved_non_csci
-        )
+        approved_non_csci_credits += aggregate_approved_non_csci
 
-        confirmed_degree_credits = (
-            csci_credits
-            + approved_non_csci_credits
-        )
+        confirmed_degree_credits = csci_credits + approved_non_csci_credits
 
-        aggregate_confirmed_degree_credits = (
-            degree_credit_summary.get("confirmed", 0) or 0
-        )
+        aggregate_confirmed_degree_credits = degree_credit_summary.get("confirmed", 0) or 0
 
-        confirmed_degree_credits = max(
-            confirmed_degree_credits,
-            aggregate_confirmed_degree_credits,
-        )
+        confirmed_degree_credits = max(confirmed_degree_credits, aggregate_confirmed_degree_credits,)
 
-        reported_total_requirement_satisfied = (
-            degree_credit_summary.get("requirement_satisfied") is True
-        )
+        reported_total_requirement_satisfied = (degree_credit_summary.get("requirement_satisfied") is True)
 
         required_total_credits = req["total_credits"]
 
         if reported_total_requirement_satisfied:
             total_degree_complete = True
         else:
-            total_degree_complete = (
-                confirmed_degree_credits >= required_total_credits
-            )
+            total_degree_complete = (confirmed_degree_credits >= required_total_credits)
 
         results.append("TOTAL DEGREE CREDIT REQUIREMENT:")
 
-        current_confirmed_gap = max(
-            required_total_credits - confirmed_degree_credits,
-            0,
-        )
+        current_confirmed_gap = max(required_total_credits - confirmed_degree_credits,0,)
 
         if reported_total_requirement_satisfied:
             results.append(
-                "  ✅ Student reports the total degree credit requirement "
-                "is satisfied"
+                "  ✅ Student reports the total degree credit requirement is satisfied"
             )
         else:
             results.append(
@@ -958,10 +802,7 @@ def degree_audit(completed_courses: list, program: str = "ms", plan: str | None 
             )
 
             if not reported_total_requirement_satisfied:
-                projected_remaining_degree_credits = max(
-                    current_confirmed_gap - aggregate_pending_non_csci,
-                    0,
-                )
+                projected_remaining_degree_credits = max(current_confirmed_gap - aggregate_pending_non_csci, 0,)
 
                 results.append(
                     f"  If all {aggregate_pending_non_csci} pending non-CSCI "
@@ -970,10 +811,7 @@ def degree_audit(completed_courses: list, program: str = "ms", plan: str | None 
                 )
 
         if pending_non_csci_approval:
-            results.append(
-                "  ⚠️ Degree applicability must be verified for: "
-                + ", ".join(pending_non_csci_approval)
-            )
+            results.append("  ⚠️ Degree applicability must be verified for: " + ", ".join(pending_non_csci_approval))
 
         if pending_non_csci_credit:
             results.append(
@@ -982,10 +820,7 @@ def degree_audit(completed_courses: list, program: str = "ms", plan: str | None 
             )
 
         if needs_csci_credit_verification:
-            results.append(
-                "  ⚠️ Total may increase after verifying CSCI credits for: "
-                + ", ".join(needs_csci_credit_verification)
-            )
+            results.append("  ⚠️ Total may increase after verifying CSCI credits for: " + ", ".join(needs_csci_credit_verification))
 
         results.append("")
 
@@ -1008,10 +843,7 @@ def degree_audit(completed_courses: list, program: str = "ms", plan: str | None 
 
         results.append("ADVANCED CSCI REQUIREMENT:")
         if aggregate_csci_only:
-            results.append(
-                "  ⚠️ Advanced CSCI completion cannot be assessed "
-                "without completed course codes"
-            )
+            results.append("  ⚠️ Advanced CSCI completion cannot be assessed without completed course codes")
         else:
             results.append(
                 f"  Confirmed advanced CSCI credits: "
@@ -1019,10 +851,7 @@ def degree_audit(completed_courses: list, program: str = "ms", plan: str | None 
             )
 
             if advanced_verify:
-                results.append(
-                    "  ⚠️ Credit value must be verified for: "
-                    + ", ".join(advanced_verify)
-                )
+                results.append("  ⚠️ Credit value must be verified for: " + ", ".join(advanced_verify))
 
         results.append("")
 
@@ -1054,36 +883,27 @@ def degree_audit(completed_courses: list, program: str = "ms", plan: str | None 
 
         elif program == "phd" and phd_pending_milestones:
             results.append(
-                "  ⚠️ Core academic requirements appear satisfied, "
-                "but milestone verification is still pending for: "
+                "  ⚠️ Core academic requirements appear satisfied, but milestone verification is still pending for: "
                 + ", ".join(phd_pending_milestones)
             )
 
         else:
             results.append(
                 "  ✅ Core CSCI requirements appear satisfied based on the courses you provided. "
-                "This is a preliminary checklist only — verify your official status via GPAS in "
-                "MyU and confirm with csgradmn@umn.edu before making graduation decisions."
+                "This is a preliminary checklist only — verify your official status via GPAS in MyU and confirm with csgradmn@umn.edu before making graduation decisions."
             )
     else:
         missing = []
 
         if not aggregate_csci_only:
             if categories_missing:
-                missing.append(
-                    f"breadth in: {', '.join(categories_missing)}"
-                )
+                missing.append(f"breadth in: {', '.join(categories_missing)}")
 
-            extra_needed = (
-                required_breadth_courses
-                - total_breadth_completed
-            )
+            extra_needed = (required_breadth_courses - total_breadth_completed)
 
             if extra_needed > 0 and all_categories_covered:
                 missing.append(
-                    f"{extra_needed} additional breadth course(s) "
-                    f"from any area"
-                )
+                    f"{extra_needed} additional breadth course(s) from any area")
 
             if colloquium not in completed:
                 missing.append(f"{colloquium} colloquium")
@@ -1092,10 +912,7 @@ def degree_audit(completed_courses: list, program: str = "ms", plan: str | None 
                 missing.append("CSCI8760 Plan B project course")
 
             if not advanced_complete:
-                advanced_needed = (
-                    required_advanced
-                    - advanced_credits
-                )
+                advanced_needed = required_advanced - advanced_credits
 
                 if advanced_verify:
                     missing.append(
@@ -1121,21 +938,13 @@ def degree_audit(completed_courses: list, program: str = "ms", plan: str | None 
                     f"(verify earned credits for {', '.join(needs_csci_credit_verification)})"
                 )
             else:
-                missing.append(
-                    f"{csci_needed:g} more CSCI credit(s)"
-                )
+                missing.append(f"{csci_needed:g} more CSCI credit(s)")
 
         if program == "phd" and not phd_course_credits_complete:
-            phd_course_needed = (
-                required_phd_course_credits
-                - confirmed_phd_course_credits
-            )
+            phd_course_needed = required_phd_course_credits - confirmed_phd_course_credits
 
             if pending_non_csci_approval or pending_non_csci_credit:
-                pending_phd_verification = (
-                    pending_non_csci_approval
-                    + pending_non_csci_credit
-                )
+                pending_phd_verification = pending_non_csci_approval + pending_non_csci_credit
 
                 missing.append(
                     f"{phd_course_needed:g} more confirmed Ph.D. course credit(s) "
@@ -1143,20 +952,12 @@ def degree_audit(completed_courses: list, program: str = "ms", plan: str | None 
                     f"{', '.join(pending_phd_verification)})"
                 )
             else:
-                missing.append(
-                    f"{phd_course_needed:g} more Ph.D. course credit(s)"
-                )
+                missing.append(f"{phd_course_needed:g} more Ph.D. course credit(s)")
 
         if program == "phd" and not phd_support_minor_complete:
-            supporting_needed = (
-                required_supporting
-                - confirmed_supporting_credits
-            )
+            supporting_needed = required_supporting - confirmed_supporting_credits
 
-            minor_needed = (
-                required_minor
-                - confirmed_minor_credits
-            )
+            minor_needed = required_minor - confirmed_minor_credits
 
             missing.append(
                 f"Ph.D. supporting/minor requirement: "
@@ -1165,10 +966,7 @@ def degree_audit(completed_courses: list, program: str = "ms", plan: str | None 
             )
 
         if program == "phd" and not phd_thesis_complete:
-            thesis_needed = (
-                phd_thesis_credits_required
-                - confirmed_phd_thesis_credits
-            )
+            thesis_needed = phd_thesis_credits_required - confirmed_phd_thesis_credits
 
             if has_unknown_phd_thesis_credits:
                 missing.append(
@@ -1184,17 +982,10 @@ def degree_audit(completed_courses: list, program: str = "ms", plan: str | None 
         if program == "ms" and not total_degree_complete:
             total_needed = required_total_credits - confirmed_degree_credits
 
-            pending_total_verification = (
-                pending_non_csci_approval
-                + pending_non_csci_credit
-                + needs_csci_credit_verification
-            )
+            pending_total_verification = (pending_non_csci_approval + pending_non_csci_credit + needs_csci_credit_verification)
 
             if aggregate_pending_non_csci:
-                missing.append(
-                    f"{total_needed:g} more confirmed degree credit(s) "
-                    f"currently needed"
-                )
+                missing.append(f"{total_needed:g} more confirmed degree credit(s) currently needed")
 
             elif pending_total_verification:
                 missing.append(
@@ -1204,9 +995,7 @@ def degree_audit(completed_courses: list, program: str = "ms", plan: str | None 
                 )
 
             else:
-                missing.append(
-                    f"{total_needed:g} more degree credit(s)"
-                )
+                missing.append(f"{total_needed:g} more degree credit(s)")
         results.append(f"  Still needed: {'; '.join(missing)}")
 
     return "\n".join(results)

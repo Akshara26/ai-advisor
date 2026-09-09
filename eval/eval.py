@@ -286,11 +286,8 @@ CLARIFICATION_SIGNALS = [
     "could you clarify", "could you specify", "can you clarify",
     "please clarify", "please specify", "more information",
     "more details", "let me know", "which degree", "what course",
-    "which course", "what class",
-    "are you in",
-    "are you enrolled",
-    "what is your",
-    "which track",
+    "which course", "what class", "are you in", "are you enrolled",
+    "what is your", "which track",
 ]
 
 behavioral_rows = []
@@ -329,14 +326,9 @@ for i, q in enumerate(behavioral_qs):
         expected_office = q.get("expected_office")
 
         if expected_office:
-            match_terms = _office_match_terms(
-                expected_office
-            )
+            match_terms = _office_match_terms(expected_office)
 
-            matched = any(
-                term.lower() in resp_lower
-                for term in match_terms
-            )
+            matched = any(term.lower() in resp_lower for term in match_terms)
 
             passed = matched
 
@@ -357,10 +349,7 @@ for i, q in enumerate(behavioral_qs):
                 "confirm",
             ]
 
-            passed = any(
-                signal in resp_lower
-                for signal in escalation_signals
-            )
+            passed = any(signal in resp_lower for signal in escalation_signals)
 
             reason = (
                 "provided escalation guidance"
@@ -382,10 +371,7 @@ for i, q in enumerate(behavioral_qs):
             "do not have enough",
         ]
 
-        passed = any(
-            signal in resp_lower
-            for signal in refusal_signals
-        )
+        passed = any(signal in resp_lower for signal in refusal_signals)
 
         reason = (
             "correctly declined unsupported conclusion"
@@ -423,10 +409,7 @@ for i, q in enumerate(behavioral_qs):
         )
 
     else:
-        passed = (
-            bool(response.strip())
-            and "ERROR" not in response
-        )
+        passed = (bool(response.strip()) and "ERROR" not in response)
 
         reason = (
             "answered directly"

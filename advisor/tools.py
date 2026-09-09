@@ -107,8 +107,7 @@ def search_handbook(query: str) -> str:
     Two-pass retrieval:
       1. Embedding similarity — retrieve top 10 candidate chunks.
       2. LLM rerank — score each chunk against the query, keep top 3.
-    Each chunk is prefixed with its source label so the advisor can
-    include inline citations ([Handbook p.12], [cs.umn.edu], etc.).
+    Each chunk is prefixed with its source label so the advisor can include inline citations ([Handbook p.12], [cs.umn.edu], etc.).
     """
     if not _db_available or retriever is None:
         return (
