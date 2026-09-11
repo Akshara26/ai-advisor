@@ -123,7 +123,7 @@ def process_message(prompt):
         st.markdown(response)
         if drafted_email:
             st.divider()
-            st.caption("I couldn't fully answer this from the handbook. Here's a draft email you can send:")
+            st.caption("Draft email")
             st.text_area("Draft email", value=drafted_email, height=200,
                          key=f"email_{len(st.session_state.messages)}")
     st.session_state.messages.append({"role": "assistant", "content": response})

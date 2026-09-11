@@ -732,14 +732,14 @@ def email_agent_node(state: AdvisorState) -> AdvisorState:
     )
 
     prompt = f"""Question type: {question_type}
-Tools already searched: {', '.join(tools_tried) if tools_tried else 'none'}
-What the advisor found: {answer or 'No relevant information found'}
+        Tools already searched: {', '.join(tools_tried) if tools_tried else 'none'}
+        What the advisor found: {answer or 'No relevant information found'}
 
-The office responsible for this issue is: {office_name} ({office_contact})
-Address the email TO THIS OFFICE in the To: line. Do not address it to anyone else.
+        The office responsible for this issue is: {office_name} ({office_contact})
+        Address the email TO THIS OFFICE in the To: line. Do not address it to anyone else.
 
-Full conversation:
-{conversation_summary}
+        Full conversation:
+        {conversation_summary}
 
 Draft the email now."""
 
@@ -751,7 +751,7 @@ Draft the email now."""
         ]
     )
 
-    return {**state, "drafted_email": parse_email_block(response.choices[0].message.content)}
+    return { **state, "answer": "I've drafted an email you can send:", "drafted_email": parse_email_block(response.choices[0].message.content),}
 
 SELF_CONTAINED_TYPES = {"course_difficulty", "course_recommendation"}
 
