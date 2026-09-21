@@ -39,3 +39,8 @@ def save_history(session_id: str, history: list):
         redis.set(f"history:{session_id}", json.dumps(history, default=_serialize), ex=604800)
     except Exception as e:
         print(f"Redis save error: {e}")
+
+def delete_history(session_id: str) -> None:
+    """Delete the saved conversation history for a session."""
+    redis = get_redis()
+    redis.delete(f"history:{session_id}")

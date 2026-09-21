@@ -1,7 +1,7 @@
 import streamlit as st
 import uuid
 from advisor.graph import chat
-from advisor.memory import load_history, save_history
+from advisor.memory import load_history, save_history, delete_history
 import io
 import re
 from pypdf import PdfReader
@@ -10,6 +10,8 @@ from advisor.transcript_utils import parse_transcript
 
 st.title("UMN CS Graduate Advisor")
 st.caption("Ask me anything about the CS graduate program at University of Minnesota.")
+if "transcript_upload_key" not in st.session_state:
+    st.session_state.transcript_upload_key = str(uuid.uuid4())
 
 # ── Sidebar: Transcript → Degree Audit ───────────────────────────────────────
 with st.sidebar:
@@ -19,7 +21,12 @@ with st.sidebar:
     "are extracted in memory. Selected course information is included in your conversation history, which is kept for 7 days."
     )
 
-    uploaded = st.file_uploader("Transcript PDF", type=["pdf"], label_visibility="collapsed")
+    uploaded = st.file_uploader(
+        "Transcript PDF",
+        type=["pdf"],
+        label_visibility="collapsed",
+        key=st.session_state.transcript_upload_key,
+    )
 
     if uploaded:
         try:
@@ -110,6 +117,21 @@ if "messages" not in st.session_state:
 
 if "conversation_history" not in st.session_state:
     st.session_state.conversation_history = load_history(session_id)
+
+# Clear saved history and start a fresh session
+with st.sidebar:
+    if st.button("Clear conversation", use_container_width=True):
+        try:
+            delete_history(session_id)
+        except Exception:
+            st.error("Could not delete saved history. Please try again.")
+        else:
+            st.session_state.messages = []
+            st.session_state.conversation_history = []
+            st.session_state.pop("pending_question", None)
+            st.session_state.transcript_upload_key = str(uuid.uuid4())
+            st.query_params["session_id"] = str(uuid.uuid4())
+            st.rerun()
 
 def process_message(prompt):
     st.session_state.messages.append({"role": "user", "content": prompt})
