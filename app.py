@@ -112,11 +112,11 @@ if "session_id" not in params:
 
 session_id = st.query_params["session_id"]
 
-if "messages" not in st.session_state:
-    st.session_state.messages = []
-
 if "conversation_history" not in st.session_state:
     st.session_state.conversation_history = load_history(session_id)
+
+if "messages" not in st.session_state:
+    st.session_state.messages = list(st.session_state.conversation_history)
 
 # Clear saved history and start a fresh session
 with st.sidebar:
