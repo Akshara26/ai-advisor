@@ -1,6 +1,6 @@
 # UMN CS Graduate Advisor
 
-An AI-powered academic advisor for University of Minnesota Computer Science graduate students.
+An AI-powered academic advisor for University of Minnesota CS graduate students.
 
 It combines retrieval-augmented generation with deterministic academic tools to answer policy questions, audit degree progress, check course requirements, and route students to the right university resource when official confirmation is needed.
 
@@ -66,21 +66,23 @@ The LLM handles intent, orchestration, and response synthesis. Structured academ
 
 The project evaluates three parts of the system separately:
 
-| Track | What it measures | Current result |
+| Track | What it measures | Recorded result |
 |---|---|---:|
-| RAG | Grounding and retrieval quality | **87.19% descriptive mean** |
-| Tool | Correct deterministic tool execution | **100%** |
-| Behavioral | Clarification, escalation, and cautious-response behavior | **76.92%** |
+| RAG | Grounding and retrieval quality | **85.17% descriptive mean** |
+| Tool | Correct deterministic tool execution | **100% (2/2)** |
+| Behavioral | Clarification, escalation, and cautious-response behavior | **84.62% (11/13)** |
 
 ### RAGAS Metrics
 
-| Metric | Score |
+| Metric | Recorded score |
 |---|---:|
-| Faithfulness | **86.50%** |
-| Answer Relevancy | **80.89%** |
-| Context Recall | **94.17%** |
+| Faithfulness | **80.00%** |
+| Answer Relevancy | **83.84%** |
+| Context Recall | **91.67%** |
 
-The current evaluation set contains 10 RAG cases, 2 deterministic-tool cases, and 13 behavioral cases. Legacy cases retained for regression or provenance are excluded from current aggregate metrics.
+These results are from the evaluation run recorded on September 9, 2026, in [`eval/baseline_results.json`](eval/baseline_results.json). The evaluation set contains 38 cases: 10 RAG, 2 deterministic-tool, 13 behavioral, and 13 excluded (`skip`) cases.
+
+The RAGAS descriptive mean summarizes the three metrics above; it is not a graduation-advice accuracy rate. RAGAS results are model- and judge-dependent and may vary between runs. The tool pass rate is based on two evaluated cases and should not be interpreted as comprehensive tool coverage.
 
 ---
 
@@ -177,7 +179,7 @@ streamlit run app.py
 
 Run evaluation:
 ```bash
-python -m eval.py
+python -m eval.eval
 ```
 
 ---
@@ -187,5 +189,6 @@ python -m eval.py
 - Course and grade data come from static snapshots and may not reflect the latest term
 - Some university resources cannot be scraped and are represented by curated reference stubs
 - Official degree clearance, petitions, and policy exceptions still require confirmation from the appropriate UMN office
+- **Privacy:** Uploaded PDFs are processed in memory, but transcript-derived information included in chat history is stored in Redis for up to seven days. Sessions use URL-based identifiers without authentication, so this public demo is intended for synthetic transcripts rather than real student academic records.
 
 
