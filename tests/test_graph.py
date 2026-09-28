@@ -553,29 +553,30 @@ class TestDegreeAuditSynthesisGuards:
         )
 
         bad_final_response = SimpleNamespace(
-            choices=[
-                SimpleNamespace(
-                    message=SimpleNamespace(
-                        content=(
-                            "You have 13 confirmed degree credits "
-                            "and therefore need 18 more total credits."
-                        ),
-                        tool_calls=None,
-                    )
+        choices=[
+            SimpleNamespace(
+                message=SimpleNamespace(
+                    content=(
+                        "Your non-CSCI credits still require approval, "
+                        "but you need a total of 18 more credits to "
+                        "reach 31."
+                    ),
+                    tool_calls=None,
                 )
-            ]
-        )
+            )
+        ]
+    )
 
         corrected_final_response = SimpleNamespace(
             choices=[
                 SimpleNamespace(
                     message=SimpleNamespace(
                         content=(
-                            "You said your non-CSCI coursework brings "
-                            "you to 31 total credits. Those credits should "
-                            "not be treated as missing, but their degree "
-                            "applicability still needs approval or "
-                            "verification."
+                            "You reported enough non-CSCI credits to reach "
+                            "the 31-credit total, although their applicability "
+                            "still requires verification. CSCI 4041 is a 4xxx "
+                            "course and is excluded from the graduate CSCI "
+                            "degree-credit count."
                         ),
                         tool_calls=None,
                     )
@@ -677,7 +678,11 @@ class TestDegreeAuditSynthesisGuards:
             ]
         )
 
-        assert "18 more total credits" not in answer
+        # The corrected answer must explicitly preserve the excluded course.
+        assert "csci 4041" in answer
+
+        # It must not invent a fixed total-credit shortfall.
+        assert "18 more" not in answer
 
         assert (
             fake_client.chat.completions.create.call_count
@@ -4768,3 +4773,82 @@ class TestPreliminaryHardEscalation:
 
         # The unsafe first draft should have been rejected.
         assert fake_client.chat.completions.create.call_count == 2
+
+
+class TestDegreeAuditSynthesisGuards:
+    def test_degree_audit_does_not_infer_credits_from_course_count(self):
+        from advisor.graph import _normalize_degree_audit_arguments
+
+        args = {
+            "completed_courses": [
+                "CSCI5511",
+                "CSCI5521",
+            ],
+            "non_csci_credit_summary": {
+                "approved": 15,
+            },
+            "program": "ms",
+            "plan": "C",
+        }
+
+        result = _normalize_degree_audit_arguments(
+            (
+                "I'm M.S. Plan C and completed five "
+                "non-CSCI STAT courses."
+            ),
+            args,
+        )
+
+        assert "non_csci_credit_summary" not in result
+
+    def test_degree_audit_preserves_reported_total_credit_satisfaction(self):
+        from advisor.graph import _normalize_degree_audit_arguments
+
+        args = {
+            "completed_courses": [
+                "CSCI5511",
+                "CSCI5421",
+                "CSCI5751",
+                "CSCI8970",
+                "CSCI4041",
+                "CSCI5527",
+            ],
+            "program": "ms",
+            "plan": "C",
+        }
+
+        result = _normalize_degree_audit_arguments(
+            (
+                "I'm M.S. Plan C. I have those courses "
+                "and enough non-CSCI credits to reach 31."
+            ),
+            args,
+        )
+
+        assert (
+            result["degree_credit_summary"]
+            ["requirement_satisfied"]
+            is True
+        )
+
+    def test_degree_audit_detects_excluded_4xxx_input(self):
+        from advisor.graph import (
+            _degree_audit_excluded_4xxx_courses,
+        )
+
+        trace = [{
+            "name": "degree_audit",
+            "success": True,
+            "arguments": {
+                "completed_courses": [
+                    "CSCI5511",
+                    "CSCI4041",
+                    {"code": "CSCI5527", "credits": 3},
+                ]
+            },
+        }]
+
+        assert (
+            _degree_audit_excluded_4xxx_courses(trace)
+            == ["CSCI 4041"]
+        )

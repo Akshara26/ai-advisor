@@ -256,6 +256,189 @@ def _mentions_non_csci_context(user_message: str) -> bool:
         )
     )
 
+def _student_reports_total_credit_requirement_satisfied(
+    user_message: str,
+) -> bool:
+    """
+    Detect an affirmative student statement that they already
+    have enough credits to meet the total degree-credit requirement.
+    """
+    text = user_message.lower()
+
+    return bool(
+        re.search(
+            r"\bi\s+have\b.{0,300}\benough\s+"
+            r"(?:non[-\s]?csci\s+)?credits?\s+"
+            r"to\s+(?:reach|meet)\s+\d+(?:\.\d+)?\b",
+            text,
+        )
+        or re.search(
+            r"\bi\s+(?:already\s+)?have\s+enough\s+"
+            r"(?:total\s+)?credits?\s+(?:overall|in total)\b",
+            text,
+        )
+        or re.search(
+            r"\bi\s+(?:already\s+)?meet\s+the\s+total\s+"
+            r"(?:degree\s+)?credit\s+requirement\b",
+            text,
+        )
+    )
+
+
+def _normalize_degree_audit_arguments(
+    user_message: str,
+    tool_args: dict,
+) -> dict:
+    """
+    Preserve explicit aggregate-credit statements and prevent a
+    course count from being converted into an invented credit total.
+    """
+
+    # Example:
+    # "I have enough non-CSCI credits to reach 31."
+    # This means the student reports satisfying the total-credit
+    # requirement; it does NOT tell us an approved non-CSCI amount.
+    if _student_reports_total_credit_requirement_satisfied(
+        user_message
+    ):
+        degree_summary = (
+            tool_args.get("degree_credit_summary") or {}
+        )
+        degree_summary["requirement_satisfied"] = True
+        tool_args["degree_credit_summary"] = degree_summary
+
+    text = user_message.lower()
+
+    # Example:
+    # "five non-CSCI STAT courses"
+    #
+    # A course count is not a credit count. If the model invented
+    # an aggregate number of non-CSCI credits from such wording,
+    # remove that unsupported aggregate.
+    mentions_non_csci_courses = bool(
+        re.search(
+            r"\bnon[-\s]?csci\b.{0,50}\bcourses?\b",
+            text,
+        )
+        or re.search(
+            r"\bcourses?\b.{0,50}\bnon[-\s]?csci\b",
+            text,
+        )
+    )
+
+    explicit_non_csci_credit_amount = bool(
+        re.search(
+            r"\b\d+(?:\.\d+)?\s+(?:approved\s+|pending\s+)?"
+            r"non[-\s]?csci\s+credits?\b",
+            text,
+        )
+        or re.search(
+            r"\bnon[-\s]?csci\s+credits?\b.{0,20}"
+            r"\b\d+(?:\.\d+)?\b",
+            text,
+        )
+        or re.search(
+            r"\b\d+(?:\.\d+)?\s+credits?\s+(?:of\s+)?"
+            r"non[-\s]?csci\b",
+            text,
+        )
+    )
+
+    if (
+        mentions_non_csci_courses
+        and not explicit_non_csci_credit_amount
+    ):
+        tool_args.pop("non_csci_credit_summary", None)
+
+    return tool_args
+
+def _degree_audit_excluded_4xxx_courses(
+    tool_trace: list,
+) -> list[str]:
+    """
+    Return user-supplied CSCI 4xxx courses from the most recent
+    successful degree-audit call. The degree audit excludes these
+    from graduate CSCI degree credit.
+    """
+    for trace in reversed(tool_trace):
+        if (
+            trace.get("name") != "degree_audit"
+            or not trace.get("success")
+        ):
+            continue
+
+        completed = (
+            trace.get("arguments", {})
+            .get("completed_courses", [])
+        )
+
+        excluded = []
+
+        for item in completed:
+            if isinstance(item, str):
+                code = item
+            elif isinstance(item, dict):
+                code = item.get("code", "")
+            else:
+                continue
+
+            normalized = re.sub(
+                r"[\s-]+",
+                "",
+                code.upper(),
+            )
+
+            match = re.fullmatch(
+                r"CSCI(\d{4})",
+                normalized,
+            )
+
+            if match and int(match.group(1)) < 5000:
+                excluded.append(
+                    f"CSCI {match.group(1)}"
+                )
+
+        return excluded
+
+    return []
+
+def _answer_mentions_course(
+    answer_text: str,
+    course_code: str,
+) -> bool:
+    answer_norm = re.sub(
+        r"[\s-]+",
+        "",
+        answer_text.upper(),
+    )
+    code_norm = re.sub(
+        r"[\s-]+",
+        "",
+        course_code.upper(),
+    )
+
+    return code_norm in answer_norm
+
+def _claims_fixed_total_credit_shortfall(
+    answer_text: str,
+) -> bool:
+    text = answer_text.lower()
+
+    patterns = [
+        r"\bneed(?:s)?\s+(?:a\s+)?total\s+of\s+"
+        r"\d+(?:\.\d+)?\s+more\s+credits?\b",
+
+        r"\bneed(?:s)?\s+\d+(?:\.\d+)?\s+more\s+"
+        r"(?:total|degree)\s+credits?\b",
+
+        r"\b\d+(?:\.\d+)?\s+more\s+credits?\s+"
+        r"to\s+(?:reach|meet)\s+\d+(?:\.\d+)?\b",
+    ]
+
+    return any(
+        re.search(pattern, text)
+        for pattern in patterns
+    )
 
 def _preserves_non_csci_context(answer_text: str) -> bool:
     text = answer_text.lower()
@@ -509,6 +692,64 @@ def advisor_node(state: AdvisorState) -> AdvisorState:
 
             answer_text = message.content or ""
 
+            # ── Hard enforcement: preserve degree-audit findings ──
+            if "degree_audit" in successful_tools:
+                synthesis_issues = []
+
+                excluded_4xxx = _degree_audit_excluded_4xxx_courses(
+                    tool_trace
+                )
+
+                missing_excluded = [
+                    code
+                    for code in excluded_4xxx
+                    if not _answer_mentions_course(
+                        answer_text,
+                        code,
+                    )
+                ]
+
+                if missing_excluded:
+                    synthesis_issues.append(
+                        "The degree audit excluded the following "
+                        "student-provided CSCI 4xxx course(s) from "
+                        "graduate degree credit, but your draft omitted "
+                        "them: "
+                        + ", ".join(missing_excluded)
+                        + ". Explicitly identify each excluded course "
+                        "and explain that it does not count toward the "
+                        "graduate CSCI degree-credit requirement."
+                    )
+
+                if (
+                    _student_reports_total_credit_requirement_satisfied(
+                        user_message
+                    )
+                    and _claims_fixed_total_credit_shortfall(
+                        answer_text
+                    )
+                ):
+                    synthesis_issues.append(
+                        "The student explicitly stated that they have "
+                        "enough credits to meet the total degree-credit "
+                        "requirement. Do not invent a fixed total-credit "
+                        "shortfall from the listed CSCI courses alone. "
+                        "Preserve the student's reported total while "
+                        "noting that non-CSCI applicability may still "
+                        "require approval or verification."
+                    )
+
+                if synthesis_issues:
+                    conversation.append({
+                        "role": "user",
+                        "content": (
+                            "[System: Revise the draft before answering. "
+                            + " ".join(synthesis_issues)
+                            + "]"
+                        ),
+                    })
+                    continue
+
             # ── Hard enforcement: preliminary escalation guidance ──
             if (
                 escalation
@@ -648,6 +889,12 @@ def advisor_node(state: AdvisorState) -> AdvisorState:
                 tool_name = tool_call.function.name
                 tool_args = json.loads(tool_call.function.arguments)
                 tools_tried.append(tool_name)
+
+                if tool_name == "degree_audit":
+                    tool_args = _normalize_degree_audit_arguments(
+                        user_message,
+                        tool_args,
+                    )
             except json.JSONDecodeError:
                 tool_trace.append({
                     "name": tool_name,

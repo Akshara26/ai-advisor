@@ -40,7 +40,10 @@ db_url = db_url.replace("postgres://", "postgresql://", 1)
 
 client = OpenAI(api_key=openai_key)
 
-embed_model = OpenAIEmbedding(api_key=openai_key)
+embed_model = OpenAIEmbedding(
+    api_key=openai_key,
+    model="text-embedding-3-small",
+)
 Settings.embed_model = embed_model
 
 async_db_url = db_url.replace("postgresql://", "postgresql+asyncpg://", 1)
@@ -290,6 +293,8 @@ tools = [
                         "description": (
                             "Aggregate non-CSCI credits explicitly stated by the student "
                             "when individual course codes are unavailable. "
+                            "A number of non-CSCI courses is not a credit amount. "
+                            "Never assume a default number of credits per course. "
                             "Use 'approved' only for credits the student explicitly says "
                             "are approved to count toward the degree. "
                             "Use 'pending_approval' for credits whose degree applicability "
@@ -356,7 +361,8 @@ tools = [
                                 "description": (
                                     "Use true only when the student explicitly states that "
                                     "the total degree credit requirement is already satisfied "
-                                    "but does not provide an exact total."
+                                    "but does not provide an exact total, including statements "
+                                    "such as 'I have enough non-CSCI credits to reach 31'."
                                 ),
                             },
                         },
