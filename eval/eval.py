@@ -506,5 +506,12 @@ ragas_detail.to_csv(os.path.join(EVAL_DIR, "eval_results_ragas.csv"), index=Fals
 behavioral_detail = pd.DataFrame(behavioral_rows)
 behavioral_detail.to_csv(os.path.join(EVAL_DIR, "eval_results_behavioral.csv"), index=False)
 
+tool_detail = pd.DataFrame(tool_rows)
+tool_detail.to_csv(
+    os.path.join(EVAL_DIR, "eval_results_tools.csv"),
+    index=False,
+)
+
 print("RAGAS breakdown saved to eval_results_ragas.csv")
 print("Behavioral breakdown saved to eval_results_behavioral.csv")
+print("Tool breakdown saved to eval_results_tools.csv")
