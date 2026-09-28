@@ -420,7 +420,7 @@ def advisor_node(state: AdvisorState) -> AdvisorState:
 
         if not message.tool_calls:
             # ── Hard enforcement: degree_audit must be followed by search_handbook ──
-            if "degree_audit" in tools_tried and "search_handbook" not in tools_tried:
+            if "degree_audit" in tools_tried and "search_handbook" not in successful_tools:
                 conversation.append({
                     "role": "user",
                     "content": (
